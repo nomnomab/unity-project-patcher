@@ -1,0 +1,18 @@
+{
+  "name": "com.nomnom.unity-project-patcher",
+  "version": "0.1.0",
+  "displayName": "Unity Project Patcher",
+  "description": "Description",
+  "unity": "2022.3",
+  "unityRelease": "9f1",
+  "licensesUrl": "https://choosealicense.com/licenses/gpl-3.0/",
+  "dependencies": {},
+  "devDependencies": {},
+  "samples": [],
+  "author": {
+    "name": "Andrew Burke",
+    "email": "",
+    "url": ""
+  },
+  "type": "library"
+}
