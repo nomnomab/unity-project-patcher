@@ -1,10 +1,11 @@
 {
-    "name": "com.nomnom.unity-project-patcher.Runtime",
-    "rootNamespace": "Nomnom.UnityProjectPatcher",
+    "name": "AYellowpaper.SerializedCollections.Editor",
     "references": [
         "GUID:d525ad6bd40672747bde77962f1c401e"
     ],
-    "includePlatforms": [],
+    "includePlatforms": [
+        "Editor"
+    ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,

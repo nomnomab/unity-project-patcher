@@ -1,9 +1,6 @@
 {
-    "name": "com.nomnom.unity-project-patcher.Runtime",
-    "rootNamespace": "Nomnom.UnityProjectPatcher",
-    "references": [
-        "GUID:d525ad6bd40672747bde77962f1c401e"
-    ],
+    "name": "AYellowpaper.SerializedCollections",
+    "references": [],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

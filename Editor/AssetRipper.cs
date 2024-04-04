@@ -8,7 +8,7 @@ using UnityEngine;
 namespace Nomnom.UnityProjectPatcher.Editor {
     public readonly struct AssetRipper: IPatcherStep {
         public async UniTask<StepResult> Run() {
-            var assetRipperExePath = ""; // where ar exe is
+            var assetRipperExePath = ""; // where asset ripper exe is
             var inputPath = ""; // where game is
             var outputPath = ""; // where the files will end up
 
@@ -19,13 +19,15 @@ namespace Nomnom.UnityProjectPatcher.Editor {
 
             Directory.CreateDirectory(outputPath);
 
+            // download asset ripper if we don't already have it
             try {
-                await DownloadRequiredDLL();
+                await DownloadAssetRipper();
             } catch (Exception e) {
                 Debug.LogException(e);
                 return StepResult.Failure;
             }
 
+            // run asset ripper to extract assets
             try {
                 await RunAssetRipper(assetRipperExePath, inputPath, outputPath, "");
             } catch (Exception e) {
@@ -36,34 +38,34 @@ namespace Nomnom.UnityProjectPatcher.Editor {
             return StepResult.Success;
         }
 
-        private async UniTask DownloadRequiredDLL() {
-            const string dllUrl = "https://github.com/nomnomab/AssetRipper/releases/download/v1.0.0/AssetRipper.SourceGenerated.dll.zip";
+        private async UniTask DownloadAssetRipper() {
+            // const string dllUrl = "https://github.com/nomnomab/AssetRipper/releases/download/v1.0.0/AssetRipper.SourceGenerated.dll.zip";
+            const string buildUrl = "";
 
-            var dllLocation = "";
-            
-            if (File.Exists(dllLocation)) {
+            var finalPath = "";
+            if (Directory.Exists(finalPath)) {
                 return;
             }
 
-            var zipOutput = "";
+            var zipOutputPath = "";
             using (var client = new System.Net.WebClient()) {
                 client.DownloadProgressChanged += (_, args) => {
-                    EditorUtility.DisplayProgressBar("Downloading AssetRipper DLL", $"Downloading from {dllUrl}", args.ProgressPercentage / 100f);
+                    EditorUtility.DisplayProgressBar("Downloading AssetRipper", $"Downloading from {buildUrl}", args.ProgressPercentage / 100f);
                 };
                 
-                await client.DownloadFileTaskAsync(dllUrl, zipOutput);
+                await client.DownloadFileTaskAsync(buildUrl, zipOutputPath);
             }
             
             EditorUtility.ClearProgressBar();
             
             // if the zip doesn't exist, something went wrong
-            if (!File.Exists(zipOutput)) {
-                throw new FileNotFoundException("Failed to download AssetRipper DLL");
+            if (!File.Exists(zipOutputPath)) {
+                throw new FileNotFoundException("Failed to download AssetRipper");
             }
             
             // extract the zip to where we need it
             try {
-                System.IO.Compression.ZipFile.ExtractToDirectory(zipOutput, Path.GetDirectoryName(dllLocation));
+                System.IO.Compression.ZipFile.ExtractToDirectory(zipOutputPath, finalPath);
             } catch (Exception e) {
                 Debug.LogError(e);
                 throw;
@@ -71,15 +73,10 @@ namespace Nomnom.UnityProjectPatcher.Editor {
 
             // clean up the files
             try {
-                File.Delete(zipOutput);
+                File.Delete(zipOutputPath);
             } catch (Exception e) {
                 Debug.LogError(e);
                 throw;
-            }
-            
-            // if the dll doesn't exist, the zip may have been incomplete?
-            if (!File.Exists(dllLocation)) {
-                throw new Exception("Failed to extract AssetRipper DLL");
             }
         }
         
