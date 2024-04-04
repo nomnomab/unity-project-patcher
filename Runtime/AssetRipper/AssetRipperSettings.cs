@@ -35,6 +35,7 @@ namespace Nomnom.UnityProjectPatcher.AssetRipper {
     public struct Import {
         [JsonProperty("ScriptContentLevel")]
         [DefaultValue(ScriptContentLevel.Level2)]
+        [Tooltip("Level0: Scripts are not loaded.\n\nLevel1: Methods are stubbed during processing.\n\nLevel2: This level is the default. It has full methods for Mono games and empty methods for IL2Cpp games.")]
         public ScriptContentLevel scriptContentLevel;
 
         [JsonProperty("StreamingAssetsMode")]
@@ -45,6 +46,7 @@ namespace Nomnom.UnityProjectPatcher.AssetRipper {
         public DefaultVersion defaultVersion;
 
         [JsonProperty("BundledAssetsExportMode")]
+        [Tooltip("GroupByAssetType: Bundled assets are treated the same as assets from other files.\n\nGroupByBundleName: Bundled assets are grouped by their asset bundle name.\n\nDirectExport: Bundled assets are exported without grouping.")]
         public BundledAssetsExportMode bundledAssetsExportMode;
     }
 
@@ -66,16 +68,20 @@ namespace Nomnom.UnityProjectPatcher.AssetRipper {
     public struct Export {
         [JsonProperty("AudioExportFormat")]
         [DefaultValue(AudioExportFormat.Default)]
+        [Tooltip("Yaml: Export as a yaml asset and resS file. This is a safe option and is the backup when things go wrong.\n\nNative: For advanced users. This exports in a native format, usually FSB (FMOD Sound Bank). FSB files cannot be used in Unity Editor.\n\nDefault: This is the recommended option. Audio assets are exported in the compression of the source, usually OGG.\n\nPreferWav: Not advised if rebundling. This converts audio to the WAV format when possible")]
         public AudioExportFormat audioExportFormat;
 
         [JsonProperty("ImageExportFormat")]
         [DefaultValue(ImageExportFormat.Png)]
+        [Tooltip("Bmp: Lossless. Bitmap\n\nExr: Lossless. OpenEXR\n\nHdr: Lossless. Radiance HDR\n\nJpeg: Lossy. Joint Photographic Experts Group\n\nPng: Lossless. Portable Network Graphics\n\nTga: Lossless. Truevision TGA")]
         public ImageExportFormat imageExportFormat;
 
         [JsonProperty("MeshExportFormat")]
+        [Tooltip("Native: A robust format for using meshes in the editor. Can be converted to other formats by a variety of unity packages.\n\nGlb: An opensource alternative to FBX. It is the binary version of GLTF. Unity does not support importing this format.")]
         public MeshExportFormat meshExportFormat;
 
         [JsonProperty("ScriptExportMode")]
+        [Tooltip("Decompiled: Use the ILSpy decompiler to generate CS scripts. This is reliable. However, it's also time-consuming and contains many compile errors.\n\nHybrid: Special assemblies, such as Assembly-CSharp, are decompiled to CS scripts with the ILSpy decompiler. Other assemblies are saved as DLL files.\n\nDllExportWithRenaming: Special assemblies, such as Assembly-CSharp, are renamed to have compatible names.\n\nDllExportWithoutRenaming: Export assemblies in their compiled Dll form. Experimental. Might not work at all.")]
         public ScriptExportMode scriptExportMode;
 
         [JsonProperty("ScriptLanguageVersion")]
@@ -83,16 +89,20 @@ namespace Nomnom.UnityProjectPatcher.AssetRipper {
         public ScriptLanguageVersion scriptLanguageVersion;
 
         [JsonProperty("ShaderExportMode")]
+        [Tooltip("Dummy: Export as dummy shaders which compile in the editor\n\nYaml: Export as yaml assets which can be viewed in the editor\n\nDisassembly: Export as disassembly which does not compile in the editor\n\nDecompile: Export as decompiled hlsl (unstable!)")]
         public ShaderExportMode shaderExportMode;
 
         [JsonProperty("SpriteExportMode")]
+        [Tooltip("Yaml: Export as yaml assets which can be viewed in the editor.\n\nNative: Export in the native asset format, where all sprites data are stored in texture importer settings.\n\nTexture2D: Export as a Texture2D png image")]
         public SpriteExportMode spriteExportMode;
 
         [JsonProperty("TerrainExportMode")]
+        [Tooltip("Yaml: The default export mode. This is the only one that exports in a format Unity can use for terrains.\n\nMesh: This converts the terrain data into a mesh. Unity cannot import this.\n\nHeatmap: A heatmap of the terrain height. Probably not usable for anything but a visual representation.")]
         public TerrainExportMode terrainExportMode;
 
         [JsonProperty("TextExportMode")]
         [DefaultValue(TextExportMode.Parse)]
+        [Tooltip("Bytes: Export as bytes\n\nTxt: Export as plain text files\n\nParse: Export as plain text files, but try to guess the file extension")]
         public TextExportMode textExportMode;
 
         [JsonProperty("SaveSettingsToDisk")]
