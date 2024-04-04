@@ -1,6 +1,6 @@
 {
   "name": "com.nomnom.unity-project-patcher.Runtime",
-  "rootNamespace": "",
+  "rootNamespace": "Nomnom.UnityProjectPatcher",
   "references": [],
   "includePlatforms": [],
   "excludePlatforms": [],

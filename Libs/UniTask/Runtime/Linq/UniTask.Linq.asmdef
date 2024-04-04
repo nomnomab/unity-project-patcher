@@ -1,12 +1,9 @@
 {
-    "name": "com.nomnom.unity-project-patcher.Editor",
-    "rootNamespace": "Nomnom.UnityProjectPatcher.Editor",
+    "name": "UniTask.Linq",
     "references": [
-        "GUID:f51ebe6a0ceec4240a699833d6309b23"
+        "UniTask"
     ],
-    "includePlatforms": [
-        "Editor"
-    ],
+    "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,
