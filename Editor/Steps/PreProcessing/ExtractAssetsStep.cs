@@ -2,7 +2,7 @@
 
 namespace Nomnom.UnityProjectPatcher.Editor.Steps.PreProcessing {
     public class ExtractAssetsStep: IPatcherStep {
-        public UniTask<StepResult> TryPatch() {
+        public UniTask<StepResult> Run() {
             throw new System.NotImplementedException();
         }
     }

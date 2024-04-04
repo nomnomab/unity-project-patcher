@@ -19,7 +19,7 @@ namespace Nomnom.UnityProjectPatcher.Editor {
             foreach (var step in allSteps) {
                 StepResult result;
                 try {
-                    result = await step.TryPatch();
+                    result = await step.Run();
                 } catch (System.Exception) {
                     result = StepResult.Failure;
                 }
