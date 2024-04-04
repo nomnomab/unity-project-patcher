@@ -29,6 +29,10 @@ namespace Nomnom.UnityProjectPatcher.AssetRipper {
             scriptLanguageVersion = ScriptLanguageVersion.AutoSafe,
             textExportMode = TextExportMode.Parse
         };
+
+        public string ToJson() {
+            return JsonConvert.SerializeObject(this, Formatting.Indented);
+        }
     }
 
     [Serializable]
