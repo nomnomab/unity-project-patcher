@@ -1,10 +1,7 @@
 {
-    "name": "com.nomnom.unity-project-patcher.Runtime",
-    "rootNamespace": "Nomnom.UnityProjectPatcher",
-    "references": [
-        "GUID:d525ad6bd40672747bde77962f1c401e",
-        "GUID:febaf25a60dafbd44941357b21678606"
-    ],
+    "name": "EditorAttributes",
+    "rootNamespace": "EditorAttributes",
+    "references": [],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

@@ -1,0 +1,36 @@
+{
+	"name": "com.v0lt.editor-attributes",
+	"version": "2.1.1",
+	"displayName": "EditorAttributes",
+	"description": "EditorAttributes is a unity package that adds some extra editor attributes to your project to easly customize your editors without having to write any editor code.",
+	"changelogUrl": "https://editorattributesdocs.readthedocs.io/en/latest/changelogs.html",
+	"documentationUrl": "https://editorattributesdocs.readthedocs.io/",
+	
+	"dependencies": 
+	{
+		"com.unity.nuget.newtonsoft-json": "3.2.1"
+	},
+	
+	"keywords": 
+	[
+		"editor",
+		"editor-attributes",
+		"attributes"
+	],
+	
+	"samples": 
+	[
+		{
+			"displayName": "AttributesSamples",
+			"description": "Provides a sample scene with components on empty gameobjects showing how all attributes work",
+			"path": "Samples~"
+		}
+	],
+	
+	"author": 
+	{
+		"name": "v0lt",
+		"email": "v0lt130852@gmail.com",
+		"url": ""
+	}
+}
