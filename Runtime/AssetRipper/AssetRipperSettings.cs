@@ -5,18 +5,21 @@ using System.Linq;
 using EditorAttributes;
 using Newtonsoft.Json;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Nomnom.UnityProjectPatcher.AssetRipper {
     [CreateAssetMenu(fileName = "AssetRipperSettings", menuName = "Unity Project Patcher/AssetRipper Settings")]
     public class AssetRipperSettings : ScriptableObject {
-        public string? AssetRipperPath => _assetRipperPath;
-        public string AssetRipperOutputPath => _assetRipperOutputPath;
+        public string? FolderPath => _folderPath;
+        public string? ExePath => Path.Combine(_folderPath, "AssetRipper.Tools.SystemTester.exe");
+        public string? OutputFolderPath => _outputFolderPath;
+        public string? ConfigPath => Path.Combine(FolderPath, "AssetRipper.Settings.json");
         
         [SerializeField, FolderPath(getRelativePath: false)]
-        private string? _assetRipperPath = Path.GetFullPath(Path.Combine("..", "AssetRipper"));
+        private string? _folderPath = Path.GetFullPath("AssetRipper");
         
         [SerializeField, FolderPath(getRelativePath: false)]
-        private string? _assetRipperOutputPath = Path.GetFullPath(Path.Combine("..", "AssetRipperOutput"));
+        private string? _outputFolderPath = Path.GetFullPath("AssetRipperOutput");
         
         [SerializeField]
         private FolderMapping[] _folderMappings = new[] {
@@ -64,6 +67,16 @@ namespace Nomnom.UnityProjectPatcher.AssetRipper {
 
         public string ToJson() {
             return JsonConvert.SerializeObject(_configurationData, Formatting.Indented);
+        }
+
+        public void SaveToConfig() {
+            var json = ToJson();
+            
+            if (!Directory.Exists(FolderPath)) {
+                Directory.CreateDirectory(FolderPath);
+            }
+            
+            File.WriteAllText(ConfigPath, json);
         }
     }
 

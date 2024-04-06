@@ -1,7 +1,10 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using Cysharp.Threading.Tasks;
 using Nomnom.UnityProjectPatcher.Editor.Steps;
 using Nomnom.UnityProjectPatcher.Editor.Steps.PreProcessing;
+using UnityEditor;
+using UnityEngine;
 
 namespace Nomnom.UnityProjectPatcher.Editor {
     /// <summary>
@@ -13,6 +16,20 @@ namespace Nomnom.UnityProjectPatcher.Editor {
             new ExtractAssetsStep(),
             new CopyGameDLLsStep(),
         };
+
+        [MenuItem("Tools/Test Asset Ripper")]
+        public static async UniTaskVoid RunTest() {
+            var assetRipper = new AssetRipper();
+            StepResult result = StepResult.Failure;
+            try {
+                result = await assetRipper.Run();
+            } catch (Exception e) {
+                Debug.LogException(e);
+                result = StepResult.Failure;
+            }
+            
+            Debug.Log($"Result: {result}");
+        }
         
         public static async UniTask Run() {
             // todo: determine which step to start on
