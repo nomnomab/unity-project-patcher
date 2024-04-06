@@ -1,38 +1,93 @@
 ﻿using System;
 using System.ComponentModel;
+using System.IO;
+using System.Linq;
+using EditorAttributes;
 using Newtonsoft.Json;
 using UnityEngine;
 
 namespace Nomnom.UnityProjectPatcher.AssetRipper {
     [CreateAssetMenu(fileName = "AssetRipperSettings", menuName = "Unity Project Patcher/AssetRipper Settings")]
     public class AssetRipperSettings : ScriptableObject {
-        public Import import => _import;
-        public Processing processing => _processing;
-        public Export export => _export;
+        public string? AssetRipperPath => _assetRipperPath;
+        public string AssetRipperOutputPath => _assetRipperOutputPath;
         
+        [SerializeField, FolderPath(getRelativePath: false)]
+        private string? _assetRipperPath = Path.GetFullPath(Path.Combine("..", "AssetRipper"));
+        
+        [SerializeField, FolderPath(getRelativePath: false)]
+        private string? _assetRipperOutputPath = Path.GetFullPath(Path.Combine("..", "AssetRipperOutput"));
+        
+        [SerializeField]
+        private FolderMapping[] _folderMappings = new[] {
+            new FolderMapping(DefaultFolderMapping.AnimationClipKey, DefaultFolderMapping.AnimationClipOutput),
+            new FolderMapping(DefaultFolderMapping.AnimatorControllerKey, DefaultFolderMapping.AnimatorControllerOutput),
+            new FolderMapping(DefaultFolderMapping.AudioClipKey, DefaultFolderMapping.AudioClipOutput),
+            new FolderMapping(DefaultFolderMapping.AudioMixerControllerKey, DefaultFolderMapping.AudioMixerControllerOutput),
+            new FolderMapping(DefaultFolderMapping.FontKey, DefaultFolderMapping.FontOutput),
+            new FolderMapping(DefaultFolderMapping.LightingSettingsKey, DefaultFolderMapping.LightingSettingsOutput),
+            new FolderMapping(DefaultFolderMapping.MaterialKey, DefaultFolderMapping.MaterialOutput),
+            new FolderMapping(DefaultFolderMapping.MeshKey, DefaultFolderMapping.MeshOutput),
+            new FolderMapping(DefaultFolderMapping.PrefabInstanceKey, DefaultFolderMapping.PrefabInstanceOutput),
+            new FolderMapping(DefaultFolderMapping.PhysicsMaterialKey, DefaultFolderMapping.PhysicsMaterialOutput),
+            new FolderMapping(DefaultFolderMapping.ResourcesKey, DefaultFolderMapping.ResourcesOutput),
+            new FolderMapping(DefaultFolderMapping.SettingsKey, DefaultFolderMapping.SettingsOutput),
+            new FolderMapping(DefaultFolderMapping.ScenesKey, DefaultFolderMapping.ScenesOutput),
+            new FolderMapping(DefaultFolderMapping.MonoBehaviourKey, DefaultFolderMapping.MonoBehaviourOutput),
+            new FolderMapping(DefaultFolderMapping.NavMeshDataKey, DefaultFolderMapping.NavMeshDataOutput),
+            new FolderMapping(DefaultFolderMapping.CubemapKey, DefaultFolderMapping.CubemapOutput),
+            new FolderMapping(DefaultFolderMapping.TerrainDataKey, DefaultFolderMapping.TerrainDataOutput),
+            new FolderMapping(DefaultFolderMapping.ShaderKey, DefaultFolderMapping.ShaderOutput),
+            new FolderMapping(DefaultFolderMapping.ScriptsKey, DefaultFolderMapping.ScriptsOutput),
+            new FolderMapping(DefaultFolderMapping.Texture2DKey, DefaultFolderMapping.Texture2DOutput),
+            new FolderMapping(DefaultFolderMapping.Texture3DKey, DefaultFolderMapping.Texture3DOutput),
+            new FolderMapping(DefaultFolderMapping.RenderTextureKey, DefaultFolderMapping.RenderTextureOutput),
+            new FolderMapping(DefaultFolderMapping.TerrainLayerKey, DefaultFolderMapping.TerrainLayerOutput),
+            new FolderMapping(DefaultFolderMapping.SpriteKey, DefaultFolderMapping.SpriteOutput),
+            new FolderMapping(DefaultFolderMapping.VideoClipKey, DefaultFolderMapping.VideoClipOutput),
+        }.OrderBy(x => x.sourceName).ToArray();
+
+        [SerializeField]
+        private AssetRipperJsonData _configurationData = new();
+        
+        public bool TryGetFolderMapping(string key, out string? folder, string? fallbackPath = null) {
+            foreach (var mapping in _folderMappings) {
+                if (mapping.sourceName.Equals(key, StringComparison.OrdinalIgnoreCase)) {
+                    folder = mapping.outputPath;
+                    return true;
+                }
+            }
+
+            folder = fallbackPath;
+            return false;
+        }
+
+        public string ToJson() {
+            return JsonConvert.SerializeObject(_configurationData, Formatting.Indented);
+        }
+    }
+
+    [Serializable]
+    public class AssetRipperJsonData {
         [SerializeField] 
-        private Import _import = new Import {
+        public Import Import = new Import {
             scriptContentLevel = ScriptContentLevel.Level2,
             streamingAssetsMode = StreamingAssetsMode.Extract,
         };
         
         [SerializeField] 
-        private Processing _processing = new Processing {
+        public Processing Processing = new Processing {
             enableStaticMeshSeparation = true,
             enableAssetDeduplication = true
         };
         
         [SerializeField] 
-        private Export _export = new Export {
+        public Export Export = new Export {
             audioExportFormat = AudioExportFormat.Default,
             imageExportFormat = ImageExportFormat.Png,
             scriptLanguageVersion = ScriptLanguageVersion.AutoSafe,
             textExportMode = TextExportMode.Parse
         };
-
-        public string ToJson() {
-            return JsonConvert.SerializeObject(this, Formatting.Indented);
-        }
     }
 
     [Serializable]
@@ -46,7 +101,7 @@ namespace Nomnom.UnityProjectPatcher.AssetRipper {
         [DefaultValue(StreamingAssetsMode.Extract)]
         public StreamingAssetsMode streamingAssetsMode;
 
-        [JsonProperty("DefaultVersion")]
+        [JsonProperty("DefaultVersion"), HideInInspector]
         public DefaultVersion defaultVersion;
 
         [JsonProperty("BundledAssetsExportMode")]

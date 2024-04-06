@@ -8,9 +8,15 @@ using UnityEngine;
 namespace Nomnom.UnityProjectPatcher.Editor {
     public readonly struct AssetRipper: IPatcherStep {
         public async UniTask<StepResult> Run() {
-            var assetRipperExePath = ""; // where asset ripper exe is
-            var inputPath = ""; // where game is
-            var outputPath = ""; // where the files will end up
+            var settings = this.GetSettings();
+            var arSettings = this.GetAssetRipperSettings();
+            
+            // where asset ripper exe is
+            var assetRipperExePath = arSettings.AssetRipperPath; 
+            // where game is
+            var inputPath = settings.GamePath;
+            // where the files will end up
+            var outputPath = arSettings.AssetRipperOutputPath;
 
             // clear the previous output
             if (Directory.Exists(outputPath)) {
