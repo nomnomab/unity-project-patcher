@@ -7,6 +7,11 @@ using UnityEditor;
 using UnityEngine;
 
 namespace Nomnom.UnityProjectPatcher.Editor {
+    /// <summary>
+    /// The core to run AssetRipper through.
+    /// <br/><br/>
+    /// Automatically handles downloading and running AssetRipper.
+    /// </summary>
     public readonly struct AssetRipper: IPatcherStep {
         public async UniTask<StepResult> Run() {
             var settings = this.GetSettings();
@@ -63,7 +68,7 @@ namespace Nomnom.UnityProjectPatcher.Editor {
 
         private async UniTask DownloadAssetRipper(AssetRipperSettings arSettings) {
             // const string dllUrl = "https://github.com/nomnomab/AssetRipper/releases/download/v1.0.0/AssetRipper.SourceGenerated.dll.zip";
-            const string buildUrl = @"";
+            const string buildUrl = @"file:\\C:\Users\nomno\Documents\Github\AssetRipper\Source\0Bins\AssetRipper.Tools.SystemTester\Release\Release.zip";
 
             var finalPath = arSettings.FolderPath;
             var exePath = arSettings.ExePath;
