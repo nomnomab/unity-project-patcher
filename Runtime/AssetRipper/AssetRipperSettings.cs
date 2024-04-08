@@ -5,7 +5,6 @@ using System.Linq;
 using EditorAttributes;
 using Newtonsoft.Json;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace Nomnom.UnityProjectPatcher.AssetRipper {
     [CreateAssetMenu(fileName = "AssetRipperSettings", menuName = "Unity Project Patcher/AssetRipper Settings")]

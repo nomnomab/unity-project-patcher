@@ -3,13 +3,16 @@
     "rootNamespace": "Nomnom.UnityProjectPatcher",
     "references": [
         "GUID:d525ad6bd40672747bde77962f1c401e",
-        "GUID:febaf25a60dafbd44941357b21678606"
+        "GUID:febaf25a60dafbd44941357b21678606",
+        "GUID:f51ebe6a0ceec4240a699833d6309b23"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,
-    "precompiledReferences": [],
+    "precompiledReferences": [
+        "Quickenshtein.dll"
+    ],
     "autoReferenced": true,
     "defineConstraints": [],
     "versionDefines": [],

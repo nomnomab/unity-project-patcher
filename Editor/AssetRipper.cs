@@ -25,6 +25,26 @@ namespace Nomnom.UnityProjectPatcher.Editor {
             var outputPath = arSettings.OutputFolderPath;
             // where the config is to determine what ar will do
             var configPath = arSettings.ConfigPath;
+            
+            if (assetRipperExePath is null) {
+                Debug.LogError("AssetRipper exe path was null");
+                return StepResult.Failure;
+            }
+            
+            if (inputPath is null) {
+                Debug.LogError("Input path was null");
+                return StepResult.Failure;
+            }
+            
+            if (outputPath is null) {
+                Debug.LogError("Output path was null");
+                return StepResult.Failure;
+            }
+            
+            if (configPath is null) {
+                Debug.LogError("Config path was null");
+                return StepResult.Failure;
+            }
 
             arSettings.SaveToConfig();
 
@@ -72,6 +92,17 @@ namespace Nomnom.UnityProjectPatcher.Editor {
 
             var finalPath = arSettings.FolderPath;
             var exePath = arSettings.ExePath;
+
+            if (finalPath is null) {
+                Debug.LogError("Final path was null");
+                return;
+            }
+            
+            if (exePath is null) {
+                Debug.LogError("Exe path was null");
+                return;
+            }
+            
             if (Directory.Exists(finalPath) && File.Exists(exePath)) {
                 return;
             }
@@ -103,7 +134,7 @@ namespace Nomnom.UnityProjectPatcher.Editor {
             try {
                 System.IO.Compression.ZipFile.ExtractToDirectory(zipOutputPath, finalPath);
             } catch (Exception e) {
-                Debug.LogError($"Failed to extract \"{zipOutputPath}\" to \"{finalPath}\"");
+                Debug.LogError($"Failed to extract \"{zipOutputPath}\" to \"{finalPath}\":\n{e}");
                 throw;
             }
             finally {
@@ -111,13 +142,13 @@ namespace Nomnom.UnityProjectPatcher.Editor {
                 try {
                     File.Delete(zipOutputPath);
                 } catch (Exception e) {
-                    Debug.LogError($"Failed to delete \"{zipOutputPath}\"");
+                    Debug.LogError($"Failed to delete \"{zipOutputPath}\":\n{e}");
                     throw;
                 }
             }
         }
         
-        private async UniTask RunAssetRipper(string assetRipperExePath, string inputPath, string outputPath, string settingsPath) {
+        private UniTask RunAssetRipper(string assetRipperExePath, string inputPath, string outputPath, string settingsPath) {
             Debug.Log($"Running AssetRipper at \"{assetRipperExePath}\" with \"{inputPath}\" and outputting into \"{outputPath}\"");
             Debug.Log($"Using data folder at \"{inputPath}\"");
             Debug.Log($"Outputting ripped assets at \"{outputPath}\"");
@@ -143,6 +174,8 @@ namespace Nomnom.UnityProjectPatcher.Editor {
                 var totalExports = 5624f;
                 while (!process.StandardOutput.EndOfStream) {
                     var line = process.StandardOutput.ReadLine();
+                    if (line is null) continue;
+                    
                     Debug.Log($"[AssetRipper] <i>{line}</i>");
                     
                     //? time estimation of three minutes
@@ -169,6 +202,8 @@ namespace Nomnom.UnityProjectPatcher.Editor {
                 Debug.LogError($"Error running AssetRipper: {e}");
                 throw;
             }
+            
+            return UniTask.CompletedTask;
         }
     }
 }

@@ -3,7 +3,8 @@
     "rootNamespace": "Nomnom.UnityProjectPatcher.Editor",
     "references": [
         "GUID:f51ebe6a0ceec4240a699833d6309b23",
-        "GUID:d622a80a03e90ec48afe2a9c4bacce98"
+        "GUID:d622a80a03e90ec48afe2a9c4bacce98",
+        "GUID:febaf25a60dafbd44941357b21678606"
     ],
     "includePlatforms": [
         "Editor"
