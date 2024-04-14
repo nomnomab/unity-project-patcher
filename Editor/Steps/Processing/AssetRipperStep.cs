@@ -2,17 +2,16 @@
 using System.IO;
 using Cysharp.Threading.Tasks;
 using Nomnom.UnityProjectPatcher.AssetRipper;
-using Nomnom.UnityProjectPatcher.Editor.Steps;
 using UnityEditor;
 using UnityEngine;
 
-namespace Nomnom.UnityProjectPatcher.Editor {
+namespace Nomnom.UnityProjectPatcher.Editor.Steps {
     /// <summary>
     /// The core to run AssetRipper through.
     /// <br/><br/>
     /// Automatically handles downloading and running AssetRipper.
     /// </summary>
-    public readonly struct AssetRipper: IPatcherStep {
+    public readonly struct AssetRipperStep: IPatcherStep {
         public async UniTask<StepResult> Run() {
             var settings = this.GetSettings();
             var arSettings = this.GetAssetRipperSettings();

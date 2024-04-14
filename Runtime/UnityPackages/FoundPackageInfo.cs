@@ -25,6 +25,29 @@ namespace Nomnom.UnityProjectPatcher.UnityPackages {
             this.matchType = matchType;
         }
 #endif
+
+        public override string ToString() {
+            return $"{name}@{version}";
+        }
+    }
+    
+    [Serializable]
+    public struct GitPackageInfo {
+        [ReadOnly] public string name;
+        [ReadOnly] public string version;
+        
+        public GitPackageInfo(string name, string version) {
+            this.name = name;
+            this.version = version;
+        }
+
+        public override string ToString() {
+            if (string.IsNullOrEmpty(version)) {
+                return name;
+            }
+            
+            return $"{name}#{version}";
+        }
     }
     
     [Serializable]

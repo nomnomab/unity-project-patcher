@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Linq;
 using Cysharp.Threading.Tasks;
 using Nomnom.UnityProjectPatcher.Editor.Steps;
-using Nomnom.UnityProjectPatcher.Editor.Steps.PreProcessing;
 using UnityEditor;
 using UnityEngine;
 
@@ -11,15 +9,11 @@ namespace Nomnom.UnityProjectPatcher.Editor {
     /// The core of the patcher. Executes various steps in sequence.
     /// </summary>
     public static class PatcherSteps {
-        private readonly static IPatcherStep[] _defaultSteps = {
-            new ExtractProjectInformationStep(),
-            new ExtractAssetsStep(),
-            new CopyGameDLLsStep(),
-        };
+        private readonly static IPatcherStep[] _defaultSteps = { };
 
         [MenuItem("Tools/Test Asset Ripper")]
         public static async UniTaskVoid RunTest() {
-            var assetRipper = new AssetRipper();
+            var assetRipper = new AssetRipperStep();
             StepResult result = StepResult.Failure;
             try {
                 result = await assetRipper.Run();

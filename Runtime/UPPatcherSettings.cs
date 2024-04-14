@@ -18,6 +18,8 @@ namespace Nomnom.UnityProjectPatcher {
         public string? GameVersion => _gameVersion;
         
         public IReadOnlyCollection<string> IgnoredDllPrefixes => _ignoredDllPrefixes;
+        public IReadOnlyCollection<FoundPackageInfo> ExactPackagesFound => _exactPackagesFound;
+        public IReadOnlyCollection<GitPackageInfo> GitPackages => _gitPackages;
 
         [SerializeField, FolderPath(getRelativePath: false)]
         private string? _gameFolderPath;
@@ -38,6 +40,7 @@ namespace Nomnom.UnityProjectPatcher {
         [SerializeField] private List<FoundPackageInfo> _exactPackagesFound = new();
         [SerializeField] private List<FoundPackageInfo> _possiblePackagesFound = new();
         [SerializeField] private List<FoundPackageInfo> _improbablePackagesFound = new();
+        [SerializeField] private List<GitPackageInfo> _gitPackages = new();
 
         private void GetGameName() {
             if (GameFolderPath is null) {
