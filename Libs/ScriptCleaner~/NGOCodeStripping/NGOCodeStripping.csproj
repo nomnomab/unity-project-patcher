@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>netstandard2.1</TargetFramework>
+        <ImplicitUsings>false</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <LangVersion>9</LangVersion>
+        <AssemblyName>Nomnom.NGOCodeStripping</AssemblyName>
+        <RootNamespace>Nomnom</RootNamespace>
+        <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    </PropertyGroup>
+    <ItemGroup>
+      <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.8.0" />
+    </ItemGroup>
+    
+    <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+        <Copy SourceFiles="$(TargetDir)$(AssemblyName).dll" DestinationFolder="$(SolutionDir)..\Plugins" />
+        <Copy SourceFiles="$(TargetDir)$(AssemblyName).pdb" DestinationFolder="$(SolutionDir)..\Plugins" />
+        <Copy SourceFiles="$(TargetDir)Microsoft.CodeAnalysis.dll" DestinationFolder="$(SolutionDir)..\Plugins" />
+        <Copy SourceFiles="$(TargetDir)Microsoft.CodeAnalysis.CSharp.dll" DestinationFolder="$(SolutionDir)..\Plugins" />
+        <Copy SourceFiles="$(TargetDir)System.Buffers.dll" DestinationFolder="$(SolutionDir)..\Plugins" />
+        <Copy SourceFiles="$(TargetDir)System.Memory.dll" DestinationFolder="$(SolutionDir)..\Plugins" />
+        <Copy SourceFiles="$(TargetDir)System.Collections.Immutable.dll" DestinationFolder="$(SolutionDir)..\Plugins" />
+        <Copy SourceFiles="$(TargetDir)System.Numerics.Vectors.dll" DestinationFolder="$(SolutionDir)..\Plugins" />
+        <Copy SourceFiles="$(TargetDir)System.Reflection.Metadata.dll" DestinationFolder="$(SolutionDir)..\Plugins" />
+        <Copy SourceFiles="$(TargetDir)System.Runtime.CompilerServices.Unsafe.dll" DestinationFolder="$(SolutionDir)..\Plugins" />
+        <Copy SourceFiles="$(TargetDir)System.Text.Encoding.CodePages.dll" DestinationFolder="$(SolutionDir)..\Plugins" />
+        <Copy SourceFiles="$(TargetDir)System.Threading.Tasks.Extensions.dll" DestinationFolder="$(SolutionDir)..\Plugins" />
+    </Target>
+</Project>

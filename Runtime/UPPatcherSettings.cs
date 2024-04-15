@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using EditorAttributes;
@@ -9,13 +10,21 @@ using Debug = UnityEngine.Debug;
 namespace Nomnom.UnityProjectPatcher {
     [CreateAssetMenu(fileName = "UnityProjectPatcherSettings", menuName = "Unity Project Patcher/Settings")]
     public partial class UPPatcherSettings : ScriptableObject {
-        public string? GameFolderPath => _gameFolderPath;
-        public string? GameExePath => Path.Combine(GameFolderPath, $"{_gameName}.exe");
-        public string? GameDataPath => Path.Combine(GameFolderPath, $"{_gameName}_Data");
-        public string? GameManagedPath => Path.Combine(GameDataPath, "Managed");
+        public string GameFolderPath => _gameFolderPath ?? throw new NullReferenceException(nameof(GameFolderPath));
+        public string GameExePath => Path.Combine(GameFolderPath, $"{GameName}.exe");
+        public string GameDataPath => Path.Combine(GameFolderPath, $"{GameName}_Data");
+        public string GameManagedPath => Path.Combine(GameDataPath, "Managed");
         
-        public string? GameName => _gameName;
-        public string? GameVersion => _gameVersion;
+        public string ProjectUnityPath => Path.Combine(Application.dataPath, "Unity");
+        public string ProjectUnityAssetStorePath => Path.Combine(Application.dataPath, "AssetStore");
+        
+        public string ProjectGamePath => Path.Combine(Application.dataPath, GameName.Replace(" ", string.Empty));
+        public string ProjectGameAssetsPath => Path.Combine(ProjectGamePath, "Game");
+        public string ProjectGameModsPath => Path.Combine(ProjectGamePath, "Mods");
+        public string ProjectGameToolsPath => Path.Combine(ProjectGamePath, "Tools");
+        
+        public string GameName => _gameName ?? throw new NullReferenceException(nameof(GameName));
+        public string GameVersion => _gameVersion ?? throw new NullReferenceException(nameof(GameVersion));
         
         public IReadOnlyCollection<string> IgnoredDllPrefixes => _ignoredDllPrefixes;
         public IReadOnlyCollection<FoundPackageInfo> ExactPackagesFound => _exactPackagesFound;
