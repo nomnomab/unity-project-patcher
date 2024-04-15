@@ -17,7 +17,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
     /// If that misses some packages, then this will manually define them
     /// in the manifest file.
     /// </summary>
-    public readonly struct PackagesInstaller: IPatcherStep {
+    public readonly struct PackagesInstallerStep: IPatcherStep {
         public UniTask<StepResult> Run() {
             var settings = this.GetSettings();
             var packages = settings.ExactPackagesFound;

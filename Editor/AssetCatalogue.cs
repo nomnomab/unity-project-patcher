@@ -10,16 +10,16 @@ namespace Nomnom.UnityProjectPatcher.Editor {
     /// </summary>
     [Serializable]
     public class AssetCatalogue {
-        public readonly string RootPath;
+        public readonly string RootAssetsPath;
         public Entry[] Entries;
         
-        public AssetCatalogue(string rootPath, Entry[] entries) {
-            RootPath = rootPath;
+        public AssetCatalogue(string rootAssetsPath, Entry[] entries) {
+            RootAssetsPath = rootAssetsPath;
             Entries = entries;
         }
 
-        public AssetCatalogue(string rootPath, IEnumerable<Entry> entries) {
-            RootPath = rootPath;
+        public AssetCatalogue(string rootAssetsPath, IEnumerable<Entry> entries) {
+            RootAssetsPath = rootAssetsPath;
             Entries = entries.ToArray();
         }
         
@@ -46,8 +46,8 @@ namespace Nomnom.UnityProjectPatcher.Editor {
         
         public override string ToString() {
             var sb = new System.Text.StringBuilder();
-            sb.AppendLine($"Asset Catalogue of {Entries.Length} entries <i>(click for details)</i>");
-            sb.AppendLine($"<b>Root</b>: {RootPath}");
+            sb.AppendLine($"AssetCatalogue of {Entries.Length} entries <i>(click for details)</i>");
+            sb.AppendLine($"<b>\"Assets\" root</b>: {RootAssetsPath}");
             sb.AppendLine();
             
             // group by folder
