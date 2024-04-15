@@ -22,9 +22,12 @@ namespace Nomnom.UnityProjectPatcher {
         public string ProjectGameAssetsPath => Path.Combine(ProjectGamePath, "Game");
         public string ProjectGameModsPath => Path.Combine(ProjectGamePath, "Mods");
         public string ProjectGameToolsPath => Path.Combine(ProjectGamePath, "Tools");
+        public string ProjectGamePluginsPath => Path.Combine(ProjectGamePath, "Plugins");
         
         public string GameName => _gameName ?? throw new NullReferenceException(nameof(GameName));
         public string GameVersion => _gameVersion ?? throw new NullReferenceException(nameof(GameVersion));
+        
+        public IReadOnlyList<FolderMapping> DllsToCopy => _dllsToCopy;
         
         public IReadOnlyCollection<string> IgnoredDllPrefixes => _ignoredDllPrefixes;
         public IReadOnlyCollection<FoundPackageInfo> ExactPackagesFound => _exactPackagesFound;
@@ -38,6 +41,9 @@ namespace Nomnom.UnityProjectPatcher {
         
         [SerializeField, InlineButton(nameof(GetGameVersion), "Get", buttonWidth: 30)] 
         private string? _gameVersion = null;
+
+        [Header("Dlls")]
+        [SerializeField] private FolderMapping[] _dllsToCopy = Array.Empty<FolderMapping>();
 
         [Header("Packages")]
         [SerializeField] private string[] _ignoredDllPrefixes = new[] {
