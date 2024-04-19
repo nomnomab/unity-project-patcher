@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using Cysharp.Threading.Tasks;
@@ -21,34 +22,48 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
         public UniTask<StepResult> Run() {
             var settings = this.GetSettings();
             var packages = settings.ExactPackagesFound;
-            var gitPackages = settings.GitPackages;
+            // var gitPackages = settings.GitPackages;
 
-            var packageStrings = packages
-                .Select(x => x.ToString())
-                .Concat(gitPackages.Select(x => x.ToString()))
-                .ToArray();
+            // var packageStrings = packages
+            //     .Select(x => x.ToString())
+            //     .Concat(gitPackages.Select(x => x.ToString()))
+            //     .ToArray();
             
             EditorUtility.DisplayProgressBar("Installing packages", "Checking if packages are already installed", 0.25f);
             try {
                 var packageList = Client.List(false, false);
-                while (!packageList.IsCompleted) { }
+                while (true) {
+                    if (packageList.IsCompleted) break;
+                    if (packageList.Status == StatusCode.Failure && packageList.Error is { } error) {
+                        EditorUtility.ClearProgressBar();
+                        throw new Exception($"Failed to list packages! [{error.errorCode}] {error.message}");
+                    }
+                }
 
-                var missingPackages = packageStrings
-                    .Where(x => packageList.Result.All(y => y.name != x))
+                var missingPackages = packages
+                    .Where(x => packageList.Result.All(y => y.name != x.name))
+                    .Select(x => x.ToString())
                     .ToArray();
 
                 if (!missingPackages.Any()) {
                     return UniTask.FromResult(StepResult.Success);
                 }
-
+                
+                EditorUtility.DisplayDialog("Installing packages", $"The following packages are missing: {string.Join(", ", missingPackages)}", "OK");
                 EditorUtility.DisplayProgressBar("Installing packages", $"Installing {missingPackages.Length} package{(missingPackages.Length == 1 ? string.Empty : "s")}", 0.5f);
 
                 var request = Client.AddAndRemove(missingPackages);
-                while (!request.IsCompleted) { }
+                while (true) {
+                    if (request.IsCompleted) break;
+                    if (request.Status == StatusCode.Failure && request.Error is { } error) {
+                        EditorUtility.ClearProgressBar();
+                        throw new Exception($"Failed to list packages! [{error.errorCode}] {error.message}");
+                    }
+                }
 
                 Client.Resolve();
-                ManuallyResolveManifest();
                 
+                ManuallyResolveManifest();
                 EditorUtility.ClearProgressBar();
                 EditorUtility.RequestScriptReload();
             } catch {
@@ -59,14 +74,14 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                 EditorUtility.ClearProgressBar();
             }
             
-            return UniTask.FromResult(StepResult.Success);
+            return UniTask.FromResult(StepResult.RestartEditor);
         }
 
-        private void ManuallyResolveManifest() {
+        private bool ManuallyResolveManifest() {
             var manifestFile = Path.GetFullPath(Path.Combine("Packages", "manifest.json"));
             if (!File.Exists(manifestFile)) {
                 Debug.LogError($"Could not find {manifestFile}");
-                return;
+                return false;
             }
             
             var settings = this.GetSettings();
@@ -108,11 +123,13 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
             }
 
             if (!changed) {
-                return;
+                Debug.Log($"No changes to {manifestFile}");
+                return false;
             }
 
             var json = manifestJson.ToString(Formatting.Indented);
             File.WriteAllText(manifestFile, json);
+            return true;
         }
     }
 }

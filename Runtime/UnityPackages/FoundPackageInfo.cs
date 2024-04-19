@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Linq;
-using EditorAttributes;
 
 namespace Nomnom.UnityProjectPatcher.UnityPackages {
     [Serializable]
     public struct FoundPackageInfo {
-        [ReadOnly] public string name;
-        [ReadOnly] public string version;
-        [ReadOnly] public FoundDependencyInfo[]? dependencies;
-        [ReadOnly] public PackageMatchType matchType;
+        /*[ReadOnly]*/ public string name;
+        /*[ReadOnly]*/ public string version;
+        /*[ReadOnly]*/ public FoundDependencyInfo[]? dependencies;
+        /*[ReadOnly]*/ public PackageMatchType matchType;
         
         public FoundPackageInfo(string name, string version, FoundDependencyInfo[]? dependencies, PackageMatchType matchType) {
             this.name = name;
@@ -33,8 +32,8 @@ namespace Nomnom.UnityProjectPatcher.UnityPackages {
     
     [Serializable]
     public struct GitPackageInfo {
-        [ReadOnly] public string name;
-        [ReadOnly] public string version;
+        /*[ReadOnly]*/ public string name;
+        /*[ReadOnly]*/ public string version;
         
         public GitPackageInfo(string name, string version) {
             this.name = name;
@@ -52,8 +51,8 @@ namespace Nomnom.UnityProjectPatcher.UnityPackages {
     
     [Serializable]
     public struct FoundDependencyInfo {
-        [ReadOnly] public string name;
-        [ReadOnly] public string version;
+        /*[ReadOnly]*/ public string name;
+        /*[ReadOnly]*/ public string version;
         
         public FoundDependencyInfo(string name, string version) {
             this.name = name;
