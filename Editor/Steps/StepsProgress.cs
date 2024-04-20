@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
 using UnityEngine;
@@ -25,6 +26,42 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
             
             var json = File.ReadAllText(path);
             return JsonConvert.DeserializeObject<StepsProgress>(json) ?? null;
+        }
+
+        public bool GetCompletion(IPatcherStep[] steps, out int stepIndex) {
+            stepIndex = 0;
+            
+            // make sure steps are the same
+            if (Steps.Count != steps.Length) {
+                throw new Exception("Steps are not the same length");
+            }
+                
+            for (int i = 0; i < steps.Length; i++) {
+                var step = steps[i];
+                if (step.GetType().FullName != Steps[i]) {
+                    throw new Exception("Steps do not match");
+                }
+            }
+
+            if (CompletedSteps.Count > steps.Length) {
+                throw new Exception("Steps are of an invalid completion length");
+            }
+                
+            for (int i = 0; i < CompletedSteps.Count; i++) {
+                var step = steps[i];
+                if (step.GetType().FullName == CompletedSteps[i]) {
+                    stepIndex++;
+                }
+            }
+
+            if (LastResult != StepResult.RestartEditor) {
+                Debug.Log("Clearing previous progress");
+                stepIndex = 0;
+                return false;
+            }
+
+            var isComplete = stepIndex >= steps.Length;
+            return isComplete;
         }
     }
 }

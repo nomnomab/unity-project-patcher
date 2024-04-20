@@ -175,7 +175,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                     var line = process.StandardOutput.ReadLine();
                     if (line is null) continue;
                     
-                    Debug.Log($"[AssetRipper] <i>{line}</i>");
+                    // Debug.Log($"[AssetRipper] <i>{line}</i>");
                     
                     //? time estimation of three minutes
                     if (line.Contains("Exporting", StringComparison.OrdinalIgnoreCase)) {

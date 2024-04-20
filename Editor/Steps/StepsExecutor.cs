@@ -22,44 +22,14 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
             };
         }
 
-        public async UniTask Execute() {
+        public async UniTask<bool> Execute() {
             var stepIndex = 0;
             
             try {
                 var stepsProgress = StepsProgress.FromPath(StepsProgress.SavePath);
-                if (stepsProgress is not null) {
-                    // make sure steps are the same
-                    if (stepsProgress.Steps.Count != steps.Length) {
-                        throw new Exception("Steps are not the same length");
-                    }
-                
-                    for (int i = 0; i < steps.Length; i++) {
-                        var step = steps[i];
-                        if (step.GetType().FullName != stepsProgress.Steps[i]) {
-                            throw new Exception("Steps do not match");
-                        }
-                    }
-
-                    if (stepsProgress.CompletedSteps.Count > steps.Length) {
-                        throw new Exception("Steps are of an invalid completion length");
-                    }
-                
-                    for (int i = 0; i < stepsProgress.CompletedSteps.Count; i++) {
-                        var step = steps[i];
-                        if (step.GetType().FullName == stepsProgress.CompletedSteps[i]) {
-                            stepIndex++;
-                        }
-                    }
-
-                    if (stepsProgress.LastResult != StepResult.RestartEditor) {
-                        Debug.Log("Clearing previous progress");
-                        ClearProgress();
-                        stepIndex = 0;
-                    }
-
+                if (stepsProgress is not null && stepsProgress.GetCompletion(steps, out stepIndex)) {
                     Debug.Log($"Completed {stepIndex} steps out of {steps.Length}");
                 }
-                
             } catch {
                 Debug.LogError("Failed to read steps progress");
                 throw;
@@ -68,7 +38,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
             if (stepIndex >= steps.Length) {
                 Debug.Log("All steps are done");
                 ClearProgress();
-                return;
+                return true;
             }
 
             index = stepIndex;
@@ -82,6 +52,8 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                 // save steps so far
                 SaveProgress();
                 
+                while (EditorApplication.isCompiling) {}
+                
                 var step = steps[i];
                 Debug.Log($"Starting step \"<b>{step.GetType().Name}</b>\"");
                 EditorUtility.DisplayProgressBar("Patching", step.GetType().Name, (float)i / steps.Length);
@@ -94,10 +66,10 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                         case StepResult.RestartEditor:
                             index++;
                             SaveProgress();
-                            EditorUtility.DisplayDialog("Restarting Unity", "Unity is restarting.", "OK");
+                            // EditorUtility.DisplayDialog("Restarting Unity", "Unity is restarting.", "OK");
+                            AssetDatabase.StartAssetEditing();
                             EditorApplication.OpenProject(Directory.GetCurrentDirectory());
-                            await UniTask.Delay(100000);
-                            break;
+                            return false;
                         case StepResult.Failure:
                             throw new Exception($"Step {step.GetType().Name} failed");
                         default:
@@ -115,6 +87,8 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
             }
             
             EditorUtility.ClearProgressBar();
+            ClearProgress();
+            return true;
         }
 
         public void SaveProgress() {

@@ -65,7 +65,10 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                 
                 ManuallyResolveManifest();
                 EditorUtility.ClearProgressBar();
-                EditorUtility.RequestScriptReload();
+
+                if (missingPackages.Any(x => x.StartsWith("com.unity.inputsystem"))) {
+                    new EnableNewInputSystemStep().Assign();
+                }
             } catch {
                 Debug.LogError("Failed to install packages.");
                 throw;

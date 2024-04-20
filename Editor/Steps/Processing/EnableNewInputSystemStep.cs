@@ -23,20 +23,10 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                     Debug.LogWarning("Input System is not installed");
                     return UniTask.FromResult(StepResult.Success);
                 }
-                
-                var playerSettings = Resources.FindObjectsOfTypeAll<PlayerSettings>()[0];
-                var playerSettingsSo = new SerializedObject(playerSettings);
-                var activeInputHandlerProp = playerSettingsSo.FindProperty("activeInputHandler");
-                if (activeInputHandlerProp.intValue == 1) {
-                    Debug.LogWarning("Input System is already enabled");
+
+                if (!Assign()) {
                     return UniTask.FromResult(StepResult.Success);
                 }
-                
-                // 0: Input Manager (Old)
-                // 1: Input System Package (New)
-                // 2: Both
-                activeInputHandlerProp.intValue = 1;
-                playerSettingsSo.ApplyModifiedPropertiesWithoutUndo();
                 
                 EditorUtility.DisplayDialog("Input System Enabled", "Input System is now enabled.", "OK");
             } catch {
@@ -45,6 +35,24 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
             }
             
             return UniTask.FromResult(StepResult.RestartEditor);
+        }
+
+        public bool Assign() {
+            var playerSettings = Resources.FindObjectsOfTypeAll<PlayerSettings>()[0];
+            var playerSettingsSo = new SerializedObject(playerSettings);
+            var activeInputHandlerProp = playerSettingsSo.FindProperty("activeInputHandler");
+            if (activeInputHandlerProp.intValue != 0) {
+                Debug.LogWarning("Input System is already enabled");
+                return false;
+            }
+                
+            // 0: Input Manager (Old)
+            // 1: Input System Package (New)
+            // 2: Both
+            activeInputHandlerProp.intValue = 1;
+            playerSettingsSo.ApplyModifiedPropertiesWithoutUndo();
+            Debug.Log("Input System is now enabled");
+            return true;
         }
     }
 }
