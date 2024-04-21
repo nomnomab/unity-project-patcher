@@ -64,7 +64,7 @@ namespace Nomnom.UnityProjectPatcher.AssetRipper {
         [SerializeField]
         private AssetRipperJsonData _configurationData = new();
         
-        public bool TryGetFolderMapping(string key, out string? folder, string? fallbackPath = null) {
+        public bool TryGetFolderMapping(string key, out string folder, string? fallbackPath = null) {
             foreach (var mapping in _folderMappings) {
                 if (mapping.sourceName.Equals(key, StringComparison.OrdinalIgnoreCase)) {
                     folder = mapping.outputPath;
@@ -72,8 +72,8 @@ namespace Nomnom.UnityProjectPatcher.AssetRipper {
                 }
             }
 
-            folder = fallbackPath;
-            return false;
+            folder = fallbackPath ?? string.Empty;
+            return string.IsNullOrEmpty(folder);
         }
 
         public string ToJson() {
