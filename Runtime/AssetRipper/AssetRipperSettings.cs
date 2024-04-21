@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
@@ -10,9 +11,11 @@ namespace Nomnom.UnityProjectPatcher.AssetRipper {
     [CreateAssetMenu(fileName = "AssetRipperSettings", menuName = "Unity Project Patcher/AssetRipper Settings")]
     public class AssetRipperSettings : ScriptableObject {
         public string? FolderPath => _folderPath;
-        public string? ExePath => Path.Combine(_folderPath, "AssetRipper.Tools.SystemTester.exe");
+        public string ExePath => Path.Combine(FolderPath, "AssetRipper.Tools.SystemTester.exe");
         public string? OutputFolderPath => _outputFolderPath;
-        public string? ConfigPath => Path.Combine(FolderPath, "AssetRipper.Settings.json");
+        public string ConfigPath => Path.Combine(FolderPath, "AssetRipper.Settings.json");
+        
+        public IReadOnlyList<string> ProjectSettingFilesToCopy => _projectSettingFilesToCopy;
         
         [SerializeField, FolderPath(getRelativePath: false)]
         private string? _folderPath = Path.GetFullPath("AssetRipper");
@@ -48,6 +51,15 @@ namespace Nomnom.UnityProjectPatcher.AssetRipper {
             new FolderMapping(DefaultFolderMapping.SpriteKey, DefaultFolderMapping.SpriteOutput),
             new FolderMapping(DefaultFolderMapping.VideoClipKey, DefaultFolderMapping.VideoClipOutput),
         }.OrderBy(x => x.sourceName).ToArray();
+        
+        [SerializeField]
+        private string[] _projectSettingFilesToCopy = new[] {
+            "NavMeshAreas.asset",
+            "TagManager.asset",
+            "TimeManager.asset",
+            "DynamicsManager.asset",
+            "QualitySettings.asset"
+        };
 
         [SerializeField]
         private AssetRipperJsonData _configurationData = new();
