@@ -47,7 +47,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                 }
             }
 
-            return UniTask.FromResult(StepResult.Success);
+            return UniTask.FromResult(StepResult.Recompile);
         }
     }
 }

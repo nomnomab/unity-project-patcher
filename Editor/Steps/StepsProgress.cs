@@ -54,7 +54,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                 }
             }
 
-            if (LastResult != StepResult.RestartEditor) {
+            if (LastResult != StepResult.RestartEditor && LastResult != StepResult.Recompile) {
                 Debug.Log("Clearing previous progress");
                 stepIndex = 0;
                 return false;

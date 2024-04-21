@@ -32,6 +32,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                 }
             } catch {
                 Debug.LogError("Failed to read steps progress");
+                ClearProgress();
                 throw;
             }
             
@@ -52,6 +53,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                 // save steps so far
                 SaveProgress();
                 
+                // todo: is this even needed?
                 while (EditorApplication.isCompiling) {}
                 
                 var step = steps[i];
@@ -66,18 +68,25 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                         case StepResult.RestartEditor:
                             index++;
                             SaveProgress();
-                            // EditorUtility.DisplayDialog("Restarting Unity", "Unity is restarting.", "OK");
+                            
+                            //? bypasses the recompilation of scripts so it doesn't trigger the
+                            //? patcher twice while closing
                             AssetDatabase.StartAssetEditing();
                             EditorApplication.OpenProject(Directory.GetCurrentDirectory());
                             return false;
                         case StepResult.Failure:
                             throw new Exception($"Step {step.GetType().Name} failed");
+                        case StepResult.Recompile:
+                            index++;
+                            SaveProgress();
+                            return false;
                         default:
                             Debug.Log($"Step \"<b>{step.GetType().Name}</b>\" completed");
                             break;
                     }
                 } catch {
                     Debug.LogError($"Step {step.GetType().Name} failed");
+                    ClearProgress();
                     throw;
                 }
                 finally {
