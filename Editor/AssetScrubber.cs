@@ -18,18 +18,30 @@ namespace Nomnom.UnityProjectPatcher.Editor {
         public static void TestScrubProjectAssets() {
             var catalogue = ScrubProjectAssets();
             Debug.Log(catalogue);
+
+            var outputPath = Path.Combine(Application.dataPath, "scrub.assets.txt");
+            File.WriteAllText(outputPath, catalogue.ToString(false));
+            AssetDatabase.Refresh();
         }
         
         [MenuItem("Tools/Scrub/Project")]
         public static void TestScrubProject() {
             var catalogue = ScrubProject();
             Debug.Log(catalogue);
+            
+            var outputPath = Path.Combine(Application.dataPath, "scrub.project.txt");
+            File.WriteAllText(outputPath, catalogue.ToString(false));
+            AssetDatabase.Refresh();
         }
         
         [MenuItem("Tools/Scrub/Disk")]
         public static void TestScrubDiskFolder() {
             var catalogue = ScrubDiskFolder(Application.dataPath);
             Debug.Log(catalogue);
+            
+            var outputPath = Path.Combine(Application.dataPath, "scrub.disk.txt");
+            File.WriteAllText(outputPath, catalogue.ToString(false));
+            AssetDatabase.Refresh();
         }
         
         [MenuItem("Tools/Scrub/Disk - Custom")]
@@ -38,6 +50,10 @@ namespace Nomnom.UnityProjectPatcher.Editor {
             if (string.IsNullOrEmpty(disk)) return;
             var catalogue = ScrubDiskFolder(disk);
             Debug.Log(catalogue);
+            
+            var outputPath = Path.Combine(Application.dataPath, "scrub.disk_custom.txt");
+            File.WriteAllText(outputPath, catalogue.ToString(false));
+            AssetDatabase.Refresh();
         }
 
         [MenuItem("Tools/Scrub/Compare")]

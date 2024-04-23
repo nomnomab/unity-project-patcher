@@ -14,6 +14,7 @@ namespace Nomnom.UnityProjectPatcher.AssetRipper {
         public string ExePath => Path.Combine(FolderPath, "AssetRipper.Tools.SystemTester.exe");
         public string? OutputFolderPath => _outputFolderPath;
         public string ConfigPath => Path.Combine(FolderPath, "AssetRipper.Settings.json");
+        public string OutputExportFolderPath => Path.Combine(OutputFolderPath, "ExportedProject");
         
         public IReadOnlyList<string> ProjectSettingFilesToCopy => _projectSettingFilesToCopy;
         
