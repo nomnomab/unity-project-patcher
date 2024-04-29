@@ -23,11 +23,11 @@ namespace Nomnom.UnityProjectPatcher {
         public string ProjectGameAssetsPath => Path.Combine(ProjectGamePath, "Game").ToAssetDatabaseSafePath();
         public string ProjectGameAssetsFullPath => Path.Combine(ProjectGameFullPath, "Game");
         public string ProjectGameModsPath => Path.Combine(ProjectGamePath, "Mods").ToAssetDatabaseSafePath();
-        public string ProjectGameModsFullPath => Path.Combine(ProjectGameAssetsFullPath, "Mods");
+        public string ProjectGameModsFullPath => Path.Combine(ProjectGameFullPath, "Mods");
         public string ProjectGameToolsPath => Path.Combine(ProjectGamePath, "Tools").ToAssetDatabaseSafePath();
-        public string ProjectGameToolsFullPath => Path.Combine(ProjectGameModsFullPath, "Tools");
+        public string ProjectGameToolsFullPath => Path.Combine(ProjectGameFullPath, "Tools");
         public string ProjectGamePluginsPath => Path.Combine(ProjectGamePath, "Plugins").ToAssetDatabaseSafePath();
-        public string ProjectGamePluginsFullPath => Path.Combine(ProjectGameToolsFullPath, "Plugins");
+        public string ProjectGamePluginsFullPath => Path.Combine(ProjectGameFullPath, "Plugins");
         
         public string GameName => _gameName ?? throw new NullReferenceException(nameof(GameName));
         public string GameVersion => _gameVersion ?? throw new NullReferenceException(nameof(GameVersion));

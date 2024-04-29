@@ -18,7 +18,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
             
             if (!arSettings.TryGetFolderMapping("Scenes", out var sceneFolder, out var exclude) || exclude) {
                 Debug.LogError("Could not find \"Scenes\" folder mapping");
-                return UniTask.FromResult(StepResult.Failure);
+                return UniTask.FromResult(StepResult.Success);
             }
 
             var scenes = AssetDatabase.FindAssets("t:Scene", new[] {
@@ -31,7 +31,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                 var firstScene = scenes.FirstOrDefault(x => x.Contains(firstSceneName));
                 if (firstScene is null) {
                     Debug.LogError($"Could not find scene with name \"{firstSceneName}\"");
-                    return UniTask.FromResult(StepResult.Failure);
+                    return UniTask.FromResult(StepResult.Success);
                 }
 
                 scenes = scenes.Where(scene => scene != firstScene)
