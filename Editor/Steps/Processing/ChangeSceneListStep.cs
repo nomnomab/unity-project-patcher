@@ -16,13 +16,13 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
             var settings = this.GetSettings();
             var arSettings = this.GetAssetRipperSettings();
             
-            if (!arSettings.TryGetFolderMapping("Scenes", out var sceneFolder)) {
+            if (!arSettings.TryGetFolderMapping("Scenes", out var sceneFolder, out var exclude) || exclude) {
                 Debug.LogError("Could not find \"Scenes\" folder mapping");
                 return UniTask.FromResult(StepResult.Failure);
             }
 
-            var scenes = AssetDatabase.FindAssets($"t:{typeof(SceneAsset)}", new[] {
-                Path.Combine(settings.ProjectGameAssetsPath, sceneFolder)
+            var scenes = AssetDatabase.FindAssets("t:Scene", new[] {
+                Path.Combine(settings.ProjectGameAssetsPath, sceneFolder).ToAssetDatabaseSafePath()
             })
                 .Select(AssetDatabase.GUIDToAssetPath)
                 .ToArray();

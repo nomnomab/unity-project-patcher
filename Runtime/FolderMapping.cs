@@ -6,10 +6,12 @@ namespace Nomnom.UnityProjectPatcher {
     public struct FolderMapping {
         public string sourceName;
         public string outputPath;
+        public bool exclude;
 
-        public FolderMapping(string sourceName, string outputPath) {
+        public FolderMapping(string sourceName, string outputPath, bool exclude = false) {
             this.sourceName = sourceName;
             this.outputPath = outputPath;
+            this.exclude = exclude;
         }
     }
 
@@ -43,6 +45,9 @@ namespace Nomnom.UnityProjectPatcher {
         
         public const string PhysicsMaterialKey = "PhysicsMaterial";
         public static readonly string PhysicsMaterialOutput = "PhysicsMaterials";
+        
+        public const string PluginsKey = "Plugins";
+        public static readonly string PluginsOutput = "Plugins";
         
         public const string ResourcesKey = "Resources";
         public static readonly string ResourcesOutput = "Resources";

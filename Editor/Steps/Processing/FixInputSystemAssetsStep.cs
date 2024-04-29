@@ -15,7 +15,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
             var settings = this.GetSettings();
             var arSettings = this.GetAssetRipperSettings();
             
-            if (!arSettings.TryGetFolderMapping("MonoBehaviour", out var monoBehaviourFolder)) {
+            if (!arSettings.TryGetFolderMapping("MonoBehaviour", out var monoBehaviourFolder, out var exclude) || exclude) {
                 Debug.LogError("Could not find \"MonoBehaviour\" folder mapping");
                 return UniTask.FromResult(StepResult.Failure);
             }

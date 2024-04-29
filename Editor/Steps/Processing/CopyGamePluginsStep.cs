@@ -10,10 +10,11 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
             var dlls = settings.DllsToCopy;
 
             var gameManagedPath = settings.GameManagedPath;
-            var projectPluginsPath = settings.ProjectGamePluginsPath;
+            var projectPluginsPath = settings.ProjectGamePluginsFullPath;
 
             EditorUtility.DisplayProgressBar("Copying game dlls", "Copying dlls", 0);
 
+            var copiedOne = false;
             for (var i = 0; i < dlls.Count; i++) {
                 var dll = dlls[i];
                 try {
@@ -38,16 +39,22 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                     }
 
                     File.Copy(fromPath, toPath, overwrite: true);
+                    copiedOne = true;
                 } catch {
                     Debug.LogError($"Failed to copy {dll.sourceName} to {dll.outputPath}");
-                    throw;
+                    // throw;
                 }
                 finally {
                     EditorUtility.ClearProgressBar();
                 }
             }
+            
+            if (!copiedOne) {
+                Debug.LogWarning("Could not copy any plugin dlls, they might be locked");
+                return UniTask.FromResult(StepResult.Success);
+            }
 
-            return UniTask.FromResult(StepResult.Recompile);
+            return UniTask.FromResult(StepResult.RestartEditor);
         }
     }
 }

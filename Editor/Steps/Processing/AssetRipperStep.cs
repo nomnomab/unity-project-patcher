@@ -12,6 +12,12 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
     /// Automatically handles downloading and running AssetRipper.
     /// </summary>
     public readonly struct AssetRipperStep: IPatcherStep {
+        [MenuItem("Tools/UPP/Run AssetRipper")]
+        public static void Foo() {
+            var step = new AssetRipperStep();
+            step.Run().Forget();
+        }
+        
         public async UniTask<StepResult> Run() {
             var settings = this.GetSettings();
             var arSettings = this.GetAssetRipperSettings();
@@ -47,39 +53,46 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
 
             arSettings.SaveToConfig();
 
-            // clear the previous output
-            if (Directory.Exists(outputPath)) {
-                Directory.Delete(outputPath, recursive: true);
-            }
-
-            Directory.CreateDirectory(outputPath);
-
             EditorUtility.DisplayProgressBar("Checking AssetRipper Dependencies", "", 0);
             await UniTask.Yield();
 
-            // download asset ripper if we don't already have it
-            try {
-                await DownloadAssetRipper(arSettings);
-            } catch (Exception e) {
-                Debug.LogException(e);
-                return StepResult.Failure;
-            }
-            finally {
-                EditorUtility.ClearProgressBar();
-            }
+            if (arSettings.NeedsManualRip) {
+                // wait for the user to run asset ripper manually and then prompt this to continue
+                // todo: make a window for it
+                //! for now I'll rip it manually prior
+                Debug.LogWarning("AssetRipper required manual rip. Please run it manually and then press \"Continue\" to continue.");
+            } else {
+                // clear the previous output
+                if (Directory.Exists(outputPath)) {
+                    Directory.Delete(outputPath, recursive: true);
+                }
 
-            EditorUtility.DisplayProgressBar("Running AssetRipper", "", 0);
-            await UniTask.Yield();
+                Directory.CreateDirectory(outputPath);
+                
+                // download asset ripper if we don't already have it
+                try {
+                    await DownloadAssetRipper(arSettings);
+                } catch (Exception e) {
+                    Debug.LogException(e);
+                    return StepResult.Failure;
+                }
+                finally {
+                    EditorUtility.ClearProgressBar();
+                }
 
-            // run asset ripper to extract assets
-            try {
-                await RunAssetRipper(assetRipperExePath, inputPath, outputPath, configPath);
-            } catch (Exception e) {
-                Debug.LogException(e);
-                return StepResult.Failure;
-            }
-            finally {
-                EditorUtility.ClearProgressBar();
+                EditorUtility.DisplayProgressBar("Running AssetRipper", "", 0);
+                await UniTask.Yield();
+
+                // run asset ripper to extract assets
+                try {
+                    await RunAssetRipper(assetRipperExePath, inputPath, outputPath, configPath);
+                } catch (Exception e) {
+                    Debug.LogException(e);
+                    return StepResult.Failure;
+                }
+                finally {
+                    EditorUtility.ClearProgressBar();
+                }
             }
 
             return StepResult.Success;

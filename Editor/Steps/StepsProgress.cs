@@ -11,6 +11,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
         public List<string> Steps = new();
         public List<string> CompletedSteps = new();
         public StepResult LastResult = StepResult.Success;
+        public bool InProgress;
         
         public string ToJson() {
             return JsonConvert.SerializeObject(this, Formatting.Indented, new JsonSerializerSettings {

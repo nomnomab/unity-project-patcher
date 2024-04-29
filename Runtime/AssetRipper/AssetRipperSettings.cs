@@ -6,6 +6,7 @@ using System.Linq;
 using EditorAttributes;
 using Newtonsoft.Json;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Nomnom.UnityProjectPatcher.AssetRipper {
     [CreateAssetMenu(fileName = "AssetRipperSettings", menuName = "Unity Project Patcher/AssetRipper Settings")]
@@ -15,8 +16,14 @@ namespace Nomnom.UnityProjectPatcher.AssetRipper {
         public string? OutputFolderPath => _outputFolderPath;
         public string ConfigPath => Path.Combine(FolderPath, "AssetRipper.Settings.json");
         public string OutputExportFolderPath => Path.Combine(OutputFolderPath, "ExportedProject");
+        public string OutputExportAssetsFolderPath => Path.Combine(OutputExportFolderPath, "Assets");
         
+        public IReadOnlyList<string> FoldersToCopy => _foldersToCopy;
+        public IReadOnlyList<string> FoldersToExcludeFromRead => _foldersToExcludeFromRead;
         public IReadOnlyList<string> ProjectSettingFilesToCopy => _projectSettingFilesToCopy;
+        
+        public bool NeedsManualRip => _configurationData.Processing.enableStaticMeshSeparation || _configurationData.Processing.enableStaticMeshSeparation;
+        // public bool NeedsManualRip => false;
         
         [SerializeField, FolderPath(getRelativePath: false)]
         private string? _folderPath = Path.GetFullPath("AssetRipper");
@@ -36,6 +43,7 @@ namespace Nomnom.UnityProjectPatcher.AssetRipper {
             new FolderMapping(DefaultFolderMapping.MeshKey, DefaultFolderMapping.MeshOutput),
             new FolderMapping(DefaultFolderMapping.PrefabInstanceKey, DefaultFolderMapping.PrefabInstanceOutput),
             new FolderMapping(DefaultFolderMapping.PhysicsMaterialKey, DefaultFolderMapping.PhysicsMaterialOutput),
+            new FolderMapping(DefaultFolderMapping.PluginsKey, DefaultFolderMapping.PluginsOutput),
             new FolderMapping(DefaultFolderMapping.ResourcesKey, DefaultFolderMapping.ResourcesOutput),
             new FolderMapping(DefaultFolderMapping.SettingsKey, DefaultFolderMapping.SettingsOutput),
             new FolderMapping(DefaultFolderMapping.ScenesKey, DefaultFolderMapping.ScenesOutput),
@@ -52,6 +60,44 @@ namespace Nomnom.UnityProjectPatcher.AssetRipper {
             new FolderMapping(DefaultFolderMapping.SpriteKey, DefaultFolderMapping.SpriteOutput),
             new FolderMapping(DefaultFolderMapping.VideoClipKey, DefaultFolderMapping.VideoClipOutput),
         }.OrderBy(x => x.sourceName).ToArray();
+
+        [FormerlySerializedAs("_scriptFoldersToCopy")] [SerializeField]
+        private string[] _foldersToCopy = new[] {
+            DefaultFolderMapping.AnimationClipKey,
+            DefaultFolderMapping.AnimatorControllerKey,
+            DefaultFolderMapping.AudioClipKey,
+            DefaultFolderMapping.AudioMixerControllerKey,
+            DefaultFolderMapping.FontKey,
+            DefaultFolderMapping.LightingSettingsKey,
+            DefaultFolderMapping.MaterialKey,
+            DefaultFolderMapping.MeshKey,
+            DefaultFolderMapping.PrefabInstanceKey,
+            DefaultFolderMapping.PhysicsMaterialKey,
+            DefaultFolderMapping.PluginsKey,
+            DefaultFolderMapping.ResourcesKey,
+            DefaultFolderMapping.SettingsKey,
+            DefaultFolderMapping.ScenesKey,
+            DefaultFolderMapping.MonoBehaviourKey,
+            DefaultFolderMapping.NavMeshDataKey,
+            DefaultFolderMapping.CubemapKey,
+            DefaultFolderMapping.TerrainDataKey,
+            DefaultFolderMapping.ShaderKey,
+            DefaultFolderMapping.Texture2DKey,
+            DefaultFolderMapping.Texture3DKey,
+            DefaultFolderMapping.RenderTextureKey,
+            DefaultFolderMapping.TerrainLayerKey,
+            DefaultFolderMapping.SpriteKey,
+            DefaultFolderMapping.VideoClipKey,
+            @"Scripts\Assembly-CSharp",
+        };
+
+        [FormerlySerializedAs("_scriptFoldersToExcludeFromRead")] [SerializeField]
+        private string[] _foldersToExcludeFromRead = new string[] {
+            @"Scripts\Unity.Burst",
+            @"Scripts\Unity.Burst.Unsafe",
+            @"Scripts\Unity.Burst.Mathematics",
+            @"Scripts\Unity.Jobs",
+        };
         
         [SerializeField]
         private string[] _projectSettingFilesToCopy = new[] {
@@ -65,16 +111,18 @@ namespace Nomnom.UnityProjectPatcher.AssetRipper {
         [SerializeField]
         private AssetRipperJsonData _configurationData = new();
         
-        public bool TryGetFolderMapping(string key, out string folder, string? fallbackPath = null) {
+        public bool TryGetFolderMapping(string key, out string folder, out bool exclude, string? fallbackPath = null) {
             foreach (var mapping in _folderMappings) {
                 if (mapping.sourceName.Equals(key, StringComparison.OrdinalIgnoreCase)) {
-                    folder = mapping.outputPath;
+                    folder = mapping.outputPath.ToAssetDatabaseSafePath();
+                    exclude = mapping.exclude;
                     return true;
                 }
             }
 
-            folder = fallbackPath ?? string.Empty;
-            return string.IsNullOrEmpty(folder);
+            folder = (fallbackPath ?? string.Empty).ToAssetDatabaseSafePath();
+            exclude = false;
+            return !string.IsNullOrEmpty(folder);
         }
 
         public string ToJson() {
@@ -99,12 +147,10 @@ namespace Nomnom.UnityProjectPatcher.AssetRipper {
             scriptContentLevel = ScriptContentLevel.Level2,
             streamingAssetsMode = StreamingAssetsMode.Extract,
         };
-        
-        [SerializeField] 
-        public Processing Processing = new Processing {
-            enableStaticMeshSeparation = true,
-            enableAssetDeduplication = true
-        };
+
+        [SerializeField]
+        [HelpBox("manual = Will prompt the user to run normal Asset Ripper manually")]
+        public Processing Processing;
         
         [SerializeField] 
         public Export Export = new Export {
@@ -141,10 +187,12 @@ namespace Nomnom.UnityProjectPatcher.AssetRipper {
 
         [JsonProperty("EnableStaticMeshSeparation")]
         [DefaultValue(true)]
+        [Suffix("manual")]
         public bool enableStaticMeshSeparation;
 
         [JsonProperty("EnableAssetDeduplication")]
         [DefaultValue(true)]
+        [Suffix("manual")]
         public bool enableAssetDeduplication;
     }
 
@@ -190,6 +238,7 @@ namespace Nomnom.UnityProjectPatcher.AssetRipper {
         public TextExportMode textExportMode;
 
         [JsonProperty("SaveSettingsToDisk")]
+        [HideInInspector]
         public bool saveSettingsToDisk;
     }
 

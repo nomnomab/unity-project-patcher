@@ -18,11 +18,16 @@ namespace Nomnom.UnityProjectPatcher {
         public string ProjectUnityPath => Path.Combine(Application.dataPath, "Unity");
         public string ProjectUnityAssetStorePath => Path.Combine(Application.dataPath, "AssetStore");
         
-        public string ProjectGamePath => Path.Combine(Application.dataPath, GameName.Replace(" ", string.Empty));
-        public string ProjectGameAssetsPath => Path.Combine(ProjectGamePath, "Game");
-        public string ProjectGameModsPath => Path.Combine(ProjectGamePath, "Mods");
-        public string ProjectGameToolsPath => Path.Combine(ProjectGamePath, "Tools");
-        public string ProjectGamePluginsPath => Path.Combine(ProjectGamePath, "Plugins");
+        public string ProjectGamePath => Path.Combine("Assets", GameName.Replace(" ", string.Empty)).ToAssetDatabaseSafePath();
+        public string ProjectGameFullPath => Path.Combine(Application.dataPath, GameName.Replace(" ", string.Empty));
+        public string ProjectGameAssetsPath => Path.Combine(ProjectGamePath, "Game").ToAssetDatabaseSafePath();
+        public string ProjectGameAssetsFullPath => Path.Combine(ProjectGameFullPath, "Game");
+        public string ProjectGameModsPath => Path.Combine(ProjectGamePath, "Mods").ToAssetDatabaseSafePath();
+        public string ProjectGameModsFullPath => Path.Combine(ProjectGameAssetsFullPath, "Mods");
+        public string ProjectGameToolsPath => Path.Combine(ProjectGamePath, "Tools").ToAssetDatabaseSafePath();
+        public string ProjectGameToolsFullPath => Path.Combine(ProjectGameModsFullPath, "Tools");
+        public string ProjectGamePluginsPath => Path.Combine(ProjectGamePath, "Plugins").ToAssetDatabaseSafePath();
+        public string ProjectGamePluginsFullPath => Path.Combine(ProjectGameToolsFullPath, "Plugins");
         
         public string GameName => _gameName ?? throw new NullReferenceException(nameof(GameName));
         public string GameVersion => _gameVersion ?? throw new NullReferenceException(nameof(GameVersion));

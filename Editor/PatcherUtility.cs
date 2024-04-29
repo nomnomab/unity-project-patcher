@@ -68,5 +68,41 @@ namespace Nomnom.UnityProjectPatcher.Editor {
 
             return false;
         }
+
+        [MenuItem("CONTEXT/Object/Debug Guid")]
+        public static void DebugGuid() {
+            var selection = Selection.activeObject;
+            if (!selection) return;
+            
+            var path = AssetDatabase.GetAssetPath(selection);
+            var guid = AssetDatabase.AssetPathToGUID(path);
+            Debug.Log(guid);
+            
+            var instance = AssetDatabase.LoadMainAssetAtPath(path);
+            if (AssetDatabase.TryGetGUIDAndLocalFileIdentifier(instance, out guid, out long fileId)) {
+                Debug.Log($"{guid} {fileId}");
+            }
+        }
+        
+        // [MenuItem("CONTEXT/Object/Debug Guid2")]
+        // public static void DebugGuid2() {
+        //     var selection = Selection.activeObject;
+        //     if (!selection) return;
+        //
+        //     Debug.Log(FileIDUtil.Compute(typeof(ES3Defaults)));
+        // }
+        
+        [MenuItem("CONTEXT/MonoScript/Debug FullTypeName")]
+        [MenuItem("Assets/Debug FullTypeName")]
+        public static void DebugFullTypeName() {
+            var selection = Selection.activeObject;
+            if (!selection) return;
+            if (selection is not MonoScript monoScript) return;
+            
+            var assetPath = AssetDatabase.GetAssetPath(monoScript);
+            foreach (var entry in AssetScrubber.ScrubNonMonoData(monoScript, assetPath, 0)) {
+                Debug.Log(entry); 
+            } 
+        }
     }
 }

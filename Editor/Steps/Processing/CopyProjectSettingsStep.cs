@@ -6,6 +6,7 @@ using UnityEngine;
 namespace Nomnom.UnityProjectPatcher.Editor.Steps {
     public readonly struct CopyProjectSettingsStep: IPatcherStep {
         public UniTask<StepResult> Run() {
+            EditorApplication.LockReloadAssemblies();
             PlayerSettings.allowUnsafeCode = true;
             
             var settings = this.GetAssetRipperSettings();
@@ -25,7 +26,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                 return UniTask.FromResult(StepResult.Failure);
             }
             
-            return UniTask.FromResult(StepResult.Success);
+            return UniTask.FromResult(StepResult.RestartEditor);
         }
     }
 }

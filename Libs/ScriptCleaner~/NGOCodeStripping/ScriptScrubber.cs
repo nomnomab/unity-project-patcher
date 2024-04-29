@@ -196,12 +196,25 @@ namespace Nomnom {
 
                     var methods = root.DescendantNodes().OfType<MemberDeclarationSyntax>().ToArray();
                     var methodsToReplace = new List<(MethodDeclarationSyntax, MethodDeclarationSyntax)>();
+                    var nodesToRemove = new List<SyntaxNode>();
+
+                    var bannedAttributes = new string[] {
+                        "MonoPInvokeCallback"
+                    };
+                    
                     foreach (var method in methods) {
                         if (method is MethodDeclarationSyntax methodDeclaration) {
                             // log($"[info] - method name: {methodDeclaration.Identifier.Text}");
                             var attributes = methodDeclaration.AttributeLists
                                 .SelectMany(x => x.Attributes)
                                 .ToArray();
+
+                            if (attributes.Any(x => bannedAttributes.Contains(x.Name.ToString()))) {
+                                nodesToRemove.AddRange(attributes);
+                                nodesToRemove.Add(methodDeclaration);
+                                continue;
+                            }
+                            
                             var serverRpcAttribute = attributes
                                 .FirstOrDefault(x => x.Name.ToString() == "ServerRpc");
                             var clientRpcAttribute = attributes
@@ -240,6 +253,7 @@ namespace Nomnom {
 
                     // replace old methods with new methods
                     root = root.ReplaceNodes(methodsToReplace.Select(x => x.Item1), (x, y) => methodsToReplace.First(z => z.Item1 == x).Item2);
+                    root = root.RemoveNodes(nodesToRemove, SyntaxRemoveOptions.KeepNoTrivia);
 
                     // write the new code back to the file
                     var newCode = root.ToFullString();

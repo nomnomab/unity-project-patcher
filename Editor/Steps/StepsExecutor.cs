@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using Cysharp.Threading.Tasks;
 using UnityEditor;
+using UnityEditor.Compilation;
 using UnityEngine;
 
 namespace Nomnom.UnityProjectPatcher.Editor.Steps {
@@ -27,8 +28,17 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
             
             try {
                 var stepsProgress = StepsProgress.FromPath(StepsProgress.SavePath);
-                if (stepsProgress is not null && stepsProgress.GetCompletion(steps, out stepIndex)) {
-                    Debug.Log($"Completed {stepIndex} steps out of {steps.Length}");
+                if (stepsProgress is not null) {
+                    // might have crashed?
+                    if (stepsProgress.InProgress) {
+                        Debug.LogWarning($"Seems like it might have crashed at step {stepIndex}, aborting...");
+                        ClearProgress();
+                        return false;
+                    }
+                    
+                    if (stepsProgress.GetCompletion(steps, out stepIndex)) {
+                        Debug.Log($"Completed {stepIndex} steps out of {steps.Length}");
+                    }
                 }
             } catch {
                 Debug.LogError("Failed to read steps progress");
@@ -51,10 +61,10 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                 index = i;
                 
                 // save steps so far
-                SaveProgress();
+                SaveProgress(true);
                 
                 // todo: is this even needed?
-                while (EditorApplication.isCompiling) {}
+                // while (EditorApplication.isCompiling) {}
                 
                 var step = steps[i];
                 Debug.Log($"Starting step \"<b>{step.GetType().Name}</b>\"");
@@ -67,7 +77,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                     switch (result) {
                         case StepResult.RestartEditor:
                             index++;
-                            SaveProgress();
+                            SaveProgress(false);
                             
                             //? bypasses the recompilation of scripts so it doesn't trigger the
                             //? patcher twice while closing
@@ -78,7 +88,9 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                             throw new Exception($"Step {step.GetType().Name} failed");
                         case StepResult.Recompile:
                             index++;
-                            SaveProgress();
+                            SaveProgress(false);
+                            
+                            CompilationPipeline.RequestScriptCompilation(RequestScriptCompilationOptions.CleanBuildCache);
                             return false;
                         default:
                             Debug.Log($"Step \"<b>{step.GetType().Name}</b>\" completed");
@@ -87,6 +99,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                 } catch {
                     Debug.LogError($"Step {step.GetType().Name} failed");
                     ClearProgress();
+                    EditorUtility.ClearProgressBar();
                     throw;
                 }
                 finally {
@@ -100,10 +113,12 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
             return true;
         }
 
-        public void SaveProgress() {
+        public void SaveProgress(bool inProgress) {
             _progress.CompletedSteps = steps.Take(index)
                 .Select(x => x.GetType().FullName)
                 .ToList();
+
+            _progress.InProgress = inProgress;
 
             var json = _progress.ToJson();
             // Debug.Log(json);
@@ -112,6 +127,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
 
         public void ClearProgress() {
             File.Delete(StepsProgress.SavePath);
+            EditorUtility.ClearProgressBar();
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using Cysharp.Threading.Tasks;
+﻿using System.IO;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 namespace Nomnom.UnityProjectPatcher.Editor.Steps {
@@ -19,24 +20,34 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                     return UniTask.FromResult(StepResult.Failure);
                 }
                 
-                if (!PatcherUtility.TryToCreatePath(settings.ProjectGamePath)) {
+                if (!PatcherUtility.TryToCreatePath(settings.ProjectGameFullPath)) {
                     return UniTask.FromResult(StepResult.Failure);
                 }
                 
-                if (!PatcherUtility.TryToCreatePath(settings.ProjectGameAssetsPath)) {
+                if (!PatcherUtility.TryToCreatePath(settings.ProjectGameAssetsFullPath)) {
                     return UniTask.FromResult(StepResult.Failure);
                 }
                 
-                if (!PatcherUtility.TryToCreatePath(settings.ProjectGameModsPath)) {
+                if (!PatcherUtility.TryToCreatePath(settings.ProjectGameModsFullPath)) {
                     return UniTask.FromResult(StepResult.Failure);
                 }
                 
-                if (!PatcherUtility.TryToCreatePath(settings.ProjectGameToolsPath)) {
+                if (!PatcherUtility.TryToCreatePath(settings.ProjectGameToolsFullPath)) {
                     return UniTask.FromResult(StepResult.Failure);
                 }
             } catch {
                 Debug.LogError("Failed to create default project paths");
                 throw;
+            }
+            
+            var gameFolderPath = settings.ProjectGameAssetsPath;
+            if (Directory.Exists(gameFolderPath)) {
+                try {
+                    Directory.Delete(gameFolderPath, true);
+                } catch {
+                    Debug.LogError($"Failed to delete \"{gameFolderPath}\"");
+                    throw;
+                }
             }
             
             return UniTask.FromResult(StepResult.Success);
