@@ -4,6 +4,7 @@ using Nomnom.UnityProjectPatcher.AssetRipper;
 using Nomnom.UnityProjectPatcher.Editor.Steps;
 using UnityEditor;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace Nomnom.UnityProjectPatcher.Editor {
     public static class PatcherUtility {
@@ -67,6 +68,21 @@ namespace Nomnom.UnityProjectPatcher.Editor {
             }
 
             return false;
+        }
+        
+        public static Object GetGraphicsSettings() {
+            return AssetDatabase.LoadAssetAtPath<Object>("ProjectSettings/GraphicsSettings.asset");
+        }
+        
+        public static Object GetQualitySettings() {
+            return AssetDatabase.LoadAssetAtPath<Object>("ProjectSettings/QualitySettings.asset");
+        }
+
+        public static SerializedProperty? GetCustomRenderPipelineProperty() {
+            var qualitySettings = PatcherUtility.GetQualitySettings();
+            var serializedObject = new SerializedObject(qualitySettings);
+            
+            return serializedObject.FindProperty("m_QualitySettings.Array.data[0].customRenderPipeline");
         }
 
         [MenuItem("CONTEXT/Object/Debug Guid")]

@@ -46,6 +46,9 @@ namespace Nomnom.UnityProjectPatcher {
         
         [SerializeField, InlineButton(nameof(GetGameVersion), "Get", buttonWidth: 30)] 
         private string? _gameVersion = null;
+        
+        [SerializeField, InlineButton(nameof(GetPipelineType), "Get", buttonWidth: 30)] 
+        private PipelineType _pipelineType;
 
         [Header("Dlls")]
         [SerializeField] private FolderMapping[] _dllsToCopy = Array.Empty<FolderMapping>();
@@ -84,6 +87,32 @@ namespace Nomnom.UnityProjectPatcher {
 
             var versionInfo = FileVersionInfo.GetVersionInfo(GameExePath);
             _gameVersion = versionInfo.FileVersion;
+            
+            PatcherUtility.SetDirty(this);
+        }
+
+        private void GetPipelineType() {
+            var dllPath = GameManagedPath;
+            if (!Directory.Exists(dllPath)) {
+                Debug.LogError("Game Managed Path does not exist");
+                return;
+            }
+            
+            var dlls = Directory.EnumerateFiles(dllPath, "*.dll", SearchOption.AllDirectories);
+            _pipelineType = PipelineType.BuiltIn;
+            
+            foreach (var dll in dlls) {
+                var fileName = Path.GetFileName(dll);
+                if (fileName.Contains("RenderPipelines.HighDefinition.Runtime")) {
+                    _pipelineType = PipelineType.HDRP;
+                    break;
+                }
+                
+                if (fileName.Contains("RenderPipelines.Universal.Runtime")) {
+                    _pipelineType = PipelineType.URP;
+                    break;
+                }
+            }
             
             PatcherUtility.SetDirty(this);
         }

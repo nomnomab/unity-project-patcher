@@ -58,7 +58,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
             }
             
             var hdrpSettings = AssetDatabase.LoadMainAssetAtPath(hdrpSettingsPath);
-            var projectGraphicsAsset = AssetDatabase.LoadAssetAtPath<Object>("ProjectSettings/GraphicsSettings.asset");
+            var projectGraphicsAsset = PatcherUtility.GetGraphicsSettings();
             var serializedObject = new SerializedObject(projectGraphicsAsset);
             var iter = serializedObject.GetIterator();
             iter.Next(true);
@@ -71,11 +71,16 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                     break;
                 }
             }
-            
-            var qualitySettings = AssetDatabase.LoadAssetAtPath<Object>("ProjectSettings/QualitySettings.asset");
+
+            var qualitySettings = PatcherUtility.GetQualitySettings();
             serializedObject = new SerializedObject(qualitySettings);
+
+            var customRenderPipelineProperty = PatcherUtility.GetCustomRenderPipelineProperty();
+            if (customRenderPipelineProperty is null) {
+                Debug.LogError("Could not find m_QualitySettings.customRenderPipeline");
+                return UniTask.FromResult(StepResult.Success);
+            }
             
-            var customRenderPipelineProperty = serializedObject.FindProperty("m_QualitySettings.Array.data[0].customRenderPipeline");
             customRenderPipelineProperty.objectReferenceValue = AssetDatabase.LoadMainAssetAtPath(hdrpPipelineAssetPath);
             serializedObject.ApplyModifiedPropertiesWithoutUndo();
             
