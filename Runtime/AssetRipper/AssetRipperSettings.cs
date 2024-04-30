@@ -17,13 +17,15 @@ namespace Nomnom.UnityProjectPatcher.AssetRipper {
         public string ConfigPath => Path.Combine(FolderPath, "AssetRipper.Settings.json");
         public string OutputExportFolderPath => Path.Combine(OutputFolderPath, "ExportedProject");
         public string OutputExportAssetsFolderPath => Path.Combine(OutputExportFolderPath, "Assets");
-        
+
+        public AssetRipperJsonData ConfigurationData => _configurationData;
         public IReadOnlyList<string> FoldersToCopy => _foldersToCopy;
         public IReadOnlyList<string> FoldersToExcludeFromRead => _foldersToExcludeFromRead;
         public IReadOnlyList<string> ProjectSettingFilesToCopy => _projectSettingFilesToCopy;
-        
-        public bool NeedsManualRip => _configurationData.Processing.enableStaticMeshSeparation || _configurationData.Processing.enableStaticMeshSeparation;
-        // public bool NeedsManualRip => false;
+
+        // public bool NeedsManualRip => _configurationData.Processing.enableStaticMeshSeparation;
+        // public bool NeedsManualRip => _configurationData.Processing.enableStaticMeshSeparation || _configurationData.Processing.enableStaticMeshSeparation;
+        public bool NeedsManualRip => false;
         
         [SerializeField, FolderPath(getRelativePath: false)]
         private string? _folderPath = Path.GetFullPath("AssetRipper");
@@ -126,7 +128,10 @@ namespace Nomnom.UnityProjectPatcher.AssetRipper {
         }
 
         public string ToJson() {
-            return JsonConvert.SerializeObject(_configurationData, Formatting.Indented);
+            var data = _configurationData;
+            data.Processing.enableAssetDeduplication = false;
+            data.Processing.enableStaticMeshSeparation = false;
+            return JsonConvert.SerializeObject(data, Formatting.Indented);
         }
 
         public void SaveToConfig() {
@@ -149,7 +154,7 @@ namespace Nomnom.UnityProjectPatcher.AssetRipper {
         };
 
         [SerializeField]
-        [HelpBox("manual = Will prompt the user to run normal Asset Ripper manually")]
+        // [HelpBox("manual = Will prompt the user to run normal Asset Ripper manually")]
         public Processing Processing;
         
         [SerializeField] 
@@ -183,16 +188,19 @@ namespace Nomnom.UnityProjectPatcher.AssetRipper {
     [Serializable]
     public struct Processing {
         [JsonProperty("EnablePrefabOutlining")]
+        [Suffix("experimental")]
         public bool enablePrefabOutlining;
 
         [JsonProperty("EnableStaticMeshSeparation")]
         [DefaultValue(true)]
         [Suffix("manual")]
+        [HideInInspector]
         public bool enableStaticMeshSeparation;
 
         [JsonProperty("EnableAssetDeduplication")]
         [DefaultValue(true)]
         [Suffix("manual")]
+        [HideInInspector]
         public bool enableAssetDeduplication;
     }
 

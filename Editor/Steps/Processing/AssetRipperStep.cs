@@ -55,18 +55,66 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
 
             EditorUtility.DisplayProgressBar("Checking AssetRipper Dependencies", "", 0);
             await UniTask.Yield();
+            
+            if (arSettings.ConfigurationData.Processing.enablePrefabOutlining) {
+                if (!EditorUtility.DisplayDialog("Enable Prefab Outlining", "Are you sure you want to enable prefab outlining?\n\nThis is a highly unstable feature of AssetRipper, so this may not work as expected, such as creating prefabs with infinite loading loops when importing.", "Yes", "No")) {
+                    return StepResult.Failure;
+                }
+            }
+
+            if (!Directory.Exists(outputPath)) {
+                Directory.CreateDirectory(outputPath);
+            }
 
             if (arSettings.NeedsManualRip) {
                 // wait for the user to run asset ripper manually and then prompt this to continue
                 // todo: make a window for it
                 //! for now I'll rip it manually prior
                 Debug.LogWarning("AssetRipper required manual rip. Please run it manually and then press \"Continue\" to continue.");
-            } else {
-                // clear the previous output
-                if (Directory.Exists(outputPath)) {
-                    Directory.Delete(outputPath, recursive: true);
+                
+                // open export folder
+                var tmpFile = Path.Combine(outputPath, "README.txt");
+                if (File.Exists(tmpFile)) {
+                    File.Delete(tmpFile);
                 }
+                
+                using (var file = File.CreateText(tmpFile)) {
+                    file.WriteLine("AssetRipper requires a manual rip to handle static mesh separation.");
+                    
+                    // if (arSettings.ConfigurationData.Processing.enableAssetDeduplication) {
+                    //     file.WriteLine();
+                    //     file.WriteLine(" - Asset deduplication is enabled, so make sure you enable that in AssetRipper.");
+                    // }
+                
+                    if (arSettings.ConfigurationData.Processing.enableStaticMeshSeparation) {
+                        file.WriteLine(" - Static mesh separation is enabled, so make sure you enable that in AssetRipper.");
+                    }
+                    
+                    file.WriteLine();
+                    file.WriteLine("Grab version 1.0.10 from here: https://github.com/AssetRipper/AssetRipper/releases/tag/1.0.10");
+                    file.WriteLine(" - It's the only version with status mesh separation available for free");
+                    file.WriteLine();
+                    file.WriteLine("Otherwise, you have to purchase their \"premium\" version and use that instead :/");
+                    file.WriteLine();
+                    file.WriteLine("Simply run AssetRipper with the wanted settings, then copy the contents into this folder.");
+                    file.WriteLine("The contents should be the insides of the folder that AssetRipper exports into. Such as:");
+                    file.WriteLine(" - Root");
+                    file.WriteLine("   - AuxiliaryFiles     <- Copy these");
+                    file.WriteLine("   - ExportedFiles      <- Copy these");
+                    file.WriteLine("   - [Any Other Folder] <- Copy these");
+                }
+                EditorUtility.RevealInFinder(tmpFile);
 
+                var text = $"AssetRipper requires a manual rip to handle asset static mesh separation.\n\nCheck the README.txt for more information at \"{outputPath}\"\n\nPlease run it manually and then press \"Continue\" to continue.\n\n";
+                if (!EditorUtility.DisplayDialog("Continue when you patch!", text, "Continue", "Abort")) {
+                    return StepResult.Failure;
+                }
+                
+                clearGameFolder();
+            } else {
+                clearExportFolder();
+                clearGameFolder();
+                
                 Directory.CreateDirectory(outputPath);
                 
                 // download asset ripper if we don't already have it
@@ -96,6 +144,25 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
             }
 
             return StepResult.Success;
+
+            void clearExportFolder() {
+                // clear the previous output
+                if (Directory.Exists(outputPath)) {
+                    Directory.Delete(outputPath, recursive: true);
+                }
+            }
+            
+            void clearGameFolder() {
+                var gameFolderPath = settings.ProjectGameAssetsPath;
+                if (Directory.Exists(gameFolderPath)) {
+                    try {
+                        Directory.Delete(gameFolderPath, true);
+                    } catch {
+                        Debug.LogError($"Failed to delete \"{gameFolderPath}\"");
+                        throw;
+                    }
+                }
+            }
         }
 
         private async UniTask DownloadAssetRipper(AssetRipperSettings arSettings) {

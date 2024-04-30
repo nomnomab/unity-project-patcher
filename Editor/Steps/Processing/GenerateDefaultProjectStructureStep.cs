@@ -1,5 +1,4 @@
-﻿using System.IO;
-using Cysharp.Threading.Tasks;
+﻿using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 namespace Nomnom.UnityProjectPatcher.Editor.Steps {
@@ -38,16 +37,6 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
             } catch {
                 Debug.LogError("Failed to create default project paths");
                 throw;
-            }
-            
-            var gameFolderPath = settings.ProjectGameAssetsPath;
-            if (Directory.Exists(gameFolderPath)) {
-                try {
-                    Directory.Delete(gameFolderPath, true);
-                } catch {
-                    Debug.LogError($"Failed to delete \"{gameFolderPath}\"");
-                    throw;
-                }
             }
             
             return UniTask.FromResult(StepResult.Success);

@@ -34,9 +34,26 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                 return UniTask.FromResult(StepResult.Success);
             }
             
-            var hdrpSettingsPath = hdrpSettingAssets.First();
+            var hdrpSettingsPath = hdrpSettingAssets.FirstOrDefault();
             if (hdrpSettingsPath is null) {
                 Debug.LogError("Could not find HDRenderPipelineGlobalSettings asset");
+                return UniTask.FromResult(StepResult.Success);
+            }
+
+            var hdrpPipelineAssets = AssetDatabase.FindAssets("t:UnityEngine.Rendering.HighDefinition.HDRenderPipelineAsset", new string[] {
+                Path.Combine(settings.ProjectGameAssetsPath, soFolder).ToAssetDatabaseSafePath()
+            })
+                .Select(AssetDatabase.GUIDToAssetPath)
+                .ToArray();
+            
+            if (hdrpPipelineAssets.Length == 0) {
+                Debug.LogError("Could not find HDRenderPipelineAsset asset");
+                return UniTask.FromResult(StepResult.Success);
+            }
+
+            var hdrpPipelineAssetPath = hdrpPipelineAssets.FirstOrDefault();
+            if (hdrpPipelineAssetPath is null) {
+                Debug.LogError("Could not find HDRenderPipelineAsset asset");
                 return UniTask.FromResult(StepResult.Success);
             }
             
@@ -55,6 +72,15 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                 }
             }
             
+            var qualitySettings = AssetDatabase.LoadAssetAtPath<Object>("ProjectSettings/QualitySettings.asset");
+            serializedObject = new SerializedObject(qualitySettings);
+            
+            var customRenderPipelineProperty = serializedObject.FindProperty("m_QualitySettings.Array.data[0].customRenderPipeline");
+            customRenderPipelineProperty.objectReferenceValue = AssetDatabase.LoadMainAssetAtPath(hdrpPipelineAssetPath);
+            serializedObject.ApplyModifiedPropertiesWithoutUndo();
+            
+            Debug.Log($"Set m_QualitySettings.customRenderPipeline to \"{hdrpPipelineAssetPath}\"");
+            
             serializedObject = new SerializedObject(hdrpSettings);
             var volumeProfile = serializedObject.FindProperty("m_DefaultVolumeProfile");
             if (volumeProfile != null) {
@@ -68,9 +94,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
 
                     // this is so jank
                     try {
-                        var graphicsSettingsAsset = AssetDatabase.LoadAssetAtPath<Object>("ProjectSettings/GraphicsSettings.asset");
-
-                        serializedObject = new SerializedObject(graphicsSettingsAsset);
+                        serializedObject = new SerializedObject(projectGraphicsAsset);
                         var iterator = serializedObject.GetIterator();
                         iterator.Next(true);
 
