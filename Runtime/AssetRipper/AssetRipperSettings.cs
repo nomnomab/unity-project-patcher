@@ -19,9 +19,10 @@ namespace Nomnom.UnityProjectPatcher.AssetRipper {
         public string OutputExportAssetsFolderPath => Path.Combine(OutputExportFolderPath, "Assets");
 
         public AssetRipperJsonData ConfigurationData => _configurationData;
-        public IReadOnlyList<string> FoldersToCopy => _foldersToCopy;
-        public IReadOnlyList<string> FoldersToExcludeFromRead => _foldersToExcludeFromRead;
-        public IReadOnlyList<string> ProjectSettingFilesToCopy => _projectSettingFilesToCopy;
+        public IReadOnlyList<string> FoldersToCopy => _foldersToCopy.Select(x => x.Replace('/', '\\')).ToList();
+        public IReadOnlyList<string> FilesToExcludeFromCopy => _filesToExcludeFromCopy.Select(x => x.Replace('/', '\\')).ToList();
+        public IReadOnlyList<string> FoldersToExcludeFromRead => _foldersToExcludeFromRead.Select(x => x.Replace('/', '\\')).ToList();
+        public IReadOnlyList<string> ProjectSettingFilesToCopy => _projectSettingFilesToCopy.Select(x => x.Replace('/', '\\')).ToList();
 
         // public bool NeedsManualRip => _configurationData.Processing.enableStaticMeshSeparation;
         // public bool NeedsManualRip => _configurationData.Processing.enableStaticMeshSeparation || _configurationData.Processing.enableStaticMeshSeparation;
@@ -35,32 +36,33 @@ namespace Nomnom.UnityProjectPatcher.AssetRipper {
         
         [SerializeField]
         private FolderMapping[] _folderMappings = new[] {
-            new FolderMapping(DefaultFolderMapping.AnimationClipKey, DefaultFolderMapping.AnimationClipOutput),
-            new FolderMapping(DefaultFolderMapping.AnimatorControllerKey, DefaultFolderMapping.AnimatorControllerOutput),
-            new FolderMapping(DefaultFolderMapping.AudioClipKey, DefaultFolderMapping.AudioClipOutput),
-            new FolderMapping(DefaultFolderMapping.AudioMixerControllerKey, DefaultFolderMapping.AudioMixerControllerOutput),
-            new FolderMapping(DefaultFolderMapping.FontKey, DefaultFolderMapping.FontOutput),
-            new FolderMapping(DefaultFolderMapping.LightingSettingsKey, DefaultFolderMapping.LightingSettingsOutput),
-            new FolderMapping(DefaultFolderMapping.MaterialKey, DefaultFolderMapping.MaterialOutput),
-            new FolderMapping(DefaultFolderMapping.MeshKey, DefaultFolderMapping.MeshOutput),
-            new FolderMapping(DefaultFolderMapping.PrefabInstanceKey, DefaultFolderMapping.PrefabInstanceOutput),
-            new FolderMapping(DefaultFolderMapping.PhysicsMaterialKey, DefaultFolderMapping.PhysicsMaterialOutput),
-            new FolderMapping(DefaultFolderMapping.PluginsKey, DefaultFolderMapping.PluginsOutput),
-            new FolderMapping(DefaultFolderMapping.ResourcesKey, DefaultFolderMapping.ResourcesOutput),
-            new FolderMapping(DefaultFolderMapping.SettingsKey, DefaultFolderMapping.SettingsOutput),
-            new FolderMapping(DefaultFolderMapping.ScenesKey, DefaultFolderMapping.ScenesOutput),
-            new FolderMapping(DefaultFolderMapping.MonoBehaviourKey, DefaultFolderMapping.MonoBehaviourOutput),
-            new FolderMapping(DefaultFolderMapping.NavMeshDataKey, DefaultFolderMapping.NavMeshDataOutput),
-            new FolderMapping(DefaultFolderMapping.CubemapKey, DefaultFolderMapping.CubemapOutput),
-            new FolderMapping(DefaultFolderMapping.TerrainDataKey, DefaultFolderMapping.TerrainDataOutput),
-            new FolderMapping(DefaultFolderMapping.ShaderKey, DefaultFolderMapping.ShaderOutput),
-            new FolderMapping(DefaultFolderMapping.ScriptsKey, DefaultFolderMapping.ScriptsOutput),
-            new FolderMapping(DefaultFolderMapping.Texture2DKey, DefaultFolderMapping.Texture2DOutput),
-            new FolderMapping(DefaultFolderMapping.Texture3DKey, DefaultFolderMapping.Texture3DOutput),
-            new FolderMapping(DefaultFolderMapping.RenderTextureKey, DefaultFolderMapping.RenderTextureOutput),
-            new FolderMapping(DefaultFolderMapping.TerrainLayerKey, DefaultFolderMapping.TerrainLayerOutput),
-            new FolderMapping(DefaultFolderMapping.SpriteKey, DefaultFolderMapping.SpriteOutput),
-            new FolderMapping(DefaultFolderMapping.VideoClipKey, DefaultFolderMapping.VideoClipOutput),
+            new FolderMapping(DefaultFolderMapping.AnimationClipKey, DefaultFolderMapping.AnimationClipKey, DefaultFolderMapping.AnimationClipOutput),
+            new FolderMapping(DefaultFolderMapping.AnimatorControllerKey, DefaultFolderMapping.AnimatorControllerKey, DefaultFolderMapping.AnimatorControllerOutput),
+            new FolderMapping(DefaultFolderMapping.AudioClipKey, DefaultFolderMapping.AudioClipKey, DefaultFolderMapping.AudioClipOutput),
+            new FolderMapping(DefaultFolderMapping.AudioMixerControllerKey, DefaultFolderMapping.AudioMixerControllerKey, DefaultFolderMapping.AudioMixerControllerOutput),
+            new FolderMapping(DefaultFolderMapping.EditorKey, DefaultFolderMapping.EditorKey, DefaultFolderMapping.EditorOutput),
+            new FolderMapping(DefaultFolderMapping.FontKey, DefaultFolderMapping.FontKey, DefaultFolderMapping.FontOutput),
+            new FolderMapping(DefaultFolderMapping.LightingSettingsKey, DefaultFolderMapping.LightingSettingsKey, DefaultFolderMapping.LightingSettingsOutput),
+            new FolderMapping(DefaultFolderMapping.MaterialKey, DefaultFolderMapping.MaterialKey, DefaultFolderMapping.MaterialOutput),
+            new FolderMapping(DefaultFolderMapping.MeshKey, DefaultFolderMapping.MeshKey, DefaultFolderMapping.MeshOutput),
+            new FolderMapping(DefaultFolderMapping.PrefabInstanceKey, DefaultFolderMapping.PrefabInstanceKey, DefaultFolderMapping.PrefabInstanceOutput),
+            new FolderMapping(DefaultFolderMapping.PhysicsMaterialKey, DefaultFolderMapping.PhysicsMaterialKey, DefaultFolderMapping.PhysicsMaterialOutput),
+            new FolderMapping(DefaultFolderMapping.PluginsKey, DefaultFolderMapping.PluginsKey, DefaultFolderMapping.PluginsOutput),
+            new FolderMapping(DefaultFolderMapping.ResourcesKey, DefaultFolderMapping.ResourcesKey, DefaultFolderMapping.ResourcesOutput),
+            new FolderMapping(DefaultFolderMapping.SettingsKey, DefaultFolderMapping.SettingsKey, DefaultFolderMapping.SettingsOutput),
+            new FolderMapping(DefaultFolderMapping.ScenesKey, DefaultFolderMapping.ScenesKey, DefaultFolderMapping.ScenesOutput),
+            new FolderMapping(DefaultFolderMapping.MonoBehaviourKey, DefaultFolderMapping.MonoBehaviourKey, DefaultFolderMapping.MonoBehaviourOutput),
+            new FolderMapping(DefaultFolderMapping.NavMeshDataKey, DefaultFolderMapping.NavMeshDataKey, DefaultFolderMapping.NavMeshDataOutput),
+            new FolderMapping(DefaultFolderMapping.CubemapKey, DefaultFolderMapping.CubemapKey, DefaultFolderMapping.CubemapOutput),
+            new FolderMapping(DefaultFolderMapping.TerrainDataKey, DefaultFolderMapping.TerrainDataKey, DefaultFolderMapping.TerrainDataOutput),
+            new FolderMapping(DefaultFolderMapping.ShaderKey, DefaultFolderMapping.ShaderKey, DefaultFolderMapping.ShaderOutput),
+            new FolderMapping(DefaultFolderMapping.ScriptsKey, DefaultFolderMapping.ScriptsKey, DefaultFolderMapping.ScriptsOutput),
+            new FolderMapping(DefaultFolderMapping.Texture2DKey, DefaultFolderMapping.Texture2DKey, DefaultFolderMapping.Texture2DOutput),
+            new FolderMapping(DefaultFolderMapping.Texture3DKey, DefaultFolderMapping.Texture3DKey, DefaultFolderMapping.Texture3DOutput),
+            new FolderMapping(DefaultFolderMapping.RenderTextureKey, DefaultFolderMapping.RenderTextureKey, DefaultFolderMapping.RenderTextureOutput),
+            new FolderMapping(DefaultFolderMapping.TerrainLayerKey, DefaultFolderMapping.TerrainLayerKey, DefaultFolderMapping.TerrainLayerOutput),
+            new FolderMapping(DefaultFolderMapping.SpriteKey, DefaultFolderMapping.SpriteKey, DefaultFolderMapping.SpriteOutput),
+            new FolderMapping(DefaultFolderMapping.VideoClipKey, DefaultFolderMapping.VideoClipKey, DefaultFolderMapping.VideoClipOutput),
         }.OrderBy(x => x.sourceName).ToArray();
 
         [FormerlySerializedAs("_scriptFoldersToCopy")] [SerializeField]
@@ -69,6 +71,7 @@ namespace Nomnom.UnityProjectPatcher.AssetRipper {
             DefaultFolderMapping.AnimatorControllerKey,
             DefaultFolderMapping.AudioClipKey,
             DefaultFolderMapping.AudioMixerControllerKey,
+            DefaultFolderMapping.EditorKey,
             DefaultFolderMapping.FontKey,
             DefaultFolderMapping.LightingSettingsKey,
             DefaultFolderMapping.MaterialKey,
@@ -92,6 +95,9 @@ namespace Nomnom.UnityProjectPatcher.AssetRipper {
             DefaultFolderMapping.VideoClipKey,
             @"Scripts\Assembly-CSharp",
         };
+        
+        [SerializeField]
+        private string[] _filesToExcludeFromCopy = Array.Empty<string>();
 
         [FormerlySerializedAs("_scriptFoldersToExcludeFromRead")] [SerializeField]
         private string[] _foldersToExcludeFromRead = new string[] {
@@ -115,7 +121,21 @@ namespace Nomnom.UnityProjectPatcher.AssetRipper {
         
         public bool TryGetFolderMapping(string key, out string folder, out bool exclude, string? fallbackPath = null) {
             foreach (var mapping in _folderMappings) {
-                if (mapping.sourceName.Equals(key, StringComparison.OrdinalIgnoreCase)) {
+                if (mapping.key.Equals(key, StringComparison.OrdinalIgnoreCase)) {
+                    folder = mapping.outputPath.ToAssetDatabaseSafePath();
+                    exclude = mapping.exclude;
+                    return true;
+                }
+            }
+
+            folder = (fallbackPath ?? string.Empty).ToAssetDatabaseSafePath();
+            exclude = false;
+            return !string.IsNullOrEmpty(folder);
+        }
+        
+        public bool TryGetFolderMappingFromSource(string sourceName, out string folder, out bool exclude, string? fallbackPath = null) {
+            foreach (var mapping in _folderMappings) {
+                if (mapping.sourceName.Equals(sourceName, StringComparison.OrdinalIgnoreCase)) {
                     folder = mapping.outputPath.ToAssetDatabaseSafePath();
                     exclude = mapping.exclude;
                     return true;

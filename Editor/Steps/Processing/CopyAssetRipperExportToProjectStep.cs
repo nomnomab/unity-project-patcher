@@ -72,11 +72,18 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
 
         private static IEnumerable<AssetCatalogue.Entry> GetAllowedEntries(AssetCatalogue arAssets, AssetCatalogue projectAssets, AssetRipperSettings settings) {
             var foldersToCopy = settings.FoldersToCopy;
+            var filesToExclude = settings.FilesToExcludeFromCopy;
+            var filesToExcludePrefix = filesToExclude.Where(x => x.EndsWith("*")).Select(x => x[..^1]).ToArray();
+            filesToExclude = filesToExclude.Except(filesToExcludePrefix).ToList();
+            
             var badFiles = new List<string>();
             for (int i = 0; i < arAssets.Entries.Length; i++) {
                 var asset = arAssets.Entries[i];
                 
                 EditorUtility.DisplayProgressBar("Getting allowed entries", $"Scrubbing {asset.RelativePathToRoot}", i / (float) arAssets.Entries.Length);
+                
+                if (filesToExclude.Any(x => x == asset.RelativePathToRoot)) continue;
+                if (filesToExcludePrefix.Any(x => asset.RelativePathToRoot.StartsWith(x))) continue;
                 
                 var fileName = Path.GetFileName(asset.RelativePathToRoot);
                 if (_ignoreFiles.Any(x => fileName == x)) {

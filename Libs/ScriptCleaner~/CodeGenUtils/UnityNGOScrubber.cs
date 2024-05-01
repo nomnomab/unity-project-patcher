@@ -6,8 +6,8 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace Nomnom {
-    public static class ScriptScrubber {
+namespace Nomnom.CodeGenUtils {
+    public static class UnityNGOScrubber {
         // ? most of this is from
         // ? https://github.com/EvaisaDev/LethalCompanyProjectCleaner/blob/482b32ce17525512a1103c1e59afa9b33da1f00b/LethalCompanyProjectCleaner/Program.cs#L235
         public static void Scrub(string[] files, Action<string> log) {

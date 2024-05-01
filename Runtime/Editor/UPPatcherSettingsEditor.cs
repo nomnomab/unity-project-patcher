@@ -7,6 +7,12 @@ using UnityEngine;
 namespace Nomnom.UnityProjectPatcher {
     public partial class UPPatcherSettings {
         [Button]
+        public void OpenGameVersionUrl() {
+            var gameVersion = Path.GetFileNameWithoutExtension(GameVersion);
+            Application.OpenURL($"https://unity.com/releases/editor/whats-new/{gameVersion}");
+        }
+        
+        [Button]
         public void GetGamePackages() {
             if (GameManagedPath is null) {
                 Debug.LogError("Game Managed Path is null");

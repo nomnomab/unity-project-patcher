@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using UnityEditor;
 
 namespace Nomnom.UnityProjectPatcher.Editor {
     /// <summary>
@@ -39,9 +40,9 @@ namespace Nomnom.UnityProjectPatcher.Editor {
             
             var shaderEntriesA = Entries.OfType<ShaderEntry>().ToArray();
             var shaderEntriesB = otherEntries.OfType<ShaderEntry>().ToArray();
-            
-            var assetEntriesA = Entries.Except(scriptEntriesA).Except(shaderEntriesA).ToArray();
-            var assetEntriesB = otherEntries.Except(scriptEntriesB).Except(shaderEntriesB).ToArray();
+
+            var assetEntriesA = Entries.Except(scriptEntriesA).Except(shaderEntriesA);
+            var assetEntriesB = otherEntries.Except(scriptEntriesB).Except(shaderEntriesB);
             
             // try to match scripts
             UnityEditor.EditorUtility.DisplayProgressBar("Comparing Catalogues", "Matching scripts - This will take a while", 0);
@@ -85,28 +86,61 @@ namespace Nomnom.UnityProjectPatcher.Editor {
             var settings = PatcherUtility.GetSettings();
             var arSettings = PatcherUtility.GetAssetRipperSettings();
             var projectGameAssetsPath = settings.ProjectGameAssetsPath;
-            
-            each = Parallel.ForEach(assetEntriesA, a => {
-                var rawPath = Path.Combine("Assets", a.RelativePathToRoot);
-                
-                foreach (var b in assetEntriesB) {
-                    // root folder is mapping key
-                    // var bKey = b.RelativePathToRoot.Split(Path.DirectorySeparatorChar)[0];
-                    // if (!arSettings.TryGetFolderMapping(bKey, out var folder)) {
-                    //     continue;
-                    // }
-            
-                    // var bPath = Path.Combine(projectGameAssetsPath, folder, Path.GetFileName(b.RelativePathToRoot));
-                    if (AssetScrubber.GetProjectPathFromExportPath(projectGameAssetsPath, b, settings, arSettings, true) is not { } bPath) {
-                        continue;
-                    }
-                    if (rawPath != bPath) continue;
+
+            var assetEntriesAGroups = assetEntriesA.GroupBy(x => Path.GetExtension(x.RelativePathToRoot))
+                .ToDictionary(x => x.Key, x => x.ToDictionary(y => y.RelativePathToRoot, y => y));
+            var assetEntriesBGroups = assetEntriesB.GroupBy(x => Path.GetExtension(x.RelativePathToRoot))
+                .ToDictionary(x => x.Key, x => x.ToDictionary(y => y.RelativePathToRoot, y => y));
+
+            var index = 0;
+            foreach (var a in assetEntriesAGroups) {
+                EditorUtility.DisplayProgressBar("Comparing Catalogues", $"Matching assets - {a.Key}", index / (float)assetEntriesAGroups.Count);
+
+                var subIndex = -1;
+                foreach (var entry in a.Value) {
+                    subIndex++;
                     
-                    found.Add(new FoundMatch(b, a));
-                    // found2.Add($"[{bKey} for {b.RelativePathToRoot}] {rawPath} <-> {bPath}");
-                    break;
+                    EditorUtility.DisplayProgressBar("Comparing Catalogues", $"Matching assets - {entry.Key}", subIndex / (float)a.Value.Count);
+                    
+                    var rawPath = Path.Combine("Assets", entry.Key);
+                    if (assetEntriesBGroups.TryGetValue(a.Key, out var b) && b.TryGetValue(entry.Key, out var bEntry)) {
+                        if (AssetScrubber.GetProjectPathFromExportPath(projectGameAssetsPath, bEntry, settings, arSettings, true) is not { } bPath) {
+                            continue;
+                        }
+                        
+                        if (rawPath != bPath) continue;
+                        found.Add(new FoundMatch(bEntry, entry.Value));
+                    }
                 }
-            });
+
+                index++;
+            }
+            
+            EditorUtility.ClearProgressBar();
+            
+            // each = Parallel.ForEach(assetEntriesAGroups, a => {
+            //     foreach (var entry in a.Value) {
+            //         var rawPath = Path.Combine("Assets", entry.Key);
+            //         if (assetEntriesBGroups.TryGetValue(a.Key, out var b) && b.TryGetValue(entry.Key, out var bEntry)) {
+            //             if (AssetScrubber.GetProjectPathFromExportPath(projectGameAssetsPath, bEntry, settings, arSettings, true) is not { } bPath) {
+            //                 continue;
+            //             }
+            //             
+            //             if (rawPath != bPath) continue;
+            //             found.Add(new FoundMatch(bEntry, entry.Value));
+            //         }
+            //     }
+            //     
+            //     // var rawPath = Path.Combine("Assets", a.RelativePathToRoot);
+            //     // foreach (var b in assetEntriesBGroups) {
+            //     //     if (AssetScrubber.GetProjectPathFromExportPath(projectGameAssetsPath, b, settings, arSettings, true) is not { } bPath) {
+            //     //         continue;
+            //     //     }
+            //     //     if (rawPath != bPath) continue;
+            //     //     found.Add(new FoundMatch(b, a));
+            //     //     break;
+            //     // }
+            // });
             
             while (!each.IsCompleted) { }
             
@@ -129,6 +163,10 @@ namespace Nomnom.UnityProjectPatcher.Editor {
             public FoundMatch(Entry from, Entry to) {
                 this.from = from;
                 this.to = to;
+            }
+            
+            public override string ToString() {
+                return $"Matched {from.Guid} <-> {to.Guid} for {from.RelativePathToRoot}:\n - {from}\n - {to}";
             }
         }
 
@@ -215,7 +253,7 @@ namespace Nomnom.UnityProjectPatcher.Editor {
                 RelativePathToRoot = relativePathToRoot;
                 Guid = guid;
                 FileId = fileId;
-                AssociatedGuids = associatedGuids ?? Array.Empty<string>();
+                AssociatedGuids = (associatedGuids ?? Array.Empty<string>()).Distinct().ToArray();
             }
 
             public override string ToString() {

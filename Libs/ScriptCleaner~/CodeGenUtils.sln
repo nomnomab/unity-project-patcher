@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NGOCodeStripping", "NGOCodeStripping\NGOCodeStripping.csproj", "{F5967962-B548-4A05-86C2-36942FF83483}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeGenUtils", "CodeGenUtils\CodeGenUtils.csproj", "{F5967962-B548-4A05-86C2-36942FF83483}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

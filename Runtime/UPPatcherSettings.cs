@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using EditorAttributes;
 using Nomnom.UnityProjectPatcher.UnityPackages;
 using UnityEngine;
@@ -32,7 +33,8 @@ namespace Nomnom.UnityProjectPatcher {
         public string GameName => _gameName ?? throw new NullReferenceException(nameof(GameName));
         public string GameVersion => _gameVersion ?? throw new NullReferenceException(nameof(GameVersion));
         
-        public IReadOnlyList<FolderMapping> DllsToCopy => _dllsToCopy;
+        public IReadOnlyList<FolderMapping> DllsToCopy => _dllsToCopy.Where(x => !x.exclude).ToList();
+        public IReadOnlyList<string> ScriptDllFoldersToCopy => _scriptDllFoldersToCopy;
         
         public IReadOnlyCollection<string> IgnoredDllPrefixes => _ignoredDllPrefixes;
         public IReadOnlyCollection<FoundPackageInfo> ExactPackagesFound => _exactPackagesFound;
@@ -52,6 +54,7 @@ namespace Nomnom.UnityProjectPatcher {
 
         [Header("Dlls")]
         [SerializeField] private FolderMapping[] _dllsToCopy = Array.Empty<FolderMapping>();
+        [SerializeField] private string[] _scriptDllFoldersToCopy = Array.Empty<string>();
 
         [Header("Packages")]
         [SerializeField] private string[] _ignoredDllPrefixes = new[] {

@@ -4,11 +4,13 @@ using System.IO;
 namespace Nomnom.UnityProjectPatcher {
     [Serializable]
     public struct FolderMapping {
+        public string key;
         public string sourceName;
         public string outputPath;
         public bool exclude;
 
-        public FolderMapping(string sourceName, string outputPath, bool exclude = false) {
+        public FolderMapping(string key, string sourceName, string outputPath, bool exclude = false) {
+            this.key = key;
             this.sourceName = sourceName;
             this.outputPath = outputPath;
             this.exclude = exclude;
@@ -27,6 +29,9 @@ namespace Nomnom.UnityProjectPatcher {
         
         public const string AudioMixerControllerKey = "AudioMixerController";
         public static readonly string AudioMixerControllerOutput = Path.Combine("Audio", "AudioMixerControllers");
+        
+        public const string EditorKey = "Editor";
+        public static readonly string EditorOutput = "Editor";
         
         public const string FontKey = "Font";
         public static readonly string FontOutput = Path.Combine("Fonts", "TextMeshPro");

@@ -19,7 +19,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
 
             _progress = new StepsProgress {
                 Steps = steps.Select(x => x.GetType().FullName).ToList(),
-                CompletedSteps = new()
+                CompletedSteps = new(),
             };
         }
 
@@ -53,6 +53,10 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
             }
 
             index = stepIndex;
+
+            if (index == 0) {
+                SetStartTime();
+            }
             
             Debug.Log($"Starting on step {stepIndex} -> {steps[stepIndex].GetType().Name}");
             
@@ -71,7 +75,12 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                 EditorUtility.DisplayProgressBar("Patching", step.GetType().Name, (float)i / steps.Length);
                 
                 try {
+                    var startTime = DateTime.Now;
                     var result = await step.Run();
+                    var endTime = DateTime.Now;
+                    var elapsedSeconds = (endTime - startTime).TotalSeconds;
+                    AppendStepResult(step, elapsedSeconds);
+                    
                     _progress.LastResult = result;
                     
                     switch (result) {
@@ -108,6 +117,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                 }
             }
             
+            SetEndTime();
             EditorUtility.ClearProgressBar();
             ClearProgress();
             return true;
@@ -127,7 +137,48 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
 
         public void ClearProgress() {
             File.Delete(StepsProgress.SavePath);
+            ClearStepResults();
             EditorUtility.ClearProgressBar();
+        }
+        
+        public void ClearStepResults() {
+            if (!File.Exists(StepsResults.SavePath)) {
+                return;
+            }
+            
+            File.Delete(StepsResults.SavePath);
+        }
+        
+        public void AppendStepResult(IPatcherStep step, double elapsedSeconds) {
+            var stepsResults = GetStepResults();
+            stepsResults.Results.Add(new StepsResults.Result(step.GetType().FullName ?? "nil", elapsedSeconds));
+            SaveStepResults(stepsResults);
+        }
+        
+        public void SetStartTime() {
+            ClearStepResults();
+            var stepsResults = GetStepResults();
+            stepsResults.StartTime = DateTime.Now;
+            stepsResults.EndTime = default;
+            stepsResults.ElapsedSeconds = -1;
+            SaveStepResults(stepsResults);
+        }
+        
+        public void SetEndTime() {
+            var stepsResults = GetStepResults();
+            stepsResults.EndTime = DateTime.Now;
+            stepsResults.ElapsedSeconds = (stepsResults.EndTime - stepsResults.StartTime).TotalSeconds;
+            SaveStepResults(stepsResults);
+        }
+        
+        private StepsResults GetStepResults() {
+            return StepsResults.FromPath(StepsResults.SavePath);
+        }
+        
+        private void SaveStepResults(StepsResults stepsResults) {
+            var json = stepsResults.ToJson();
+            // Debug.Log(json);
+            File.WriteAllText(StepsResults.SavePath, json);
         }
     }
 }

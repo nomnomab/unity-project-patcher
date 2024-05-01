@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Text;
 using Nomnom.UnityProjectPatcher.AssetRipper;
 using Nomnom.UnityProjectPatcher.Editor.Steps;
 using UnityEditor;
@@ -83,6 +84,96 @@ namespace Nomnom.UnityProjectPatcher.Editor {
             var serializedObject = new SerializedObject(qualitySettings);
             
             return serializedObject.FindProperty("m_QualitySettings.Array.data[0].customRenderPipeline");
+        }
+
+        private const string ExcludeFromAllPlatformsMetaDummyString = @"
+fileFormatVersion: 2
+guid: e467066723a20064d8f96fc222107589";
+        
+        private const string ExcludeFromAllPlatformsMetaString = @"
+PluginImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  iconMap: {}
+  executionOrder: {}
+  defineConstraints: []
+  isPreloaded: 0
+  isOverridable: 0
+  isExplicitlyReferenced: 0
+  validateReferences: 1
+  platformData:
+  - first:
+      : Any
+    second:
+      enabled: 0
+      settings:
+        Exclude Editor: 1
+        Exclude Linux64: 1
+        Exclude OSXUniversal: 1
+        Exclude Win: 1
+        Exclude Win64: 1
+  - first:
+      Any: 
+    second:
+      enabled: 0
+      settings: {}
+  - first:
+      Editor: Editor
+    second:
+      enabled: 0
+      settings:
+        DefaultValueInitialized: true
+  - first:
+      Standalone: Linux64
+    second:
+      enabled: 0
+      settings:
+        CPU: None
+  - first:
+      Standalone: OSXUniversal
+    second:
+      enabled: 0
+      settings:
+        CPU: None
+  - first:
+      Standalone: Win
+    second:
+      enabled: 0
+      settings:
+        CPU: None
+  - first:
+      Standalone: Win64
+    second:
+      enabled: 0
+      settings:
+        CPU: None
+  - first:
+      Windows Store Apps: WindowsStoreApps
+    second:
+      enabled: 0
+      settings:
+        CPU: AnyCPU
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+";
+        
+        public static void ExcludeDllFromLoading(string path) {
+            var metaPath = path + ".meta";
+            if (File.Exists(metaPath)) {
+                var metaLines = File.ReadAllLines(metaPath);
+                // keep the first two lines
+                var stringBuilder = new StringBuilder();
+                for (var i = 0; i < metaLines.Length; i++) {
+                    if (i < 2) {
+                        stringBuilder.AppendLine(metaLines[i]);
+                    }
+                }
+                stringBuilder.Append(ExcludeFromAllPlatformsMetaString);
+                File.WriteAllText(metaPath, stringBuilder.ToString());
+            } else {
+                File.WriteAllText(metaPath, $"{ExcludeFromAllPlatformsMetaDummyString}\n{ExcludeFromAllPlatformsMetaString}");
+            }
         }
 
         [MenuItem("CONTEXT/Object/Debug Guid")]

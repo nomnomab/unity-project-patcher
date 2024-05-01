@@ -5,10 +5,18 @@ using UnityEngine;
 
 namespace Nomnom.UnityProjectPatcher.Editor.Steps {
     public readonly struct CopyProjectSettingsStep: IPatcherStep {
+        private readonly bool allowUnsafeCode;
+        
+        public CopyProjectSettingsStep(bool allowUnsafeCode) {
+            this.allowUnsafeCode = allowUnsafeCode;
+        }
+        
         public UniTask<StepResult> Run() {
-            EditorApplication.LockReloadAssemblies();
-            PlayerSettings.allowUnsafeCode = true;
-            
+            if (allowUnsafeCode) {
+                EditorApplication.LockReloadAssemblies();
+                PlayerSettings.allowUnsafeCode = true;
+            }
+
             var settings = this.GetAssetRipperSettings();
             var arProjectSettingsFolder = Path.Combine(settings.OutputFolderPath, "ExportedProject", "ProjectSettings");
             var projectProjectSettingsFolder = Path.Combine(Application.dataPath, "..", "ProjectSettings");

@@ -143,6 +143,13 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                 }
             }
 
+            try {
+                SanitizeFolders(arSettings.OutputExportAssetsFolderPath);
+            } catch {
+                Debug.LogError("Failed to sanitize asset ripper export folders!");
+                throw;
+            }
+
             return StepResult.Success;
 
             void clearExportFolder() {
@@ -283,6 +290,18 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
             }
             
             return UniTask.CompletedTask;
+        }
+
+        private void SanitizeFolders(string assetsRoot) {
+            var folders = Directory.GetDirectories(assetsRoot, "*", SearchOption.TopDirectoryOnly);
+            foreach (var folder in folders) {
+                var folderName = Path.GetFileName(folder);
+                if (folderName.Contains('.') || folderName.Contains(' ')) {
+                    var newFolderName = folderName.Replace(".", string.Empty).Replace(' ', '_');
+                    var folderRoot = Path.GetDirectoryName(folder);
+                    Directory.Move(folder, Path.Combine(folderRoot, newFolderName));
+                }
+            }
         }
     }
 }

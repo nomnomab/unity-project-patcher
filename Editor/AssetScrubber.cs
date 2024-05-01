@@ -36,7 +36,7 @@ namespace Nomnom.UnityProjectPatcher.Editor {
         
         private readonly static string[] IgnoreDiskContains = {
             "Editor",
-            "Test",
+            // "Test",
             "Profile-",
             "Profiling.",
             "Unity.Services."
@@ -120,7 +120,9 @@ namespace Nomnom.UnityProjectPatcher.Editor {
             
             Debug.Log(diskCatalogue.ToString(false));
             Debug.Log(projectCatalogue.ToString(false));
-            projectCatalogue.CompareProjectToDisk(diskCatalogue);
+            foreach (var match in projectCatalogue.CompareProjectToDisk(diskCatalogue)) {
+                Debug.Log(match);
+            }
         }
         
         public static AssetCatalogue ScrubProjectAssets() {
@@ -146,7 +148,9 @@ namespace Nomnom.UnityProjectPatcher.Editor {
             
             for (var i = 0; i < assetGuids.Length; i++) {
                 var assetGuid = assetGuids[i];
-                EditorUtility.DisplayProgressBar("Scrubbing Project", $"Scrubbing {assetGuid}", i / (float) assetGuids.Length);
+                if (EditorUtility.DisplayCancelableProgressBar("Scrubbing Project", $"Scrubbing {assetGuid}", i / (float)assetGuids.Length)) {
+                    throw new OperationCanceledException();
+                }
                 
                 // load type information
                 var assetPath = AssetDatabase.GUIDToAssetPath(assetGuid);
@@ -161,7 +165,27 @@ namespace Nomnom.UnityProjectPatcher.Editor {
 
                 UnityEngine.Object? obj = null;
                 try {
-                    obj = AssetDatabase.LoadMainAssetAtPath(assetPath);
+                    // materials are dumb and tend to crash when imported???
+                    if (assetPath.EndsWith(".mat")) {
+                        var materialGuid = AssetDatabase.AssetPathToGUID(assetPath);
+                        entries.Add(new AssetCatalogue.Entry(assetPath.Replace('/', Path.DirectorySeparatorChar), materialGuid, 4800000, GetAssociatedGuids(Path.GetFullPath(assetPath)).ToArray()));
+                        continue;
+                    }
+
+                    // shaders are dumb too???
+                    if (assetPath.EndsWith(".shader")) {
+                        var shaderType = GetShaderName(Path.GetFullPath(assetPath));
+                        var shaderGuid = AssetDatabase.AssetPathToGUID(assetPath);
+                        entries.Add(new AssetCatalogue.ShaderEntry(assetPath.Replace('/', Path.DirectorySeparatorChar), shaderGuid, 4800000, shaderType, null));
+                        continue;
+                    }
+                    
+                    if (!AssetDatabase.IsMainAssetAtPathLoaded(assetPath)) {
+                        obj = AssetDatabase.LoadMainAssetAtPath(assetPath);
+                    } else {
+                        obj = AssetDatabase.LoadAssetAtPath(assetPath, assetType);
+                    }
+                    
                     var found = AssetDatabase.TryGetGUIDAndLocalFileIdentifier(obj, out var guid, out long fileId);
                     if (!found) continue;
                     
@@ -221,8 +245,10 @@ namespace Nomnom.UnityProjectPatcher.Editor {
             for (var i = 0; i < nonMonos.Count; i++) {
                 var (nonMono, assetPath, fileId) = nonMonos[i];
                 if (!nonMono) continue;
-                
-                EditorUtility.DisplayProgressBar("Scrubbing Project", $"Scrubbing nonMono {nonMono.name}", i / (float) nonMonos.Count);
+
+                if (EditorUtility.DisplayCancelableProgressBar("Scrubbing Project", $"Scrubbing nonMono {nonMono.name}", i / (float)nonMonos.Count)) {
+                    throw new OperationCanceledException();
+                }
 
                 foreach (var entry in ScrubNonMonoData(nonMono, assetPath, fileId, allTypes)) {
                     // if (entries.Any(x => x is AssetCatalogue.ScriptEntry s && entry is AssetCatalogue.ScriptEntry s2 && s.FullTypeName == s2.FullTypeName)) {
@@ -373,8 +399,10 @@ namespace Nomnom.UnityProjectPatcher.Editor {
                 if (!File.Exists(file)) continue;
                 if (Path.GetExtension(file) == ".meta") continue;
                 if (IgnoreEndsWith.Any(x => file.EndsWith(x))) continue;
-                
-                EditorUtility.DisplayProgressBar("Scrubbing Folder", $"Scrubbing {file}", i / (float) files.Length);
+
+                if (EditorUtility.DisplayCancelableProgressBar("Scrubbing Folder", $"Scrubbing {file}", i / (float)files.Length)) {
+                    throw new OperationCanceledException();
+                }
 
                 var extension = Path.GetExtension(file).ToLowerInvariant();
                 var isScript = extension == ".cs";
@@ -422,6 +450,7 @@ namespace Nomnom.UnityProjectPatcher.Editor {
                 if (isShader) {
                     var shaderType = GetShaderName(file);
                     entries.Add(new AssetCatalogue.ShaderEntry(finalFile, guid, null, shaderType, associatedGuids));
+                    // Debug.Log($" - \"{finalFile}\" -> \"{shaderType}\"");
                     continue;
                 }
 
@@ -507,14 +536,19 @@ namespace Nomnom.UnityProjectPatcher.Editor {
 
             var contents = File.ReadAllText(fullAssetPath);
             var hasChanged = false;
-            foreach (var guid in entry.AssociatedGuids) {
+            for (var i = 0; i < entry.AssociatedGuids.Length; i++) {
+                var guid = entry.AssociatedGuids[i];
+                if (EditorUtility.DisplayCancelableProgressBar($"Scrubbing {fullAssetPath}", $"Scrubbing {guid}", (float)i / entry.AssociatedGuids.Length)) {
+                    throw new OperationCanceledException();
+                }
+                
                 if (!guids.TryGetValue(guid, out var newGuid)) {
                     continue;
                 }
-                
+
                 contents = contents.Replace(guid, newGuid.to.Guid);
                 hasChanged = true;
-                Debug.Log($"   - {guid} -> {newGuid.to.Guid}");
+                // Debug.Log($"   - {guid} -> {newGuid.to.Guid}");
             }
 
             if (!hasChanged) return;
@@ -537,10 +571,13 @@ namespace Nomnom.UnityProjectPatcher.Editor {
         
         public static string? GetProjectPathFromExportPath(string projectGameAssetsPath, AssetCatalogue.Entry entry, UPPatcherSettings settings, AssetRipperSettings arSettings, bool ignoreExclude) {
             var splitPath = entry.RelativePathToRoot.Split(Path.DirectorySeparatorChar);
-            var bKey = splitPath[0];
-            if (!arSettings.TryGetFolderMapping(bKey, out var folder, out var exclude, Path.Combine("Unknown", bKey))) {
+            var sourceName = splitPath[0];
+            if (!arSettings.TryGetFolderMappingFromSource(sourceName, out var folder, out var exclude, Path.Combine("Unknown", sourceName))) {
+                Debug.LogWarning($"Could not find folder mapping for {sourceName}");
                 return null;
             }
+            
+            Debug.Log($" - {sourceName} -> {folder}");
 
             if (!ignoreExclude && exclude) {
                 return null;

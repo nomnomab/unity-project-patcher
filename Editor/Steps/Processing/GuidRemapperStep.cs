@@ -11,7 +11,21 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
         [MenuItem("Tools/UPP/Test")]
         public static void Foo() {
             var step = new GuidRemapperStep();
-            step.Run();
+
+            try {
+                var arSettings = step.GetAssetRipperSettings();
+            
+                var arAssets = AssetScrubber.ScrubDiskFolder(arSettings.OutputExportAssetsFolderPath, arSettings.FoldersToExcludeFromRead);
+                var projectAssets = AssetScrubber.ScrubProject();
+                
+                var matches = projectAssets.CompareProjectToDisk(arAssets);
+                foreach (var match in matches) {
+                    Debug.Log($"\"{match.from.RelativePathToRoot}\" to \"{match.to.RelativePathToRoot}\"\n - {match.from}\n - {match.to}");
+                }
+            } catch {
+                //
+            }
+            // step.Run();
         }
         
         public UniTask<StepResult> Run() {
@@ -36,8 +50,11 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                 var match = matches[i];
                 var entryFrom = match.from;
                 var entryTo = match.to;
-                
-                EditorUtility.DisplayProgressBar("Guid Remapping", $"Replacing {entryFrom.Guid} with {entryTo.Guid}", i / (float) matches.Length);
+
+                if (EditorUtility.DisplayCancelableProgressBar("Guid Remapping", $"Replacing {entryFrom.Guid} with {entryTo.Guid}", i / (float)matches.Length)) {
+                    Debug.Log("Manually cancelled");
+                    throw new OperationCanceledException();
+                }
                 
                 // replace guids & write to disk
                 try {
@@ -48,10 +65,17 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                 }
             }
 
+            // var filesToExclude = arSettings.FilesToExcludeFromCopy;
+            // var filesToExcludePrefix = filesToExclude.Where(x => x.EndsWith("*")).Select(x => x[..^1]).ToArray();
+            // filesToExclude = filesToExclude.Except(filesToExcludePrefix).ToList();
+            
             for (int i = 0; i < arAssets.Entries.Length; i++) {
                 var entry = arAssets.Entries[i];
-                
-                EditorUtility.DisplayProgressBar("Guid Remapping", $"Checking associations for {entry.RelativePathToRoot}", i / (float) arAssets.Entries.Length);
+
+                if (EditorUtility.DisplayCancelableProgressBar("Guid Remapping", $"Checking associations for {entry.RelativePathToRoot}", i / (float)arAssets.Entries.Length)) {
+                    Debug.Log("Manually cancelled");
+                    throw new OperationCanceledException();
+                }
 
                 try {
                     AssetScrubber.ReplaceAssetGuids(arAssets.RootAssetsPath, entry, lookup);

@@ -7,6 +7,12 @@ using UnityEngine;
 
 namespace Nomnom.UnityProjectPatcher.Editor.Steps {
     public readonly struct EnableNewInputSystemStep: IPatcherStep {
+        private readonly InputSystemType _inputSystemType;
+        
+        public EnableNewInputSystemStep(InputSystemType inputSystemType) {
+            _inputSystemType = inputSystemType;
+        }
+        
         public UniTask<StepResult> Run() {
             try {
                 // do we even have the new input system installed?
@@ -41,7 +47,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
             var playerSettings = Resources.FindObjectsOfTypeAll<PlayerSettings>()[0];
             var playerSettingsSo = new SerializedObject(playerSettings);
             var activeInputHandlerProp = playerSettingsSo.FindProperty("activeInputHandler");
-            if (activeInputHandlerProp.intValue != 0) {
+            if (activeInputHandlerProp.intValue == (int)_inputSystemType) {
                 Debug.LogWarning("Input System is already enabled");
                 return false;
             }
@@ -49,10 +55,16 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
             // 0: Input Manager (Old)
             // 1: Input System Package (New)
             // 2: Both
-            activeInputHandlerProp.intValue = 1;
+            activeInputHandlerProp.intValue = (int)_inputSystemType;
             playerSettingsSo.ApplyModifiedPropertiesWithoutUndo();
             Debug.Log("Input System is now enabled");
             return true;
         }
+    }
+
+    public enum InputSystemType {
+        InputManager_Old,
+        InputSystem_New,
+        Both
     }
 }

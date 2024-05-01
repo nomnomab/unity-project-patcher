@@ -6,7 +6,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace Nomnom {
+namespace Nomnom.CodeGenUtils {
     public static class ScriptCloner {
         // private readonly static string[] SupportedTypes = {
         //     "MonoBehaviour",

@@ -4,8 +4,8 @@
         <ImplicitUsings>false</ImplicitUsings>
         <Nullable>enable</Nullable>
         <LangVersion>9</LangVersion>
-        <AssemblyName>Nomnom.NGOCodeStripping</AssemblyName>
-        <RootNamespace>Nomnom</RootNamespace>
+        <AssemblyName>Nomnom.CodeGenUtils</AssemblyName>
+        <RootNamespace>Nomnom.CodeGenUtils</RootNamespace>
         <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     </PropertyGroup>
     <ItemGroup>
