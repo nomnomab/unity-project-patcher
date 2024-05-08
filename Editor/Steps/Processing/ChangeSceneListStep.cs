@@ -5,10 +5,14 @@ using UnityEditor;
 using UnityEngine;
 
 namespace Nomnom.UnityProjectPatcher.Editor.Steps {
+    /// <summary>
+    /// Gathers all of the scenes in the project and injects them into the scene list,
+    /// and will put a scene first in the list by name, if provided.
+    /// </summary>
     public readonly struct ChangeSceneListStep: IPatcherStep {
-        private readonly string? _firstSceneName;
+        private readonly string _firstSceneName;
         
-        public ChangeSceneListStep(string? firstSceneName) {
+        public ChangeSceneListStep(string firstSceneName) {
             _firstSceneName = firstSceneName;
         }
         
@@ -27,10 +31,11 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                 .Select(AssetDatabase.GUIDToAssetPath)
                 .ToArray();
 
-            if (_firstSceneName is {} firstSceneName) {
+            var firstSceneName = _firstSceneName;
+            if (!string.IsNullOrEmpty(_firstSceneName)) {
                 var firstScene = scenes.FirstOrDefault(x => x.Contains(firstSceneName));
                 if (firstScene is null) {
-                    Debug.LogError($"Could not find scene with name \"{firstSceneName}\"");
+                    Debug.LogError($"Could not find scene with name \"{_firstSceneName}\"");
                     return UniTask.FromResult(StepResult.Success);
                 }
 
@@ -45,5 +50,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
             
             return UniTask.FromResult(StepResult.Success);
         }
+
+        public void OnComplete(bool failed) { }
     }
 }

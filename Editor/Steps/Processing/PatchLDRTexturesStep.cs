@@ -6,13 +6,17 @@ using UnityEditor;
 using UnityEngine;
 
 namespace Nomnom.UnityProjectPatcher.Editor.Steps {
+    /// <summary>
+    /// This checks if there are any LDR textures in the project that need
+    /// to be converted to <see cref="TextureImporterFormat.RGB24"/>.
+    /// </summary>
     public readonly struct PatchLDRTexturesStep: IPatcherStep {
         private readonly string _prefix;
         
-        [MenuItem("Tools/UPP/Patch LDR Textures")]
-        public static void Patch() {
-            new PatchLDRTexturesStep("LDR_RGB1_").Run().Forget();
-        }
+        // [MenuItem("Tools/UPP/Patch LDR Textures")]
+        // public static void Patch() {
+        //     new PatchLDRTexturesStep("LDR_RGB1_").Run().Forget();
+        // }
         
         public PatchLDRTexturesStep(string prefix) {
             _prefix = prefix;
@@ -60,5 +64,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
             EditorUtility.ClearProgressBar();
             return UniTask.FromResult(StepResult.Success);
         }
+
+        public void OnComplete(bool failed) { }
     }
 }

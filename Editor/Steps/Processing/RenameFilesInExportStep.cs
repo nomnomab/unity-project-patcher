@@ -4,21 +4,12 @@ using UnityEditor;
 using UnityEngine;
 
 namespace Nomnom.UnityProjectPatcher.Editor.Steps {
+    /// <summary>
+    /// This lets you rename files in the export folder.
+    /// </summary>
     public readonly struct RenameFilesInExportStep: IPatcherStep {
         private readonly (string, string)[] _entries;
-        
-        [MenuItem("Tools/UPP/Test Rename Files In Export")]
-        public static void Test() {
-            new RenameFilesInExportStep(
-                ("Shader\\TextMeshPro_Distance Field.shader", "Shader\\TMP_SDF.shader"),
-                ("Shader\\TextMeshPro_Distance Field.shader.meta", "Shader\\TMP_SDF.shader.meta"),
-                ("Shader\\TextMeshPro_Mobile_Distance Field.shader", "Shader\\TMP_SDF-Mobile.shader"),
-                ("Shader\\TextMeshPro_Mobile_Distance Field.shader.meta", "Shader\\TMP_SDF-Mobile.shader.meta"),
-                ("Shader\\TextMeshPro_Sprite.shader", "Shader\\TMP_Sprite.shader"),
-                ("Shader\\TextMeshPro_Sprite.shader.meta", "Shader\\TMP_Sprite.shader.meta")
-            ).Run().Forget();
-        }
-        
+
         public RenameFilesInExportStep(params (string, string)[] entries) {
             _entries = entries;
         }
@@ -42,5 +33,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
             
             return UniTask.FromResult(StepResult.Success);
         }
+
+        public void OnComplete(bool failed) { }
     }
 }

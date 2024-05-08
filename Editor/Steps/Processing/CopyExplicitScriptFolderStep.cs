@@ -4,13 +4,16 @@ using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 namespace Nomnom.UnityProjectPatcher.Editor.Steps {
+    /// <summary>
+    /// This copies explicit whole folders from the AssetRipper export's Scripts folder into the project.
+    /// This is useful for dlls that have ScriptableObjects, or other asset/component types,
+    /// and they should be usable in-editor.
+    /// <br/><br/>
+    /// These are defined in the UPPatcherSettings assets at <see cref="UPPatcherSettings.ScriptDllFoldersToCopy"/>.
+    /// <br/><br/>
+    /// Restarts the editor.
+    /// </summary>
     public readonly struct CopyExplicitScriptFolderStep: IPatcherStep {
-        // [MenuItem("Tools/UPP/Copy Explicit Script Folder")]
-        // public static void Foo() {
-        //     var step = new CopyExplicitScriptFolderStep();
-        //     step.Run();
-        // }
-        
         public UniTask<StepResult> Run() {
             var settings = this.GetSettings();
             var arSettings = this.GetAssetRipperSettings();
@@ -55,7 +58,12 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                         
                         if (fileName.StartsWith("__")) continue;
                         
+#if UNITY_2020_3_OR_NEWER
                         var relativePath = Path.GetRelativePath(fromFolder, file);
+#else
+                        var relativePath = PathNetCore.GetRelativePath(fromFolder, file);
+#endif
+
                         var targetPath = Path.Combine(toFolder, relativePath);
                         Directory.CreateDirectory(Path.GetDirectoryName(targetPath));
                         File.Copy(file, targetPath, true);
@@ -68,5 +76,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
             
             return UniTask.FromResult(StepResult.RestartEditor);
         }
+
+        public void OnComplete(bool failed) { }
     }
 }

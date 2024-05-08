@@ -8,8 +8,8 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
     public sealed class StepsProgress {
         public static string SavePath => Path.Combine(Application.dataPath, "..", "completed-steps.json");
         
-        public List<string> Steps = new();
-        public List<string> CompletedSteps = new();
+        public List<string> Steps = new List<string>();
+        public List<string> CompletedSteps = new List<string>();
         public StepResult LastResult = StepResult.Success;
         public bool InProgress;
         
@@ -20,7 +20,11 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
             });
         }
         
+#if UNITY_2020_3_OR_NEWER
         public static StepsProgress? FromPath(string path) {
+#else
+        public static StepsProgress FromPath(string path) {
+#endif
             if (!File.Exists(path)) {
                 return null;
             }

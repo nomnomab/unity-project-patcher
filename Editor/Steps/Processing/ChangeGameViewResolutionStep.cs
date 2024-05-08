@@ -2,10 +2,16 @@
 using UnityEngine;
 
 namespace Nomnom.UnityProjectPatcher.Editor.Steps {
+    /// <summary>
+    /// Allows you to change the game view resolution to an aspect ratio, or a specific resolution,
+    /// but either have to already exist in the GameView resolution dropdown.
+    /// <br/><br/>
+    /// Examples being: 16:9, 16:10, etc
+    /// </summary>
     public readonly struct ChangeGameViewResolutionStep: IPatcherStep {
-        private readonly string? _size;
+        private readonly string _size;
         
-        public ChangeGameViewResolutionStep(string? size) {
+        public ChangeGameViewResolutionStep(string size) {
             _size = size;
         }
         
@@ -23,5 +29,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
             
             return UniTask.FromResult(StepResult.Success);
         }
+
+        public void OnComplete(bool failed) { }
     }
 }

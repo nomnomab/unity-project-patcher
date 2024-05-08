@@ -1,9 +1,10 @@
-﻿using System;
+﻿#if UNITY_2020_3_OR_NEWER
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Quickenshtein;
 using UnityEngine;
+using Quickenshtein;
 using UnityEngine.Pool;
 
 namespace Nomnom.UnityProjectPatcher.UnityPackages {
@@ -139,3 +140,4 @@ namespace Nomnom.UnityProjectPatcher.UnityPackages {
 #endif
     }
 }
+#endif

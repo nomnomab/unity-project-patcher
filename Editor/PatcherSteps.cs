@@ -1,6 +1,9 @@
 ﻿using System.Reflection;
 using Nomnom.UnityProjectPatcher.Editor.Steps;
 using UnityEditor;
+using UnityEditorInternal;
+using UnityEngine;
+using UnityEngine.PlayerLoop;
 
 namespace Nomnom.UnityProjectPatcher.Editor {
     /// <summary>
@@ -10,24 +13,40 @@ namespace Nomnom.UnityProjectPatcher.Editor {
         [InitializeOnLoadMethod]
         private static void OnLoad() {
             // locate game patcher
-            foreach (var type in TypeCache.GetTypesWithAttribute<UPPatcherAttribute>()) {
-                // does it have a Run function?
-                var runFunction = type.GetMethod("Run", BindingFlags.Public | BindingFlags.Static | BindingFlags.NonPublic);
-                if (runFunction is null) continue;
-                if (runFunction.GetParameters().Length > 0) continue;
-                
-                // Debug.Log($"Found Patcher: {type.Name}");
-                
-                EditorApplication.delayCall += () => {
-                    var progress = StepsProgress.FromPath(StepsProgress.SavePath);
-                    if (progress is null) return;
+            var gameWrapperType = PatcherUtility.GetGameWrapperType();
+            if (gameWrapperType is null) return;
+            
+            var runFunction = PatcherUtility.GetGameWrapperRunFunction(gameWrapperType);
+            if (runFunction is null) return;
 
-                    runFunction.Invoke(null, null);
-                };
+            StartDelay(runFunction);
 
-                //! only run one patcher
-                break;
-            }
+            // if (!InternalEditorUtility.isApplicationActive) {
+            //     EditorApplication.update -= Update;
+            //     EditorApplication.update += Update;
+            //     RunFunction(runFunction);
+            // } else {
+            //     StartDelay(runFunction);
+            // }
+        }
+
+        // private static void Update() {
+        //     if (!InternalEditorUtility.isApplicationActive) {
+        //         EditorApplication.delayCall?.Invoke();
+        //     }
+        // }
+
+        private static void StartDelay(MethodInfo runFunction) {
+            EditorApplication.delayCall += () => {
+                RunFunction(runFunction);
+            };
+        }
+
+        private static void RunFunction(MethodInfo runFunction) {
+            var progress = StepsProgress.FromPath(StepsProgress.SavePath);
+            if (progress is null) return;
+
+            runFunction.Invoke(null, null);
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Cysharp.Threading.Tasks;
@@ -8,6 +9,8 @@ using UnityEngine;
 
 namespace Nomnom.UnityProjectPatcher.Editor.Steps {
     public struct StepsExecutor {
+        public static string CurrentStepName { get; private set; }
+        
         public IPatcherStep[] steps;
         public int index;
 
@@ -19,7 +22,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
 
             _progress = new StepsProgress {
                 Steps = steps.Select(x => x.GetType().FullName).ToList(),
-                CompletedSteps = new(),
+                CompletedSteps = new List<string>(),
             };
         }
 
@@ -28,11 +31,11 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
             
             try {
                 var stepsProgress = StepsProgress.FromPath(StepsProgress.SavePath);
-                if (stepsProgress is not null) {
+                if (stepsProgress != null) {
                     // might have crashed?
                     if (stepsProgress.InProgress) {
                         Debug.LogWarning($"Seems like it might have crashed at step {stepIndex}, aborting...");
-                        ClearProgress();
+                        ClearProgress(true);
                         return false;
                     }
                     
@@ -42,13 +45,13 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                 }
             } catch {
                 Debug.LogError("Failed to read steps progress");
-                ClearProgress();
+                ClearProgress(true);
                 throw;
             }
             
             if (stepIndex >= steps.Length) {
                 Debug.Log("All steps are done");
-                ClearProgress();
+                ClearProgress(false);
                 return true;
             }
 
@@ -76,12 +79,15 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                 
                 try {
                     var startTime = DateTime.Now;
+                    CurrentStepName = step.GetType().Name;
                     var result = await step.Run();
                     var endTime = DateTime.Now;
                     var elapsedSeconds = (endTime - startTime).TotalSeconds;
                     AppendStepResult(step, elapsedSeconds);
                     
                     _progress.LastResult = result;
+                    
+                    Debug.Log($"Step \"<b>{step.GetType().Name}</b>\" took {elapsedSeconds} seconds and returned {result}");
                     
                     switch (result) {
                         case StepResult.RestartEditor:
@@ -107,7 +113,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                     }
                 } catch {
                     Debug.LogError($"Step {step.GetType().Name} failed");
-                    ClearProgress();
+                    ClearProgress(true);
                     EditorUtility.ClearProgressBar();
                     throw;
                 }
@@ -119,7 +125,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
             
             SetEndTime();
             EditorUtility.ClearProgressBar();
-            ClearProgress();
+            ClearProgress(false);
             return true;
         }
 
@@ -135,10 +141,24 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
             File.WriteAllText(StepsProgress.SavePath, json);
         }
 
-        public void ClearProgress() {
+        public void ClearProgress(bool failed) {
+            CurrentStepName = null;
             File.Delete(StepsProgress.SavePath);
-            ClearStepResults();
+            // ClearStepResults();
             EditorUtility.ClearProgressBar();
+
+            if (steps == null || steps.Length == 0) {
+                return;
+            }
+            
+            foreach (var step in steps) {
+                try {
+                    step?.OnComplete(failed);
+                } catch {
+                    Debug.LogError($"Failed to call OnComplete on \"{step?.GetType().Name}\"");
+                    throw;
+                }
+            }
         }
         
         public void ClearStepResults() {

@@ -4,6 +4,13 @@ using UnityEditor;
 using UnityEngine;
 
 namespace Nomnom.UnityProjectPatcher.Editor.Steps {
+    /// <summary>
+    /// This copies project settings from the export folder into the project.
+    /// <br/><br/>
+    /// These are defined in <see cref="Nomnom.UnityProjectPatcher.AssetRipper.AssetRipperSettings.ProjectSettingFilesToCopy"/>.
+    /// <br/><br/>
+    /// Restarts the editor.
+    /// </summary>
     public readonly struct CopyProjectSettingsStep: IPatcherStep {
         private readonly bool allowUnsafeCode;
         
@@ -36,5 +43,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
             
             return UniTask.FromResult(StepResult.RestartEditor);
         }
+        
+        public void OnComplete(bool failed) { }
     }
 }

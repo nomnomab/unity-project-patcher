@@ -41,5 +41,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
             
             return UniTask.FromResult(StepResult.Success);
         }
+        
+        public void OnComplete(bool failed) { }
     }
 }

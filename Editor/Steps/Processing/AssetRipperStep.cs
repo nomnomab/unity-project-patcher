@@ -1,6 +1,9 @@
 ﻿using System;
 using System.IO;
 using Cysharp.Threading.Tasks;
+#if !UNITY_2020_3_OR_NEWER
+using ICSharpCode.SharpZipLib.Zip;
+#endif
 using Nomnom.UnityProjectPatcher.AssetRipper;
 using UnityEditor;
 using UnityEngine;
@@ -12,10 +15,21 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
     /// Automatically handles downloading and running AssetRipper.
     /// </summary>
     public readonly struct AssetRipperStep: IPatcherStep {
-        [MenuItem("Tools/UPP/Run AssetRipper")]
-        public static void Foo() {
-            var step = new AssetRipperStep();
-            step.Run().Forget();
+        private static bool _noDeletion;
+        
+        [MenuItem("Tools/Unity Project Patcher/Run AssetRipper")]
+        private static void Foo() {
+            if (!EditorUtility.DisplayDialog("AssetRipper", "Are you sure you want to run AssetRipper?", "Yes", "No")) {
+                return;
+            }
+            
+            _noDeletion = true;
+            try {
+                new AssetRipperStep().Run().Forget();
+            } catch (Exception e) {
+                Debug.LogError(e);
+                EditorUtility.ClearProgressBar();
+            }
         }
         
         public async UniTask<StepResult> Run() {
@@ -54,7 +68,6 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
             arSettings.SaveToConfig();
 
             EditorUtility.DisplayProgressBar("Checking AssetRipper Dependencies", "", 0);
-            await UniTask.Yield();
             
             if (arSettings.ConfigurationData.Processing.enablePrefabOutlining) {
                 if (!EditorUtility.DisplayDialog("Enable Prefab Outlining", "Are you sure you want to enable prefab outlining?\n\nThis is a highly unstable feature of AssetRipper, so this may not work as expected, such as creating prefabs with infinite loading loops when importing.", "Yes", "No")) {
@@ -66,82 +79,89 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                 Directory.CreateDirectory(outputPath);
             }
 
-            if (arSettings.NeedsManualRip) {
-                // wait for the user to run asset ripper manually and then prompt this to continue
-                // todo: make a window for it
-                //! for now I'll rip it manually prior
-                Debug.LogWarning("AssetRipper required manual rip. Please run it manually and then press \"Continue\" to continue.");
-                
-                // open export folder
-                var tmpFile = Path.Combine(outputPath, "README.txt");
-                if (File.Exists(tmpFile)) {
-                    File.Delete(tmpFile);
-                }
-                
-                using (var file = File.CreateText(tmpFile)) {
-                    file.WriteLine("AssetRipper requires a manual rip to handle static mesh separation.");
-                    
-                    // if (arSettings.ConfigurationData.Processing.enableAssetDeduplication) {
-                    //     file.WriteLine();
-                    //     file.WriteLine(" - Asset deduplication is enabled, so make sure you enable that in AssetRipper.");
-                    // }
-                
-                    if (arSettings.ConfigurationData.Processing.enableStaticMeshSeparation) {
-                        file.WriteLine(" - Static mesh separation is enabled, so make sure you enable that in AssetRipper.");
-                    }
-                    
-                    file.WriteLine();
-                    file.WriteLine("Grab version 1.0.10 from here: https://github.com/AssetRipper/AssetRipper/releases/tag/1.0.10");
-                    file.WriteLine(" - It's the only version with status mesh separation available for free");
-                    file.WriteLine();
-                    file.WriteLine("Otherwise, you have to purchase their \"premium\" version and use that instead :/");
-                    file.WriteLine();
-                    file.WriteLine("Simply run AssetRipper with the wanted settings, then copy the contents into this folder.");
-                    file.WriteLine("The contents should be the insides of the folder that AssetRipper exports into. Such as:");
-                    file.WriteLine(" - Root");
-                    file.WriteLine("   - AuxiliaryFiles     <- Copy these");
-                    file.WriteLine("   - ExportedFiles      <- Copy these");
-                    file.WriteLine("   - [Any Other Folder] <- Copy these");
-                }
-                EditorUtility.RevealInFinder(tmpFile);
+            // if (arSettings.NeedsManualRip) {
+            //     // wait for the user to run asset ripper manually and then prompt this to continue
+            //     // todo: make a window for it
+            //     //! for now I'll rip it manually prior
+            //     Debug.LogWarning("AssetRipper required manual rip. Please run it manually and then press \"Continue\" to continue.");
+            //     
+            //     // open export folder
+            //     var tmpFile = Path.Combine(outputPath, "README.txt");
+            //     if (File.Exists(tmpFile)) {
+            //         File.Delete(tmpFile);
+            //     }
+            //     
+            //     using (var file = File.CreateText(tmpFile)) {
+            //         file.WriteLine("AssetRipper requires a manual rip to handle static mesh separation.");
+            //         
+            //         // if (arSettings.ConfigurationData.Processing.enableAssetDeduplication) {
+            //         //     file.WriteLine();
+            //         //     file.WriteLine(" - Asset deduplication is enabled, so make sure you enable that in AssetRipper.");
+            //         // }
+            //     
+            //         if (arSettings.ConfigurationData.Processing.enableStaticMeshSeparation) {
+            //             file.WriteLine(" - Static mesh separation is enabled, so make sure you enable that in AssetRipper.");
+            //         }
+            //         
+            //         file.WriteLine();
+            //         file.WriteLine("Grab version 1.0.10 from here: https://github.com/AssetRipper/AssetRipper/releases/tag/1.0.10");
+            //         file.WriteLine(" - It's the only version with status mesh separation available for free");
+            //         file.WriteLine();
+            //         file.WriteLine("Otherwise, you have to purchase their \"premium\" version and use that instead :/");
+            //         file.WriteLine();
+            //         file.WriteLine("Simply run AssetRipper with the wanted settings, then copy the contents into this folder.");
+            //         file.WriteLine("The contents should be the insides of the folder that AssetRipper exports into. Such as:");
+            //         file.WriteLine(" - Root");
+            //         file.WriteLine("   - AuxiliaryFiles     <- Copy these");
+            //         file.WriteLine("   - ExportedFiles      <- Copy these");
+            //         file.WriteLine("   - [Any Other Folder] <- Copy these");
+            //     }
+            //     EditorUtility.RevealInFinder(tmpFile);
+            //
+            //     var text = $"AssetRipper requires a manual rip to handle asset static mesh separation.\n\nCheck the README.txt for more information at \"{outputPath}\"\n\nPlease run it manually and then press \"Continue\" to continue.\n\n";
+            //     if (!EditorUtility.DisplayDialog("Continue when you patch!", text, "Continue", "Abort")) {
+            //         return StepResult.Failure;
+            //     }
+            //     
+            //     clearGameFolder();
+            //     _noDeletion = false;
+            // } 
+            //else {
+            clearExportFolder();
+            clearGameFolder();
+            _noDeletion = false;
 
-                var text = $"AssetRipper requires a manual rip to handle asset static mesh separation.\n\nCheck the README.txt for more information at \"{outputPath}\"\n\nPlease run it manually and then press \"Continue\" to continue.\n\n";
-                if (!EditorUtility.DisplayDialog("Continue when you patch!", text, "Continue", "Abort")) {
-                    return StepResult.Failure;
-                }
-                
-                clearGameFolder();
-            } else {
-                clearExportFolder();
-                clearGameFolder();
-                
+            try {
                 Directory.CreateDirectory(outputPath);
-                
-                // download asset ripper if we don't already have it
-                try {
-                    await DownloadAssetRipper(arSettings);
-                } catch (Exception e) {
-                    Debug.LogException(e);
-                    return StepResult.Failure;
-                }
-                finally {
-                    EditorUtility.ClearProgressBar();
-                }
-
-                EditorUtility.DisplayProgressBar("Running AssetRipper", "", 0);
-                await UniTask.Yield();
-
-                // run asset ripper to extract assets
-                try {
-                    await RunAssetRipper(assetRipperExePath, inputPath, outputPath, configPath);
-                } catch (Exception e) {
-                    Debug.LogException(e);
-                    return StepResult.Failure;
-                }
-                finally {
-                    EditorUtility.ClearProgressBar();
-                }
+            } catch {
+                Debug.LogError("Failed to create output folder!");
+                throw;
             }
+            
+            // download asset ripper if we don't already have it
+            try {
+                await DownloadAssetRipper(arSettings);
+            } catch (Exception e) {
+                Debug.LogException(e);
+                return StepResult.Failure;
+            }
+            finally {
+                EditorUtility.ClearProgressBar();
+            }
+
+            EditorUtility.DisplayProgressBar("Running AssetRipper", "", 0);
+
+            // run asset ripper to extract assets
+            try {
+                await RunAssetRipper(assetRipperExePath, inputPath, outputPath, configPath);
+            } catch (Exception e) {
+                Debug.LogException(e);
+                return StepResult.Failure;
+            }
+            finally {
+                EditorUtility.ClearProgressBar();
+            }
+            //}
 
             try {
                 SanitizeFolders(arSettings.OutputExportAssetsFolderPath);
@@ -160,6 +180,9 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
             }
             
             void clearGameFolder() {
+                if (_noDeletion) return;
+                if (PatcherUtility.IsProbablyPatched()) return;
+                
                 var gameFolderPath = settings.ProjectGameAssetsPath;
                 if (Directory.Exists(gameFolderPath)) {
                     try {
@@ -173,8 +196,10 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
         }
 
         private async UniTask DownloadAssetRipper(AssetRipperSettings arSettings) {
-            // const string dllUrl = "https://github.com/nomnomab/AssetRipper/releases/download/v1.0.0/AssetRipper.SourceGenerated.dll.zip";
-            const string buildUrl = @"file:\\C:\Users\nomno\Documents\Github\AssetRipper\Source\0Bins\AssetRipper.Tools.SystemTester\Release\Release.zip";
+            const string dllUrl = "https://github.com/nomnomab/AssetRipper/releases/download/v1.0.12-patcher/Release.zip";
+            var buildUrl = dllUrl;
+            
+            Debug.Log($"Downloading AssetRipper from {buildUrl}");
 
             var finalPath = arSettings.FolderPath;
             var exePath = arSettings.ExePath;
@@ -195,15 +220,20 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
 
             EditorUtility.DisplayProgressBar("Downloading AssetRipper", $"Downloading from {buildUrl}", 0);
             
-            var zipOutputPath = Path.Combine(Application.dataPath, "..", "AssetRipper.temp.zip");
+            var zipOutputPath = Path.Combine(Application.dataPath, "..", "AssetRipper.temp.zip").ToOSPath();
+            Debug.Log($"Storing the zip for AssetRipper at {zipOutputPath}");
+            
             using (var client = new System.Net.WebClient()) {
                 client.DownloadProgressChanged += (_, args) => {
                     EditorUtility.DisplayProgressBar("Downloading AssetRipper", $"Downloading from {buildUrl}", args.ProgressPercentage / 100f);
+                    Debug.Log($"Downloaded {args.ProgressPercentage}%");
                 };
                 
                 EditorUtility.DisplayProgressBar("Downloading AssetRipper", $"Downloading from {buildUrl}", 0);
                 await client.DownloadFileTaskAsync(buildUrl, zipOutputPath);
             }
+            
+            Debug.Log($"Downloaded AssetRipper to {zipOutputPath}");
             
             EditorUtility.ClearProgressBar();
             
@@ -213,12 +243,19 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
             }
             
             if (!Directory.Exists(finalPath)) {
+                Debug.Log($"Creating {finalPath}");
                 Directory.CreateDirectory(finalPath);
             }
             
             // extract the zip to where we need it
             try {
+#if UNITY_2020_3_OR_NEWER
+                Debug.Log($"Extracting to {finalPath}");
                 System.IO.Compression.ZipFile.ExtractToDirectory(zipOutputPath, finalPath);
+#else
+                var archive = new FastZip();
+                archive.ExtractZip(zipOutputPath, finalPath, null);
+#endif
             } catch (Exception e) {
                 Debug.LogError($"Failed to extract \"{zipOutputPath}\" to \"{finalPath}\":\n{e}");
                 throw;
@@ -265,7 +302,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                     // Debug.Log($"[AssetRipper] <i>{line}</i>");
                     
                     //? time estimation of three minutes
-                    if (line.Contains("Exporting", StringComparison.OrdinalIgnoreCase)) {
+                    if (line.Contains("Exporting")) {
                         exportCount++;
                     }
                     if (EditorUtility.DisplayCancelableProgressBar("Running AssetRipper", line, exportCount / totalExports)) {
@@ -296,12 +333,14 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
             var folders = Directory.GetDirectories(assetsRoot, "*", SearchOption.TopDirectoryOnly);
             foreach (var folder in folders) {
                 var folderName = Path.GetFileName(folder);
-                if (folderName.Contains('.') || folderName.Contains(' ')) {
+                if (folderName.Contains(".") || folderName.Contains(" ")) {
                     var newFolderName = folderName.Replace(".", string.Empty).Replace(' ', '_');
                     var folderRoot = Path.GetDirectoryName(folder);
                     Directory.Move(folder, Path.Combine(folderRoot, newFolderName));
                 }
             }
         }
+        
+        public void OnComplete(bool failed) { }
     }
 }

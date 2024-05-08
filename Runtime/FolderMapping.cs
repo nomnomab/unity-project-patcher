@@ -96,6 +96,9 @@ namespace Nomnom.UnityProjectPatcher {
         public const string SpriteKey = "Sprite";
         public static readonly string SpriteOutput = Path.Combine("Textures", "Sprites");
         
+        public const string StreamingAssetsKey = "StreamingAssets";
+        public static readonly string StreamingAssetsOutput = "StreamingAssets";
+        
         public const string VideoClipKey = "VideoClip";
         public static readonly string VideoClipOutput = "Videos";
         

@@ -8,6 +8,6 @@ namespace EditorAttributes
 
 	public interface IDynamicStringAttribute
     {
-		public StringInputMode StringInputMode { get; }
+	    public StringInputMode StringInputMode { get; }
     }
 }

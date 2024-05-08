@@ -3,17 +3,20 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
-using EditorAttributes;
 using Newtonsoft.Json;
 using UnityEngine;
 using UnityEngine.Serialization;
 
+#if UNITY_2020_3_OR_NEWER
+using EditorAttributes;
+#endif
+
 namespace Nomnom.UnityProjectPatcher.AssetRipper {
     [CreateAssetMenu(fileName = "AssetRipperSettings", menuName = "Unity Project Patcher/AssetRipper Settings")]
     public class AssetRipperSettings : ScriptableObject {
-        public string? FolderPath => _folderPath;
+        public string FolderPath => _folderPath;
         public string ExePath => Path.Combine(FolderPath, "AssetRipper.Tools.SystemTester.exe");
-        public string? OutputFolderPath => _outputFolderPath;
+        public string OutputFolderPath => _outputFolderPath;
         public string ConfigPath => Path.Combine(FolderPath, "AssetRipper.Settings.json");
         public string OutputExportFolderPath => Path.Combine(OutputFolderPath, "ExportedProject");
         public string OutputExportAssetsFolderPath => Path.Combine(OutputExportFolderPath, "Assets");
@@ -28,11 +31,19 @@ namespace Nomnom.UnityProjectPatcher.AssetRipper {
         // public bool NeedsManualRip => _configurationData.Processing.enableStaticMeshSeparation || _configurationData.Processing.enableStaticMeshSeparation;
         public bool NeedsManualRip => false;
         
+#if UNITY_2020_3_OR_NEWER
         [SerializeField, FolderPath(getRelativePath: false)]
         private string? _folderPath = Path.GetFullPath("AssetRipper");
         
         [SerializeField, FolderPath(getRelativePath: false)]
         private string? _outputFolderPath = Path.GetFullPath("AssetRipperOutput");
+#else
+        [SerializeField]
+        private string _folderPath = Path.GetFullPath("AssetRipper");
+        
+        [SerializeField]
+        private string _outputFolderPath = Path.GetFullPath("AssetRipperOutput");
+#endif
         
         [SerializeField]
         private FolderMapping[] _folderMappings = new[] {
@@ -62,6 +73,7 @@ namespace Nomnom.UnityProjectPatcher.AssetRipper {
             new FolderMapping(DefaultFolderMapping.RenderTextureKey, DefaultFolderMapping.RenderTextureKey, DefaultFolderMapping.RenderTextureOutput),
             new FolderMapping(DefaultFolderMapping.TerrainLayerKey, DefaultFolderMapping.TerrainLayerKey, DefaultFolderMapping.TerrainLayerOutput),
             new FolderMapping(DefaultFolderMapping.SpriteKey, DefaultFolderMapping.SpriteKey, DefaultFolderMapping.SpriteOutput),
+            new FolderMapping(DefaultFolderMapping.StreamingAssetsKey, DefaultFolderMapping.StreamingAssetsKey, DefaultFolderMapping.StreamingAssetsOutput),
             new FolderMapping(DefaultFolderMapping.VideoClipKey, DefaultFolderMapping.VideoClipKey, DefaultFolderMapping.VideoClipOutput),
         }.OrderBy(x => x.sourceName).ToArray();
 
@@ -92,6 +104,7 @@ namespace Nomnom.UnityProjectPatcher.AssetRipper {
             DefaultFolderMapping.RenderTextureKey,
             DefaultFolderMapping.TerrainLayerKey,
             DefaultFolderMapping.SpriteKey,
+            DefaultFolderMapping.StreamingAssetsKey,
             DefaultFolderMapping.VideoClipKey,
             @"Scripts\Assembly-CSharp",
         };
@@ -117,9 +130,13 @@ namespace Nomnom.UnityProjectPatcher.AssetRipper {
         };
 
         [SerializeField]
-        private AssetRipperJsonData _configurationData = new();
+        private AssetRipperJsonData _configurationData = new AssetRipperJsonData();
         
+#if UNITY_2020_3_OR_NEWER
         public bool TryGetFolderMapping(string key, out string folder, out bool exclude, string? fallbackPath = null) {
+#else
+        public bool TryGetFolderMapping(string key, out string folder, out bool exclude, string fallbackPath = null) {
+#endif
             foreach (var mapping in _folderMappings) {
                 if (mapping.key.Equals(key, StringComparison.OrdinalIgnoreCase)) {
                     folder = mapping.outputPath.ToAssetDatabaseSafePath();
@@ -133,7 +150,11 @@ namespace Nomnom.UnityProjectPatcher.AssetRipper {
             return !string.IsNullOrEmpty(folder);
         }
         
+#if UNITY_2020_3_OR_NEWER
         public bool TryGetFolderMappingFromSource(string sourceName, out string folder, out bool exclude, string? fallbackPath = null) {
+#else
+        public bool TryGetFolderMappingFromSource(string sourceName, out string folder, out bool exclude, string fallbackPath = null) {
+#endif
             foreach (var mapping in _folderMappings) {
                 if (mapping.sourceName.Equals(sourceName, StringComparison.OrdinalIgnoreCase)) {
                     folder = mapping.outputPath.ToAssetDatabaseSafePath();
@@ -143,6 +164,20 @@ namespace Nomnom.UnityProjectPatcher.AssetRipper {
             }
 
             folder = (fallbackPath ?? string.Empty).ToAssetDatabaseSafePath();
+            exclude = false;
+            return !string.IsNullOrEmpty(folder);
+        }
+
+        public bool TryGetFolderMappingFromOutput(string outputName, out string folder, out bool exclude, string? fallbackPath = null) {
+            foreach (var mapping in _folderMappings) {
+                if (mapping.outputPath.Equals(outputName, StringComparison.OrdinalIgnoreCase)) {
+                    folder = mapping.sourceName.ToOSPath();
+                    exclude = mapping.exclude;
+                    return true;
+                }
+            }
+
+            folder = (fallbackPath ?? string.Empty).ToOSPath();
             exclude = false;
             return !string.IsNullOrEmpty(folder);
         }
@@ -208,18 +243,24 @@ namespace Nomnom.UnityProjectPatcher.AssetRipper {
     [Serializable]
     public struct Processing {
         [JsonProperty("EnablePrefabOutlining")]
+#if UNITY_2020_3_OR_NEWER
         [Suffix("experimental")]
+#endif
         public bool enablePrefabOutlining;
 
         [JsonProperty("EnableStaticMeshSeparation")]
-        [DefaultValue(true)]
-        [Suffix("manual")]
+        [DefaultValue(false)]
+#if UNITY_2020_3_OR_NEWER
+        [Suffix("paid")]
+#endif
         [HideInInspector]
         public bool enableStaticMeshSeparation;
 
         [JsonProperty("EnableAssetDeduplication")]
-        [DefaultValue(true)]
-        [Suffix("manual")]
+        [DefaultValue(false)]
+#if UNITY_2020_3_OR_NEWER
+        [Suffix("paid")]
+#endif
         [HideInInspector]
         public bool enableAssetDeduplication;
     }

@@ -3,10 +3,13 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using EditorAttributes;
 using Nomnom.UnityProjectPatcher.UnityPackages;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
+
+#if UNITY_2020_3_OR_NEWER
+using EditorAttributes;
+#endif
 
 namespace Nomnom.UnityProjectPatcher {
     [CreateAssetMenu(fileName = "UnityProjectPatcherSettings", menuName = "Unity Project Patcher/Settings")]
@@ -40,6 +43,7 @@ namespace Nomnom.UnityProjectPatcher {
         public IReadOnlyCollection<FoundPackageInfo> ExactPackagesFound => _exactPackagesFound;
         public IReadOnlyCollection<GitPackageInfo> GitPackages => _gitPackages;
 
+#if UNITY_2020_3_OR_NEWER
         [SerializeField, FolderPath(getRelativePath: false)]
         private string? _gameFolderPath;
 
@@ -51,6 +55,19 @@ namespace Nomnom.UnityProjectPatcher {
         
         [SerializeField, InlineButton(nameof(GetPipelineType), "Get", buttonWidth: 30)] 
         private PipelineType _pipelineType;
+#else
+        [SerializeField]
+        private string _gameFolderPath;
+
+        [SerializeField]
+        private string _gameName = null;
+        
+        [SerializeField] 
+        private string _gameVersion = null;
+        
+        [SerializeField] 
+        private PipelineType _pipelineType;
+#endif
 
         [Header("Dlls")]
         [SerializeField] private FolderMapping[] _dllsToCopy = Array.Empty<FolderMapping>();
@@ -63,10 +80,10 @@ namespace Nomnom.UnityProjectPatcher {
             "Unity.Services."
         };
 
-        [SerializeField] private List<FoundPackageInfo> _exactPackagesFound = new();
-        [SerializeField] private List<FoundPackageInfo> _possiblePackagesFound = new();
-        [SerializeField] private List<FoundPackageInfo> _improbablePackagesFound = new();
-        [SerializeField] private List<GitPackageInfo> _gitPackages = new();
+        [SerializeField] private List<FoundPackageInfo> _exactPackagesFound = new List<FoundPackageInfo>();
+        [SerializeField] private List<FoundPackageInfo> _possiblePackagesFound = new List<FoundPackageInfo>();
+        [SerializeField] private List<FoundPackageInfo> _improbablePackagesFound = new List<FoundPackageInfo>();
+        [SerializeField] private List<GitPackageInfo> _gitPackages = new List<GitPackageInfo>();
 
         private void GetGameName() {
             if (GameFolderPath is null) {

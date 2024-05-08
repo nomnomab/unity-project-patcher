@@ -6,12 +6,10 @@ using UnityEditor;
 using Debug = UnityEngine.Debug;
 
 namespace Nomnom.UnityProjectPatcher.Editor.Steps {
+    /// <summary>
+    /// This uses ffmpeg to re-encode audio clips, as wav files tend to export broken.
+    /// </summary>
     public readonly struct ReEncodeAudioClipsStep: IPatcherStep {
-        [MenuItem("Tools/UPP/Test Re-encode audio clips")]
-        public static void Test() { 
-            new ReEncodeAudioClipsStep().Run().Forget();
-        }
-        
         public UniTask<StepResult> Run() {
             var arSettings = PatcherUtility.GetAssetRipperSettings();
             
@@ -31,7 +29,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                 }
                 
                 var tmpFileName = $"{Path.GetFileNameWithoutExtension(audioClipPath)}_temp.wav";
-                var tmpPath = Path.Combine(Path.GetDirectoryName(audioClipPath)!, tmpFileName);
+                var tmpPath = Path.Combine(Path.GetDirectoryName(audioClipPath), tmpFileName);
 
                 var task = Process.Start(new ProcessStartInfo {
                     FileName = ffmpegExe,
@@ -40,9 +38,9 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                     CreateNoWindow = true
                 });
 
-                task!.WaitForExit();
-                if (task.ExitCode != 0) {
-                    throw new Exception($"ffmpeg exited with code {task.ExitCode}");
+                task?.WaitForExit();
+                if (task?.ExitCode != 0) {
+                    throw new Exception($"ffmpeg exited with code {task?.ExitCode}");
                 }
 
                 File.Delete(audioClipPath);
@@ -55,5 +53,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
 
             return UniTask.FromResult(StepResult.Success);
         }
+
+        public void OnComplete(bool failed) { }
     }
 }

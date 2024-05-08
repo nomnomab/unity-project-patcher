@@ -4,6 +4,12 @@ using UnityEditor;
 using UnityEngine;
 
 namespace Nomnom.UnityProjectPatcher.Editor.Steps {
+    /// <summary>
+    /// This simply copies specific dlls defined in <see cref="UPPatcherSettings.DllsToCopy"/>
+    /// into the project.
+    /// <br/><br/>
+    /// Recompiles the editor if a plugin was copied.
+    /// </summary>
     public readonly struct CopyGamePluginsStep: IPatcherStep {
         public UniTask<StepResult> Run() {
             var settings = this.GetSettings();
@@ -54,7 +60,9 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                 return UniTask.FromResult(StepResult.Success);
             }
 
-            return UniTask.FromResult(StepResult.RestartEditor);
+            return UniTask.FromResult(StepResult.Recompile);
         }
+
+        public void OnComplete(bool failed) { }
     }
 }

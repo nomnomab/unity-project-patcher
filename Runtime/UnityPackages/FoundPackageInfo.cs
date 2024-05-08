@@ -6,10 +6,18 @@ namespace Nomnom.UnityProjectPatcher.UnityPackages {
     public struct FoundPackageInfo {
         /*[ReadOnly]*/ public string name;
         /*[ReadOnly]*/ public string version;
+#if UNITY_2020_3_OR_NEWER
         /*[ReadOnly]*/ public FoundDependencyInfo[]? dependencies;
+#else
+        /*[ReadOnly]*/ public FoundDependencyInfo[] dependencies;
+#endif
         /*[ReadOnly]*/ public PackageMatchType matchType;
         
+#if UNITY_2020_3_OR_NEWER
         public FoundPackageInfo(string name, string version, FoundDependencyInfo[]? dependencies, PackageMatchType matchType) {
+#else
+        public FoundPackageInfo(string name, string version, FoundDependencyInfo[] dependencies, PackageMatchType matchType) {
+#endif
             this.name = name;
             this.version = version;
             this.dependencies = dependencies;

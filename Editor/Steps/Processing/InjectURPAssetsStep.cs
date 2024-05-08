@@ -5,13 +5,11 @@ using UnityEditor;
 using UnityEngine;
 
 namespace Nomnom.UnityProjectPatcher.Editor.Steps {
+    /// <summary>
+    /// This attempts to find URP related assets in the project and inject them into
+    /// the SRP pipeline.
+    /// </summary>
     public readonly struct InjectURPAssetsStep: IPatcherStep {
-        [MenuItem("Tools/UPP/Inject URP Assets")]
-        private static void InjectURPAssets() {
-            var step = new InjectURPAssetsStep();
-            step.Run().Forget();
-        }
-        
         public UniTask<StepResult> Run() {
             var settings = this.GetSettings();
             var arSettings = this.GetAssetRipperSettings();
@@ -87,5 +85,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
 
             return UniTask.FromResult(StepResult.Success);
         }
+
+        public void OnComplete(bool failed) { }
     }
 }

@@ -7,12 +7,23 @@ using UnityEngine;
 using Object = UnityEngine.Object;
 
 namespace Nomnom.UnityProjectPatcher.Editor.Steps {
+    /// <summary>
+    /// This attempts to find HDRP related assets in the project and inject them into
+    /// the SRP pipeline.
+    /// <br/><br/>
+    /// Restarts the editor.
+    /// </summary>
     public readonly struct InjectHDRPAssetsStep: IPatcherStep {
-        [MenuItem("Tools/UPP/Inject HDRP Assets")]
-        public static void InjectHDRPAssets() {
-            var step = new InjectHDRPAssetsStep();
-            step.Run().Forget();
-        }
+        // [MenuItem("Tools/UPP/Inject HDRP Assets (Will be removed)")]
+        // public static void Foo() {
+        //     var step = new InjectHDRPAssetsStep();
+        //     try {
+        //         step.Run().Forget();
+        //     } catch (Exception e) {
+        //         Debug.LogError(e);
+        //         EditorUtility.ClearProgressBar();
+        //     }
+        // }
         
         public UniTask<StepResult> Run() {
             var settings = this.GetSettings();
@@ -71,10 +82,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                     break;
                 }
             }
-
-            var qualitySettings = PatcherUtility.GetQualitySettings();
-            serializedObject = new SerializedObject(qualitySettings);
-
+            
             var customRenderPipelineProperty = PatcherUtility.GetCustomRenderPipelineProperty();
             if (customRenderPipelineProperty is null) {
                 Debug.LogError("Could not find m_QualitySettings.customRenderPipeline");
@@ -82,7 +90,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
             }
             
             customRenderPipelineProperty.objectReferenceValue = AssetDatabase.LoadMainAssetAtPath(hdrpPipelineAssetPath);
-            serializedObject.ApplyModifiedPropertiesWithoutUndo();
+            customRenderPipelineProperty.serializedObject.ApplyModifiedPropertiesWithoutUndo();
             
             Debug.Log($"Set m_QualitySettings.customRenderPipeline to \"{hdrpPipelineAssetPath}\"");
             
@@ -96,13 +104,13 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                     volumeProfile.objectReferenceValue = newSettings;
                     serializedObject.ApplyModifiedProperties();
                     Debug.Log($"Set m_DefaultVolumeProfile to one found at \"{newSettingsPath}\"");
-
+            
                     // this is so jank
                     try {
                         serializedObject = new SerializedObject(projectGraphicsAsset);
                         var iterator = serializedObject.GetIterator();
                         iterator.Next(true);
-
+            
                         while (iterator.Next(true)) {
                             if (iterator.propertyPath == "m_SRPDefaultSettings.Array.data[0].second") {
                                 iterator.objectReferenceValue = hdrpSettings;
@@ -121,5 +129,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
             
             return UniTask.FromResult(StepResult.RestartEditor);
         }
+
+        public void OnComplete(bool failed) { }
     }
 }

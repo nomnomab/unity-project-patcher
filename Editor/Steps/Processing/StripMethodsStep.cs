@@ -6,6 +6,12 @@ using UnityEditor;
 using UnityEngine;
 
 namespace Nomnom.UnityProjectPatcher.Editor.Steps {
+    /// <summary>
+    /// This runs an internal code generator that strips out unused methods
+    /// from a provided delegate.
+    /// <br/><br/>
+    /// This does not run if scripts are stubs.
+    /// </summary>
     public readonly struct StripMethodsStep: IPatcherStep {
         private readonly Func<MethodRemoval.NodeInfo, bool> _canRemoveFunction;
         
@@ -14,6 +20,10 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
         }
 
         public UniTask<StepResult> Run() {
+            if (this.ScriptsAreStubs()) {
+                return UniTask.FromResult(StepResult.Success);
+            }
+            
             var assetRipperSettings = this.GetAssetRipperSettings();
             var outputPath = assetRipperSettings.OutputExportAssetsFolderPath;
             if (outputPath is null) {
@@ -41,5 +51,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
             
             return UniTask.FromResult(StepResult.Success);
         }
+
+        public void OnComplete(bool failed) { }
     }
 }

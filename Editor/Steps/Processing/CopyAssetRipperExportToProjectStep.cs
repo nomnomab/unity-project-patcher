@@ -7,17 +7,19 @@ using UnityEditor;
 using UnityEngine;
 
 namespace Nomnom.UnityProjectPatcher.Editor.Steps {
+    /// <summary>
+    /// This simply copies the AssetRipper export into the project, excluding any files that are ignored via the
+    /// AssetRipperSettings asset, such as <see cref="AssetRipperSettings.FoldersToExcludeFromRead"/>.
+    /// <br/><br/>
+    /// If <see cref="GuidRemapperStep"/> ran, then it will re-use its asset catalogues.
+    /// <br/><br/>
+    /// Restarts the editor.
+    /// </summary>
     public readonly struct CopyAssetRipperExportToProjectStep: IPatcherStep {
         private static readonly string[] _ignoreFiles = {
             "UnitySourceGeneratedAssemblyMonoScriptTypes_v1.cs",
             "AssemblyInfo.cs"
         };
-
-        [MenuItem("Tools/UPP/Test Copy")]
-        private static void Copy() {
-            var step = new CopyAssetRipperExportToProjectStep();
-            step.Run().Forget();
-        }
         
         public UniTask<StepResult> Run() {
             var settings = this.GetSettings();
@@ -27,8 +29,8 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
             Directory.CreateDirectory(gameFolderPath);
             
             // copy the export into the proper folders
-            var arAssets = AssetScrubber.ScrubDiskFolder(arSettings.OutputExportAssetsFolderPath, arSettings.FoldersToExcludeFromRead);
-            var projectAssets = AssetScrubber.ScrubProject();
+            var arAssets = GuidRemapperStep.AssetRipperCatalogue ?? AssetScrubber.ScrubDiskFolder(arSettings.OutputExportAssetsFolderPath, arSettings.FoldersToExcludeFromRead);
+            var projectAssets = GuidRemapperStep.ProjectCatalogue ?? AssetScrubber.ScrubProject();
 
             var projectGameAssetsPath = settings.ProjectGameAssetsPath;
             
@@ -48,7 +50,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                         continue;
                     }
 
-                    Directory.CreateDirectory(Path.GetDirectoryName(projectPath)!);
+                    Directory.CreateDirectory(Path.GetDirectoryName(projectPath));
                     var exportPath = Path.Combine(arAssets.RootAssetsPath, asset.RelativePathToRoot);
                     File.Copy(exportPath, projectPath, true);
                     
@@ -70,13 +72,14 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
             return UniTask.FromResult(StepResult.RestartEditor);
         }
 
+        public void OnComplete(bool failed) { }
+
         private static IEnumerable<AssetCatalogue.Entry> GetAllowedEntries(AssetCatalogue arAssets, AssetCatalogue projectAssets, AssetRipperSettings settings) {
             var foldersToCopy = settings.FoldersToCopy;
             var filesToExclude = settings.FilesToExcludeFromCopy;
-            var filesToExcludePrefix = filesToExclude.Where(x => x.EndsWith("*")).Select(x => x[..^1]).ToArray();
+            var filesToExcludePrefix = filesToExclude.Where(x => x.EndsWith("*")).Select(x => x.Substring(0, x.Length - 1)).ToArray();
             filesToExclude = filesToExclude.Except(filesToExcludePrefix).ToList();
             
-            var badFiles = new List<string>();
             for (int i = 0; i < arAssets.Entries.Length; i++) {
                 var asset = arAssets.Entries[i];
                 
@@ -87,24 +90,23 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                 
                 var fileName = Path.GetFileName(asset.RelativePathToRoot);
                 if (_ignoreFiles.Any(x => fileName == x)) {
-                    badFiles.Add($"[badfile] {asset.RelativePathToRoot}");
                     continue;
                 }
                 
                 if (!foldersToCopy.Any(x => asset.RelativePathToRoot.StartsWith(x))) {
-                    badFiles.Add($"[notinfoldercopy] {asset.RelativePathToRoot}");
                     continue;
                 }
                 
-                if (asset is not AssetCatalogue.ScriptEntry s) {
+                if (!(asset is AssetCatalogue.ScriptEntry)) {
                     if (asset.RelativePathToRoot.EndsWith(".asmdef")) {
-                        badFiles.Add($"[asmdef] {asset.RelativePathToRoot}");
                         continue;
                     }
                     
                     yield return asset;
                     continue;
                 }
+                
+                var s = asset as AssetCatalogue.ScriptEntry;
 
                 // var assemblyName = s.AssemblyName;
                 // if (foldersToCopy.All(x => x != assemblyName)) {
@@ -135,13 +137,8 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                 // }
 
                 if (!projectAssets.ContainsFullTypeName(s)) {
-                    badFiles.Add($"[type_name] {asset.RelativePathToRoot}");
                     yield return asset;
                 }
-            }
-
-            foreach (var file in badFiles) {
-                Debug.Log($"bad file -> {file}");
             }
             
             EditorUtility.ClearProgressBar();

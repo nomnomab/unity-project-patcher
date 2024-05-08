@@ -5,6 +5,9 @@ using UnityEditor;
 using UnityEngine;
 
 namespace Nomnom.UnityProjectPatcher.Editor.Steps {
+    /// <summary>
+    /// This fixes AudioMixers that default to Echo being enabled.
+    /// </summary>
     public readonly struct PatchDiageticAudioMixersStep: IPatcherStep {
         private readonly string[] _mixerNames;
         
@@ -57,5 +60,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
             
             return UniTask.FromResult(StepResult.Success);
         }
+        
+        public void OnComplete(bool failed) { }
     }
 }

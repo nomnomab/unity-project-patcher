@@ -11,5 +11,9 @@ namespace Nomnom.UnityProjectPatcher {
         public static string ToAssetDatabaseSafePath(this string path) {
             return path.Replace(Path.DirectorySeparatorChar, '/');
         }
+        
+        public static string ToOSPath(this string path) {
+            return path.Replace('/', Path.DirectorySeparatorChar).Replace('\\', Path.DirectorySeparatorChar);
+        }
     }
 }

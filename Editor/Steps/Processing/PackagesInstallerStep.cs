@@ -17,6 +17,8 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
     /// Will attempt to first install packages normally via the Client api.
     /// If that misses some packages, then this will manually define them
     /// in the manifest file.
+    /// <br/><br/>
+    /// Recompiles the editor if a package was installed or the manifest was changed.
     /// </summary>
     public readonly struct PackagesInstallerStep: IPatcherStep {
         public UniTask<StepResult> Run() {
@@ -34,9 +36,9 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                 var packageList = Client.List(false, false);
                 while (true) {
                     if (packageList.IsCompleted) break;
-                    if (packageList.Status == StatusCode.Failure && packageList.Error is { } error) {
+                    if (packageList.Status == StatusCode.Failure && packageList.Error != null) {
                         EditorUtility.ClearProgressBar();
-                        throw new Exception($"Failed to list packages! [{error.errorCode}] {error.message}");
+                        throw new Exception($"Failed to list packages! [{packageList.Error.errorCode}] {packageList.Error.message}");
                     }
                 }
 
@@ -52,6 +54,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                 EditorUtility.DisplayDialog("Installing packages", $"The following packages are missing: {string.Join(", ", missingPackages)}", "OK");
                 EditorUtility.DisplayProgressBar("Installing packages", $"Installing {missingPackages.Length} package{(missingPackages.Length == 1 ? string.Empty : "s")}", 0.5f);
 
+#if UNITY_2020_3_OR_NEWER
                 var request = Client.AddAndRemove(missingPackages);
                 while (true) {
                     if (request.IsCompleted) break;
@@ -62,6 +65,18 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                 }
 
                 Client.Resolve();
+#else
+                foreach (var package in missingPackages) {
+                    var request = Client.Add(package);
+                    while (true) {
+                        if (request.IsCompleted) break;
+                        if (request.Status == StatusCode.Failure && request.Error != null) {
+                            EditorUtility.ClearProgressBar();
+                            throw new Exception($"Failed to list packages! [{request.Error.errorCode}] {request.Error.message}");
+                        }
+                    }
+                }
+#endif
                 
                 ManuallyResolveManifest();
                 EditorUtility.ClearProgressBar();
@@ -77,7 +92,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                 EditorUtility.ClearProgressBar();
             }
             
-            return UniTask.FromResult(StepResult.RestartEditor);
+            return UniTask.FromResult(StepResult.Recompile);
         }
 
         private bool ManuallyResolveManifest() {
@@ -94,7 +109,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
             
             var manifest = File.ReadAllText(manifestFile);
             var manifestJson = JObject.Parse(manifest);
-            var dependencies = (JObject)manifestJson["dependencies"]!;
+            var dependencies = (JObject)manifestJson["dependencies"];
             var changed = false;
             
             EditorUtility.DisplayProgressBar("Updating packages", "Updating dependencies", 0.75f);
@@ -111,7 +126,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                         changed = true;
                     }
 
-                    var value = (JValue)versionObj!;
+                    var value = (JValue)versionObj;
                     var valueString = value.ToString(CultureInfo.InvariantCulture);
                     if (valueString != version) {
                         value.Value = version;
@@ -134,5 +149,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
             File.WriteAllText(manifestFile, json);
             return true;
         }
+        
+        public void OnComplete(bool failed) { }
     }
 }
