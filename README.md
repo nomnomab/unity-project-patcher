@@ -31,7 +31,6 @@
 - [Custom Game Wrapper](#custom-game-wrapper)
 - [FAQ](#faq)
 - [Games I Tested With](#games-i-tested-with)
-- [Acknowledgements](#acknowledgements)
 
 <!-- About the Project -->
 ## About the Project
@@ -153,9 +152,9 @@ Any game wrapper will require the following two ScriptableObjects:
 > [!NOTE]  
 > Can be made via `Create > Unity Project Patcher > Settings`
 
-<div align="center" style="display: flex; flex-direction: row; gap: 10px;">
-  <img src="Assets~/UPPatcherSettings_1.png" />
-  <img src="Assets~/UPPatcherSettings_2.png" />
+<div float="left" align="center" style="display: flex; flex-direction: row; gap: 10px;">
+  <img src="Assets~/UPPatcherSettings_1.png" width="500" />
+  <img src="Assets~/UPPatcherSettings_2.png" width="500" />
 </div>
 
 This can be retrieved in a custom step via `this.GetSettings();`.
@@ -216,9 +215,9 @@ If you need to put any git packages in the wrapper, put them here.
 > [!NOTE]  
 > Can be made via `Create > Unity Project Patcher > AssetRipper Settings`
 
-<div align="center" style="display: flex; flex-direction: row; gap: 10px;">
-  <img src="Assets~/AssetRipperSettings_1.png" />
-  <img src="Assets~/AssetRipperSettings_2.png" />
+<div float="left" align="center" style="display: flex; flex-direction: row; gap: 10px;">
+  <img src="Assets~/AssetRipperSettings_1.png" width="500" />
+  <img src="Assets~/AssetRipperSettings_2.png" width="500" />
 </div>
 
 This can be retrieved in a custom step via `this.GetAssetRipperSettings();`.
