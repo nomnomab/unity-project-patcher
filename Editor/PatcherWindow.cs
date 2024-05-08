@@ -76,6 +76,10 @@ namespace Nomnom.UnityProjectPatcher.Editor {
                 GUI.enabled = string.IsNullOrEmpty(currentStep);
             }
 
+            if (EditorApplication.isCompiling) {
+                EditorGUILayout.LabelField("Compiling...", EditorStyles.centeredGreyMiniLabel);
+            }
+
             if (GUILayout.Button("Run Patcher")) {
                 var runFunction = PatcherUtility.GetGameWrapperRunFunction(_gameWrapperType);
                 if (runFunction is null) {
