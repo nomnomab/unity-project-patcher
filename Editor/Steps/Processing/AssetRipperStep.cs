@@ -226,7 +226,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
             using (var client = new System.Net.WebClient()) {
                 client.DownloadProgressChanged += (_, args) => {
                     EditorUtility.DisplayProgressBar("Downloading AssetRipper", $"Downloading from {buildUrl}", args.ProgressPercentage / 100f);
-                    Debug.Log($"Downloaded {args.ProgressPercentage}%");
+                    // Debug.Log($"Downloaded {args.ProgressPercentage}%");
                 };
                 
                 EditorUtility.DisplayProgressBar("Downloading AssetRipper", $"Downloading from {buildUrl}", 0);
