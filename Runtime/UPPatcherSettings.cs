@@ -111,7 +111,7 @@ namespace Nomnom.UnityProjectPatcher {
             
             PatcherUtility.SetDirty(this);
         }
-
+        
         private void GetPipelineType() {
             var dllPath = GameManagedPath;
             if (!Directory.Exists(dllPath)) {

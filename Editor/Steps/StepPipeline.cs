@@ -12,6 +12,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
             new GenerateDefaultProjectStructureStep(),
             new ImportTextMeshProStep(),
             new GenerateGitIgnoreStep(),
+            new GenerateReadmeStep(),
             new PackagesInstallerStep(), // recompile
             new CacheProjectCatalogueStep(),
             new AssetRipperStep(),

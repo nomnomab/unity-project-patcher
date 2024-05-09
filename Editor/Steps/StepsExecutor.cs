@@ -43,9 +43,9 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                         Debug.Log($"Completed {stepIndex} steps out of {steps.Length}");
                     }
 
-                    if (stepsProgress.LastResult == StepResult.RestartEditor) {
-                        EditorUtility.DisplayDialog("Focus the Editor", "Please focus the editor!", "Ok");
-                    }
+                    // if (stepsProgress.LastResult == StepResult.RestartEditor) {
+                    //     EditorUtility.DisplayDialog("Focus the Editor", "Please focus the editor!", "Ok");
+                    // }
                 }
             } catch {
                 Debug.LogError("Failed to read steps progress");

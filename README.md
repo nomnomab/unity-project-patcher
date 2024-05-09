@@ -40,18 +40,18 @@ This tool takes a unity game, extracts its assets/scripts/etc, and then generate
 > Only supports Mono games at the moment!
 > 
 > This tool does not distribute game files. It simply works off of your copy of the game!
+> 
+> Also, this tool is for **personal** use only. Do not re-distrubute game files to others.
 
 This core tool *doesn't* patch any game by itself itself, as it's just a core utility. Game wrappers have to utilize this core 
 to set up its pipeline, and any specific fixing for that specific game.
 
 > [!NOTE]  
-> I will *not* be taking requests for game wrappers to make. If you want one made, make it yourself. If you need help,
-> feel free to make an issue if it is related to the tool.
+> I will *not* be taking requests for game wrappers to make 👍
 
 <!-- Features -->
 ## Features
 
-- Custom game wrappers on top of this tool
 - Custom tool window content
 - Auto-detected game wrappers for tool window usage
 - A rough package detector
@@ -142,6 +142,15 @@ Install with the manifest.json:
 ## Usage
 
 The tool window can be opened via `Tools > Unity Project Patcher > Open Window`
+
+During the patching process, make sure you keep Unity focused. If you tab out when it restarts, it won't resume until
+you re-focus the window. Regardless of this, you may have to click into the editor when restarting to continue.
+
+> [!IMPORTANT]  
+> This tool mostly supports patching an already patched project, although this can lead to broken assets.
+> So make sure you back up your project beforehand.
+
+### Patcher Configs
 
 > [!NOTE]  
 > The end user won't have to touch these, only the game wrapper creator!
