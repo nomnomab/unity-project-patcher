@@ -74,7 +74,7 @@ namespace Lachee.Utilities.Serialization
                     {
                         bool first = true;
                         builder.Append(' ', indentLevel * indentSize).Append(name);
-                        builder.Append(arrayItem ? ' ' : eol);  // This inlines the first time of an array
+                        builder.Append(arrayItem ? " " : eol);  // This inlines the first time of an array
                         foreach (var kp in uObject.properties)
                         {
                             AppendProperty(kp.Value, indentLevel + 1, false, arrayItem && first);
@@ -129,7 +129,7 @@ namespace Lachee.Utilities.Serialization
                 }
                 else
                 {
-                    if (kp.Value.value is not UValue)
+                    if (!(kp.Value.value is UValue))
                         return false;
                 }
             }
@@ -155,7 +155,7 @@ namespace Lachee.Utilities.Serialization
                 } 
                 else 
                 {
-                    if (item is not UValue)
+                    if (!(item is UValue))
                         return false;
                 }
             }

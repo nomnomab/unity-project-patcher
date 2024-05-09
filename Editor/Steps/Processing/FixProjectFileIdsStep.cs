@@ -44,7 +44,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                 sceneIndex++;
                 var scenePath = AssetDatabase.GUIDToAssetPath(sceneGUID);
 
-                EditorUtility.DisplayProgressBar($"Fixing {scenePath}", $"Scanning {scenePath}", (float)sceneIndex / allScenes.Length);
+                EditorUtility.DisplayProgressBar($"Fixing {scenePath} [{sceneIndex}/{allScenes.Length}]", $"Scanning {scenePath}", (float)sceneIndex / allScenes.Length);
                 
                 if (scenePath.StartsWith(projectGamePath)) {
                     continue;
@@ -75,7 +75,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                     var oldFileId = oldFileIds[i];
                     var newFileId = newFileIds[i].ToString();
                     
-                    EditorUtility.DisplayProgressBar($"Fixing {scenePath}", $"Migrating {oldFileId} -> {newFileId}", (float)i / oldFileIds.Length);
+                    EditorUtility.DisplayProgressBar($"Fixing {scenePath} [{i}/{oldFileIds.Length}]", $"Migrating {oldFileId} -> {newFileId}", (float)i / oldFileIds.Length);
                     
                     if (oldFileId == newFileId) continue;
                     

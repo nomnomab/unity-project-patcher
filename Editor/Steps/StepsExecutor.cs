@@ -42,6 +42,10 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                     if (stepsProgress.GetCompletion(steps, out stepIndex)) {
                         Debug.Log($"Completed {stepIndex} steps out of {steps.Length}");
                     }
+
+                    if (stepsProgress.LastResult == StepResult.RestartEditor) {
+                        EditorUtility.DisplayDialog("Focus the Editor", "Please focus the editor!", "Ok");
+                    }
                 }
             } catch {
                 Debug.LogError("Failed to read steps progress");
@@ -105,7 +109,11 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                             index++;
                             SaveProgress(false);
                             
+#if UNITY_2020_3_OR_NEWER
                             CompilationPipeline.RequestScriptCompilation(RequestScriptCompilationOptions.CleanBuildCache);
+#else
+                            CompilationPipeline.RequestScriptCompilation();
+#endif
                             return false;
                         default:
                             Debug.Log($"Step \"<b>{step.GetType().Name}</b>\" completed");
@@ -172,6 +180,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
         public void AppendStepResult(IPatcherStep step, double elapsedSeconds) {
             var stepsResults = GetStepResults();
             stepsResults.Results.Add(new StepsResults.Result(step.GetType().FullName ?? "nil", elapsedSeconds));
+            stepsResults.ElapsedSeconds += elapsedSeconds;
             SaveStepResults(stepsResults);
         }
         
@@ -187,7 +196,6 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
         public void SetEndTime() {
             var stepsResults = GetStepResults();
             stepsResults.EndTime = DateTime.Now;
-            stepsResults.ElapsedSeconds = (stepsResults.EndTime - stepsResults.StartTime).TotalSeconds;
             SaveStepResults(stepsResults);
         }
         

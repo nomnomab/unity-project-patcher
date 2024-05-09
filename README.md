@@ -294,46 +294,73 @@ This is very simple however:
 ```csharp
 [UPPatcher]
 public static class MyGameWrapper {
-    // an example of some default steps
-    // this is put into a StepsExecutor to run through in sequence
-    private static readonly IPatcherStep[] _steps = new IPatcherStep[] {
-        new GenerateDefaultProjectStructureStep(),
-        new ImportTextMeshProStep(),
-        new GenerateGitIgnoreStep(),
-        new PackagesInstallerStep(), // recompile
-        new CacheProjectCatalogueStep(),
-        new AssetRipperStep(),
-        new CopyGamePluginsStep(), // recompile
-        new CopyProjectSettingsStep(allowUnsafeCode: true), // restart
-        new GuidRemapperStep(),
-        new CopyAssetRipperExportToProjectStep(), // restarts
-        new FixProjectFileIdsStep(),
-        new RestartEditorStep()
-    };
-    
-    // a default runner
-    public static async UniTaskVoid Run() {
-        var executor = new StepsExecutor(_steps);
-        await executor.Execute();
+    // gives you the pipeline so you can modify its execution steps
+    public static void GetSteps(StepPipeline stepPipeline) {
+        stepPipeline.SetInputSystem(InputSystemType.InputSystem_New);
+        stepPipeline.IsUsingAddressables();
+        stepPipeline.IsUsingNetcodeForGameObjects();
+        stepPipeline.InsertAfter<InjectHDRPAssetsStep>(
+            new ChangeSceneListStep("MyCustomSceneIsFirst")
+        );
+        stepPipeline.SetGameViewResolution("16:9");
+        stepPipeline.OpenSceneAtEnd("OpenThisSceneLast");
     }
-    
-    // optional
-    // lets you put custom elements in the tool window
-    public void OnGUI() { }
 }
 ```
 
 The tool window at `Tools > Unity Project Patcher > Open Window` will automatically locate the first game wrapper it
 finds, and will work off of it when pressing the `Run Patcher` button.
 
-- `PatcherUtility.GetGameWrapperType()`: gets the first game wrapper's type
-- `PatcherUtility.GetGameWrapperRunFunction()`: gets the first game wrapper's `Run` function, like above
-- `PatcherUtility.GetGameWrapperOnGUIFunction`: gets the first game wrapper's `OnGUI` function
-  - Useful for displaying custom gui elements in the window
-
 You can find all available internal steps in the `Nomnom.UnityProjectPatcher.Editor.Steps` namespace.
 
 If a step recompiles or restarts the editor, it will tell you in its type summary. 
+
+> [!IMPORTANT]  
+> Steps are unique and as such cannot be in the pipeline more than once!
+
+#### A custom step
+
+```csharp
+public readonly struct RestartEditorStep: IPatcherStep {
+    // runs when its this step's turn
+    // add async to await operations when needed
+    public UniTask<StepResult> Run() {
+        return UniTask.FromResult(StepResult.Success);
+    }
+    
+    // runs when the executor succeeds or fails
+    public void OnComplete(bool failed) { }
+}
+```
+
+#### The default pipeline steps
+
+```csharp
+public readonly List<IPatcherStep> Steps = new List<IPatcherStep>() {
+    new GenerateDefaultProjectStructureStep(),
+    new ImportTextMeshProStep(),
+    new GenerateGitIgnoreStep(),
+    new PackagesInstallerStep(), // recompile
+    new CacheProjectCatalogueStep(),
+    new AssetRipperStep(),
+    new CopyGamePluginsStep(), // recompile
+    new CopyExplicitScriptFolderStep(), // restarts
+    new CopyProjectSettingsStep(allowUnsafeCode: true), // restart
+    new GuidRemapperStep(),
+    new CopyAssetRipperExportToProjectStep(), // restarts
+    new FixProjectFileIdsStep(),
+};
+```
+
+If URP or HDRP is defined in the `UPPatcherSettings` asset, then it will automatically inject the step for it.
+
+The `StepPipeline` defines insertion functions, as well as pre-defined functions that will insert steps at specific 
+locations for you, such as `pipeline.IsUsingNetcodeForGameObjects()`, which will insert the needed step to handle NGO
+scripts for you.
+
+> [!NOTE]  
+> You can check the final pipeline steps via the patcher window at `Tools > Unity Project Patcher > Open Window`, and
+> clicking on the `Print Steps to Log` button! The steps will be put into unity's console.
 
 #### For HDRP
 
@@ -347,6 +374,9 @@ There is `InjectURPAssetsStep` which will inject the various settings files into
 
 Then when you put your game wrapper in a GitHub repository, make sure you include instructions
 on installing *this* package first, as git packages cannot have other git dependencies.
+
+Also, make sure you bundle the `UPPatcherSettings` and `AssetRipperSettings` ScriptableObjects into your package
+inside of its `Runtime` folder. This will let them be bundled for the user!
 
 ## FAQ
 

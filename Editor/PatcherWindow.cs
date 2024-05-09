@@ -81,8 +81,7 @@ namespace Nomnom.UnityProjectPatcher.Editor {
             }
 
             if (GUILayout.Button("Run Patcher")) {
-                var runFunction = PatcherUtility.GetGameWrapperRunFunction(_gameWrapperType);
-                if (runFunction is null) {
+                if (PatcherUtility.GetGameWrapperGetStepsFunction(_gameWrapperType) is null) {
                     EditorUtility.DisplayDialog("Error", $"The {_gameWrapperType.Name} does not have a Run function", "Ok");
                     return;
                 }
@@ -94,10 +93,17 @@ namespace Nomnom.UnityProjectPatcher.Editor {
                 }
 
                 EditorApplication.delayCall += () => {
-                    runFunction.Invoke(null, null);
+                    PatcherSteps.Run();
                 };
                 
                 return;
+            }
+
+            if (GUILayout.Button("Print Steps to Log")) {
+                var pipeline = PatcherSteps.GetPipeline();
+                if (pipeline != null) {
+                    pipeline.PrintToLog();
+                }
             }
             
             if (_gameWrapperGuiFunction != null) {

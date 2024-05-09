@@ -200,7 +200,7 @@ namespace Lachee.Utilities.Serialization
 
                 if (isArrayEntry)
                 {
-                    if (_curObject is not UArray && _objects.Peek() is UArray)
+                    if (!(_curObject is UArray) && _objects.Peek() is UArray)
                         _curObject = _objects.Pop();
 
                     if (_curObject is UArray arr)

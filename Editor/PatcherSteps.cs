@@ -12,41 +12,64 @@ namespace Nomnom.UnityProjectPatcher.Editor {
     public static class PatcherSteps {
         [InitializeOnLoadMethod]
         private static void OnLoad() {
-            // locate game patcher
-            var gameWrapperType = PatcherUtility.GetGameWrapperType();
-            if (gameWrapperType is null) return;
+            var progress = StepsProgress.FromPath(StepsProgress.SavePath);
+            if (progress is null) return;
             
-            var runFunction = PatcherUtility.GetGameWrapperRunFunction(gameWrapperType);
-            if (runFunction is null) return;
-
-            StartDelay(runFunction);
-
-            // if (!InternalEditorUtility.isApplicationActive) {
-            //     EditorApplication.update -= Update;
-            //     EditorApplication.update += Update;
-            //     RunFunction(runFunction);
-            // } else {
-            //     StartDelay(runFunction);
-            // }
+            Run();
         }
 
-        // private static void Update() {
-        //     if (!InternalEditorUtility.isApplicationActive) {
-        //         EditorApplication.delayCall?.Invoke();
-        //     }
-        // }
-
-        private static void StartDelay(MethodInfo runFunction) {
+        private static void StartDelay(MethodInfo func) {
             EditorApplication.delayCall += () => {
-                RunFunction(runFunction);
+                RunFunction(func);
             };
         }
 
-        private static void RunFunction(MethodInfo runFunction) {
-            var progress = StepsProgress.FromPath(StepsProgress.SavePath);
-            if (progress is null) return;
+        public static void Run() {
+            // locate game patcher
+            var gameWrapperType = PatcherUtility.GetGameWrapperType();
+            if (gameWrapperType is null) {
+                Debug.LogError("Could not find GameWrapper type");
+                return;
+            }
+            
+            var func = PatcherUtility.GetGameWrapperGetStepsFunction(gameWrapperType);
+            if (func is null) {
+                Debug.LogError("Could not find GameWrapper.GetSteps function");
+                return;
+            }
 
-            runFunction.Invoke(null, null);
+            StartDelay(func);
+        }
+        
+        private static void RunFunction(MethodInfo func) {
+            var pipeline = new StepPipeline();
+            func.Invoke(null, new object[] { pipeline });
+            if (!pipeline.Validate()) {
+                Debug.LogError("Pipeline validation failed");
+                return;
+            }
+            
+            var executor = new StepsExecutor(pipeline.Steps.ToArray());
+            executor.Execute();
+        }
+
+        public static StepPipeline GetPipeline() {
+            var pipeline = new StepPipeline();
+            
+            var gameWrapperType = PatcherUtility.GetGameWrapperType();
+            if (gameWrapperType is null) {
+                return pipeline;
+            }
+            
+            var func = PatcherUtility.GetGameWrapperGetStepsFunction(gameWrapperType);
+            if (func is null) {
+                return pipeline;
+            }
+            
+            func.Invoke(null, new object[] { pipeline });
+            if (!pipeline.Validate()) return null;
+            
+            return pipeline;
         }
     }
 }

@@ -61,7 +61,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                 var entryFrom = match.from;
                 var entryTo = match.to;
 
-                if (EditorUtility.DisplayCancelableProgressBar("Guid Remapping", $"Replacing {entryFrom.Guid} with {entryTo.Guid}", i / (float)matches.Length)) {
+                if (EditorUtility.DisplayCancelableProgressBar($"Guid Remapping [{i}/{matches.Length}]", $"Replacing {entryFrom.Guid} with {entryTo.Guid}", i / (float)matches.Length)) {
                     Debug.Log("Manually cancelled");
                     throw new OperationCanceledException();
                 }
@@ -86,7 +86,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
             for (int i = 0; i < arAssets.Entries.Length; i++) {
                 var entry = arAssets.Entries[i];
 
-                if (EditorUtility.DisplayCancelableProgressBar("Guid Remapping", $"Checking associations for {entry.RelativePathToRoot}", i / (float)arAssets.Entries.Length)) {
+                if (EditorUtility.DisplayCancelableProgressBar($"Guid Remapping [{i}/{arAssets.Entries.Length}]", $"Checking associations for {entry.RelativePathToRoot}", i / (float)arAssets.Entries.Length)) {
                     Debug.Log("Manually cancelled");
                     throw new OperationCanceledException();
                 }

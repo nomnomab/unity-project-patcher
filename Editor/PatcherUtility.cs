@@ -5,6 +5,8 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
 using Lachee.Utilities.Serialization;
 using Nomnom.UnityProjectPatcher.AssetRipper;
 using Nomnom.UnityProjectPatcher.Editor.Steps;
@@ -13,6 +15,7 @@ using UnityEditor.PackageManager;
 using UnityEditor.SceneManagement;
 using UnityEditorInternal;
 using UnityEngine;
+using UnityEngine.Profiling;
 using Object = UnityEngine.Object;
 using UObject = Lachee.Utilities.Serialization.UObject;
 
@@ -71,19 +74,32 @@ namespace Nomnom.UnityProjectPatcher.Editor {
         public static Type GetGameWrapperType() {
             foreach (var type in TypeCache.GetTypesWithAttribute<UPPatcherAttribute>()) {
                 // does it have a Run function?
-                if (GetGameWrapperRunFunction(type) is null) continue;
+                if (GetGameWrapperGetStepsFunction(type) is null) continue;
                 return type;
             }
             
             return null;
         }
 
-        public static MethodInfo GetGameWrapperRunFunction(Type wrapperType) {
-            var runFunction = wrapperType.GetMethod("Run", BindingFlags.Public | BindingFlags.Static | BindingFlags.NonPublic);
-            if (runFunction is null) return null;
-            if (runFunction.GetParameters().Length > 0) return null;
+        // public static MethodInfo GetGameWrapperRunFunction(Type wrapperType) {
+        //     var runFunction = wrapperType.GetMethod("Run", BindingFlags.Public | BindingFlags.Static | BindingFlags.NonPublic);
+        //     if (runFunction is null) return null;
+        //     if (runFunction.GetParameters().Length > 0) return null;
+        //
+        //     return runFunction;
+        // }
+        
+        public static MethodInfo GetGameWrapperGetStepsFunction(Type wrapperType) {
+            var getStepsFunction = wrapperType.GetMethod("GetSteps", BindingFlags.Public | BindingFlags.Static | BindingFlags.NonPublic);
+            if (getStepsFunction is null) return null;
 
-            return runFunction;
+            var parameters = getStepsFunction.GetParameters();
+            if (parameters.Length != 1) return null;
+            if (parameters[0].ParameterType != typeof(StepPipeline)) {
+                return null;
+            }
+
+            return getStepsFunction;
         }
         
         public static MethodInfo GetGameWrapperOnGUIFunction(Type wrapperType) {
@@ -197,6 +213,17 @@ namespace Nomnom.UnityProjectPatcher.Editor {
             var split = path.Split(separatorChar);
             var result = string.Join(separatorChar.ToString(), split.Take(count));
             return result;
+        }
+
+        public static IEnumerable<Type> GetValidTypes(this Assembly assembly) {
+            Type[] types;
+            try {
+                types = assembly.GetTypes();
+            } catch (ReflectionTypeLoadException e) {
+                types = e.Types;
+            }
+
+            return types.Where(t => t != null);
         }
 
 #if UNITY_2020_3_OR_NEWER
@@ -398,7 +425,11 @@ PluginImporter:
         
         [MenuItem("Assets/Experimental/Re-import from Export", true)]
         public static bool ReimportFromExportValidate() {
+#if UNITY_2020_3_OR_NEWER
             if (Selection.count != 1) return false;
+#else
+            if (Selection.objects.Length != 1) return false;
+#endif
             
             var activeObject = Selection.activeObject;
             var assetPath = AssetDatabase.GetAssetPath(Selection.activeObject);
@@ -415,5 +446,63 @@ PluginImporter:
         
             return true;
         }
+
+        public static void StartProfiler() {
+            Profiler.logFile = "scrub_project_profile";
+            Profiler.enableBinaryLog = true;
+            Profiler.enabled = true;
+            Profiler.enableAllocationCallstacks = true;
+            // Profiler.maxUsedMemory = 512 * 1024 * 1024;
+        }
+        
+        public static void StopProfiler() {
+            Profiler.enabled = false;
+            Profiler.logFile = "";
+            Profiler.enableBinaryLog = false;
+            Profiler.enableAllocationCallstacks = false;
+        }
+
+        public static Task ForEachAsync<TSource, TResult>(
+            this IEnumerable<TSource> source,
+            Func<TSource, Task<TResult>> taskSelector, Action<TSource, TResult> resultProcessor) {
+            var oneAtATime = new SemaphoreSlim(initialCount: 1, maxCount: 1);
+            return Task.WhenAll(
+                from item in source
+                select ProcessAsync(item, taskSelector, resultProcessor, oneAtATime));
+        }
+
+        private static async Task ProcessAsync<TSource, TResult>(
+            TSource item,
+            Func<TSource, Task<TResult>> taskSelector, Action<TSource, TResult> resultProcessor,
+            SemaphoreSlim oneAtATime) {
+            TResult result = await taskSelector(item);
+            await oneAtATime.WaitAsync();
+            try { resultProcessor(item, result); }
+            finally { oneAtATime.Release(); }
+        }
     }
 }
+
+#if !UNITY_2020_3_OR_NEWER
+public static class OldUnityExtensions {
+    public static bool TryAdd<TKey, TValue>(this Dictionary<TKey, TValue> dictionary, TKey key, TValue value) {
+        if (dictionary.ContainsKey(key)) return false;
+        dictionary.Add(key, value);
+        return true;
+    }
+        
+    public static bool TryPop<T>(this Stack<T> stack, out T value) {
+        if (stack.Count == 0) {
+            value = default;
+            return false;
+        }
+            
+        value = stack.Pop();
+        return true;
+    }
+        
+    public static string[] Split(this string value, char separator, int count) {
+        return value.Split(new char[] { separator }, count);
+    }
+}
+#endif

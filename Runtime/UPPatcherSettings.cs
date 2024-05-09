@@ -35,6 +35,7 @@ namespace Nomnom.UnityProjectPatcher {
         
         public string GameName => _gameName ?? throw new NullReferenceException(nameof(GameName));
         public string GameVersion => _gameVersion ?? throw new NullReferenceException(nameof(GameVersion));
+        public PipelineType GamePipeline => _pipelineType;
         
         public IReadOnlyList<FolderMapping> DllsToCopy => _dllsToCopy.Where(x => !x.exclude).ToList();
         public IReadOnlyList<string> ScriptDllFoldersToCopy => _scriptDllFoldersToCopy;

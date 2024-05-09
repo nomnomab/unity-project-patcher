@@ -39,7 +39,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
             for (var i = 0; i < allowedEntries.Length; i++) {
                 var asset = allowedEntries[i];
 
-                EditorUtility.DisplayProgressBar("Copying assets", $"Copying {asset.RelativePathToRoot}", i / (float)allowedEntries.Length);
+                EditorUtility.DisplayProgressBar($"Copying assets [{i}/{allowedEntries.Length}]", $"Copying {asset.RelativePathToRoot}", i / (float)allowedEntries.Length);
                 
                 try {
                     var projectPath = AssetScrubber.GetProjectPathFromExportPath(projectGameAssetsPath, asset, settings, arSettings, false);
@@ -83,7 +83,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
             for (int i = 0; i < arAssets.Entries.Length; i++) {
                 var asset = arAssets.Entries[i];
                 
-                EditorUtility.DisplayProgressBar("Getting allowed entries", $"Scrubbing {asset.RelativePathToRoot}", i / (float) arAssets.Entries.Length);
+                EditorUtility.DisplayProgressBar($"Getting allowed entries [{i}/{ arAssets.Entries.Length}]", $"Scrubbing {asset.RelativePathToRoot}", i / (float) arAssets.Entries.Length);
                 
                 if (filesToExclude.Any(x => x == asset.RelativePathToRoot)) continue;
                 if (filesToExcludePrefix.Any(x => asset.RelativePathToRoot.StartsWith(x))) continue;

@@ -168,7 +168,11 @@ namespace Nomnom.UnityProjectPatcher.AssetRipper {
             return !string.IsNullOrEmpty(folder);
         }
 
+#if UNITY_2020_3_OR_NEWER
         public bool TryGetFolderMappingFromOutput(string outputName, out string folder, out bool exclude, string? fallbackPath = null) {
+#else
+        public bool TryGetFolderMappingFromOutput(string outputName, out string folder, out bool exclude, string fallbackPath = null) {
+#endif
             foreach (var mapping in _folderMappings) {
                 if (mapping.outputPath.Equals(outputName, StringComparison.OrdinalIgnoreCase)) {
                     folder = mapping.sourceName.ToOSPath();
