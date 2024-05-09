@@ -226,6 +226,10 @@ namespace Nomnom.UnityProjectPatcher.Editor {
             return types.Where(t => t != null);
         }
 
+        internal static bool HasBuildBlocker() {
+            return typeof(UPPatcherSettings).Assembly.GetType("Nomnom.UnityProjectPatcher.BuildBlocker") != null;
+        }
+
 #if UNITY_2020_3_OR_NEWER
         public static SerializedProperty? GetCustomRenderPipelineProperty() {
 #else

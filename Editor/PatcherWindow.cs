@@ -68,6 +68,11 @@ namespace Nomnom.UnityProjectPatcher.Editor {
                 return;
             }
             
+            if (!PatcherUtility.HasBuildBlocker()) {
+                EditorGUILayout.LabelField("No build blocker found. Why did you remove it?", EditorStyles.centeredGreyMiniLabel);
+                return;
+            }
+            
             var currentStep = StepsExecutor.CurrentStepName;
             GUI.enabled = string.IsNullOrEmpty(currentStep);
             if (!string.IsNullOrEmpty(currentStep)) {

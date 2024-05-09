@@ -9,11 +9,11 @@
 <div align="center">
 <!-- Badges -->
 
-  <span></span>
-    <a href="https://github.com/nomnomab/unity-project-patcher/issues/">Report Bug</a>
-  <span> · </span>
-    <a href="https://github.com/nomnomab/unity-project-patcher/issues/">Request Feature</a>
-  </h4>
+<span></span>
+<a href="https://github.com/nomnomab/unity-project-patcher/issues/">Report Bug</a>
+<span> · </span>
+<a href="https://github.com/nomnomab/unity-project-patcher/issues/">Request Feature</a>
+</h4>
 
 </div>
 
@@ -38,12 +38,12 @@ This tool takes a unity game, extracts its assets/scripts/etc, and then generate
 
 > [!IMPORTANT]  
 > Only supports Mono games at the moment!
-> 
+>
 > This tool does not distribute game files. It simply works off of your copy of the game!
-> 
+>
 > Also, this tool is for **personal** use only. Do not re-distrubute game files to others.
 
-This core tool *doesn't* patch any game by itself itself, as it's just a core utility. Game wrappers have to utilize this core 
+This core tool *doesn't* patch any game by itself itself, as it's just a core utility. Game wrappers have to utilize this core
 to set up its pipeline, and any specific fixing for that specific game.
 
 > [!NOTE]  
@@ -72,20 +72,20 @@ to set up its pipeline, and any specific fixing for that specific game.
 This project is bundled with the following packages:
 
 - [Editor Attributes](https://github.com/v0lt13/EditorAttributes)
-  - Is excluded before 2020.3
+    - Is excluded before 2020.3
 - [UniTask](https://github.com/Cysharp/UniTask)
 - [Quickenshtein](https://github.com/Turnerj/Quickenshtein)
 - [SharpZipLib](https://github.com/icsharpcode/SharpZipLib)
-  - This is for older Unity versions
-  - Is excluded after 2020.3
+    - This is for older Unity versions
+    - Is excluded after 2020.3
 - [ffmpeg](https://github.com/FFmpeg/FFmpeg/commit/cf4af4bca0)
-  - This uses version `2024-04-29-git-cf4af4bca0-essentials_build-www.gyan.dev` from
-    https://www.gyan.dev/ffmpeg/builds/, which is available under the terms 
-  of [GPL v3](https://github.com/FFmpeg/FFmpeg?tab=GPL-3.0-3-ov-file).
+    - This uses version `2024-04-29-git-cf4af4bca0-essentials_build-www.gyan.dev` from
+      https://www.gyan.dev/ffmpeg/builds/, which is available under the terms
+      of [GPL v3](https://github.com/FFmpeg/FFmpeg?tab=GPL-3.0-3-ov-file).
 
 ### Gets Downloaded
 
-This project downloads a slightly tweaked version of [Asset Ripper](https://github.com/AssetRipper/AssetRipper), and is 
+This project downloads a slightly tweaked version of [Asset Ripper](https://github.com/AssetRipper/AssetRipper), and is
 downloded from the releases of my fork [here](https://github.com/nomnomab/AssetRipper).
 
 > [!NOTE]  
@@ -98,18 +98,11 @@ You will have to make sure you have the following before using the tool in any w
 
 - [Git](https://git-scm.com/download/win)
 - [.NET 8.0](https://dotnet.microsoft.com/en-us/download/dotnet/8.0)
-  - To run Asset Ripper
+    - To run Asset Ripper
 
 These prerequisites may or may not be already included in your Unity version:
 
 - [Newtonsoft Json](https://docs.unity3d.com/Packages/com.unity.nuget.newtonsoft-json@3.2/manual/index.html): `com.unity.nuget.newtonsoft-json`
-
-[//]: # (Optional:)
-
-[//]: # ()
-[//]: # (- [ffmpeg]&#40;https://ffmpeg.org/download.html&#41;)
-
-[//]: # (  - Put into `[PROJECT_NAME]\Packages\com.nomnom.unity-project-patcher\Libs\ffmpeg~`)
 
 <!-- Installation -->
 ## Installation
@@ -123,7 +116,7 @@ Install with the package manager:
 2. Click the '+' button in the top-left of the window
 3. Click 'Add package from git URL'
 4. Provide the URL of the this git repository: https://github.com/nomnomab/unity-project-patcher.git
-   - If you are using a specific version, you can append it to the end of the git URL, such as `#v1.2.3`
+    - If you are using a specific version, you can append it to the end of the git URL, such as `#v1.2.3`
 5. Click the 'add' button
 
 
@@ -162,23 +155,23 @@ Any game wrapper will require the following two ScriptableObjects:
 > Can be made via `Create > Unity Project Patcher > Settings`
 
 <div float="left" align="center" style="display: flex; flex-direction: row; gap: 10px;">
-  <img src="Assets~/UPPatcherSettings_1.png" width="500" />
-  <img src="Assets~/UPPatcherSettings_2.png" width="500" />
+  <img src="Assets~/UPPatcherSettings_1.png" width="400" />
+  <img src="Assets~/UPPatcherSettings_2.png" width="400" />
 </div>
 
 This can be retrieved in a custom step via `this.GetSettings();`.
 
 This is the core settings object. Here is where you define where the game is, can click the `Get` buttons
-to get the name, version, and pipeline type for the game, and can define various other options relating to 
+to get the name, version, and pipeline type for the game, and can define various other options relating to
 the way the patcher will use files.
 
 #### Dlls To Copy
 
 These DLLs will be copied from the game's `Managed` folder, provided with a relative path.
 
-The output path defines where the dll will end up relative to the `Plugins` folder defined in 
+The output path defines where the dll will end up relative to the `Plugins` folder defined in
 your [AssetRipperSettings](#assetrippersettings)
-  - This path is relative, so an empty path will equate to just the `Plugins` folder.
+- This path is relative, so an empty path will equate to just the `Plugins` folder.
 
 #### Script Dll Folders to Copy
 
@@ -196,10 +189,10 @@ At the bottom of this asset are field for packages, and a button called `GetGame
 packages for the game's version, that match the current editor's version.
 
 > [!IMPORTANT]  
-> This should be used in a project that is the same version as the game's Unity version! 
+> This should be used in a project that is the same version as the game's Unity version!
 > Otherwise it will lead to incompatible package versions.
 
-Note, the package process *will* be a slight headache to figure out as this tool is just an assumption helper. 
+Note, the package process *will* be a slight headache to figure out as this tool is just an assumption helper.
 
 To figure out packages slightly faster, you can run the tool until it throws an error when the scripts are imported, then
 you can work backwards from there with the errors.
@@ -225,8 +218,8 @@ If you need to put any git packages in the wrapper, put them here.
 > Can be made via `Create > Unity Project Patcher > AssetRipper Settings`
 
 <div float="left" align="center" style="display: flex; flex-direction: row; gap: 10px;">
-  <img src="Assets~/AssetRipperSettings_1.png" width="500" />
-  <img src="Assets~/AssetRipperSettings_2.png" width="500" />
+  <img src="Assets~/AssetRipperSettings_1.png" width="400" />
+  <img src="Assets~/AssetRipperSettings_2.png" width="400" />
 </div>
 
 This can be retrieved in a custom step via `this.GetAssetRipperSettings();`.
@@ -236,11 +229,11 @@ This can be retrieved in a custom step via `this.GetAssetRipperSettings();`.
 Each folder mapping is a key/value pair that lets you map an export folder to a new project folder location.
 
 An example can be:
-  - Key: `MonoBehaviour`
+- Key: `MonoBehaviour`
     - Used to fetch the output path, has to be unique
-  - SourceName: `MonoBehaviour`
+- SourceName: `MonoBehaviour`
     - In the export this maps to `AssetRipperOutput\ExportedProject\Assets\MonoBehaviour`
-  - OutputPath: `ScriptableObjects`
+- OutputPath: `ScriptableObjects`
     - In the project this maps to `Assets\[GAME_NAME]\Game\ScriptableObjects`
 
 This is very useful to make the project structure easier to work with!
@@ -272,15 +265,15 @@ These copy various project settings from the exports `AssetRipperOutput\Exported
 This is essentially your Asset Ripper configuration data that Asset Ripper will read.
 
 > [!WARNING]  
-> Not all settings are applicable to the free version of Asset Ripper, as some are paid features. 
-> 
+> Not all settings are applicable to the free version of Asset Ripper, as some are paid features.
+>
 > This includes settings like:
 > - Static Mesh Separation
 > - Asset De-duplication
 
 If you set the script export mode to anything other than Decompiled, it will skip code-specific steps in the patcher.
 
-This can easily be checked in custom steps with `this.ScriptsAreStubs();` which can be used in an `IPatcherStep` 
+This can easily be checked in custom steps with `this.ScriptsAreStubs();` which can be used in an `IPatcherStep`
 or manually via `PatcherUtility.ScriptsAreStubs()`.
 
 ### Custom Game Wrapper
@@ -288,11 +281,11 @@ or manually via `PatcherUtility.ScriptsAreStubs()`.
 #### Preresiquites
 
 - Generate a local unity package
-  - I have a tool for this called [New Package Helper](https://github.com/nomnomab/New-Package-Helper)
+    - I have a tool for this called [New Package Helper](https://github.com/nomnomab/New-Package-Helper)
 - Add the following to your game's package Assembly Definition References in the inspector:
-  - `com.nomnom.unity-project-patcher.Editor.asmdef`
-  - `com.nomnom.unity-project-patcher.Runtime.asmdef`
-  - `UniTask.asmdef`
+    - `com.nomnom.unity-project-patcher.Editor.asmdef`
+    - `com.nomnom.unity-project-patcher.Runtime.asmdef`
+    - `UniTask.asmdef`
 
 #### Creation
 
@@ -322,7 +315,7 @@ finds, and will work off of it when pressing the `Run Patcher` button.
 
 You can find all available internal steps in the `Nomnom.UnityProjectPatcher.Editor.Steps` namespace.
 
-If a step recompiles or restarts the editor, it will tell you in its type summary. 
+If a step recompiles or restarts the editor, it will tell you in its type summary.
 
 > [!IMPORTANT]  
 > Steps are unique and as such cannot be in the pipeline more than once!
@@ -363,7 +356,7 @@ public readonly List<IPatcherStep> Steps = new List<IPatcherStep>() {
 
 If URP or HDRP is defined in the `UPPatcherSettings` asset, then it will automatically inject the step for it.
 
-The `StepPipeline` defines insertion functions, as well as pre-defined functions that will insert steps at specific 
+The `StepPipeline` defines insertion functions, as well as pre-defined functions that will insert steps at specific
 locations for you, such as `pipeline.IsUsingNetcodeForGameObjects()`, which will insert the needed step to handle NGO
 scripts for you.
 
@@ -391,7 +384,7 @@ inside of its `Runtime` folder. This will let them be bundled for the user!
 
 #### Q: An asset's values got messed up, can I reset it?
 
-As long as you have the Asset Ripper export still, haven't touched it, and the asset's fileids/guids haven't changed, 
+As long as you have the Asset Ripper export still, haven't touched it, and the asset's fileids/guids haven't changed,
 then yes you can.
 
 Right-click the asset in the project, then select `Assets > Experimental > Re-import from Export`.
@@ -403,10 +396,10 @@ Right-click the asset in the project, then select `Assets > Experimental > Re-im
 
 - Lethal Company
 - Content Warning
-  - Not fully, as Photon is being confusing
+    - Not fully, as Photon is being confusing
 - ULTRAKILL
 - Cult of the Lamb
-  - Asset Ripper bug is preventing this one
+    - Asset Ripper bug is preventing this one
 
 <br/>
 

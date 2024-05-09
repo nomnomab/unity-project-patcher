@@ -5,7 +5,7 @@ using UnityEditor.Build.Reporting;
 using UnityEngine;
 
 namespace Nomnom.UnityProjectPatcher {
-    internal class BuildBlocker : IPreprocessBuildWithReport {
+    internal sealed class BuildBlocker : IPreprocessBuildWithReport {
         public int callbackOrder => -9999;
 
         public void OnPreprocessBuild(BuildReport report) {
