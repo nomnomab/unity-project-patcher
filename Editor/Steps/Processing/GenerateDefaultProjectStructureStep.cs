@@ -1,4 +1,6 @@
-﻿using Cysharp.Threading.Tasks;
+﻿using System.IO;
+using Cysharp.Threading.Tasks;
+using UnityEditor;
 using UnityEngine;
 
 namespace Nomnom.UnityProjectPatcher.Editor.Steps {
@@ -34,6 +36,13 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                 if (!PatcherUtility.TryToCreatePath(settings.ProjectGameToolsFullPath)) {
                     return UniTask.FromResult(StepResult.Failure);
                 }
+
+                var assetsPath = settings.ProjectGameAssetsPath;
+                var arSettings = this.GetAssetRipperSettings();
+                
+                // unsort folders so the path matching works properly
+                SortAssetTypesSteps.UnsortFolder(assetsPath, "MonoBehaviour", "ScriptableObject", arSettings);
+                SortAssetTypesSteps.UnsortFolder(assetsPath, "PrefabInstance", "Prefab", arSettings);
             } catch {
                 Debug.LogError("Failed to create default project paths");
                 throw;

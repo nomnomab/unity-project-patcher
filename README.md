@@ -136,9 +136,6 @@ Install with the manifest.json:
 
 The tool window can be opened via `Tools > Unity Project Patcher > Open Window`
 
-During the patching process, make sure you keep Unity focused. If you tab out when it restarts, it won't resume until
-you re-focus the window. Regardless of this, you may have to click into the editor when restarting to continue.
-
 > [!IMPORTANT]  
 > This tool mostly supports patching an already patched project, although this can lead to broken assets.
 > So make sure you back up your project beforehand.
@@ -351,6 +348,7 @@ public readonly List<IPatcherStep> Steps = new List<IPatcherStep>() {
     new GuidRemapperStep(),
     new CopyAssetRipperExportToProjectStep(), // restarts
     new FixProjectFileIdsStep(),
+    new SortAssetTypesSteps()
 };
 ```
 

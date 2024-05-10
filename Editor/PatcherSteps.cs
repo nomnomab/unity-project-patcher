@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using Cysharp.Threading.Tasks;
 using Nomnom.UnityProjectPatcher.Editor.Steps;
 using UnityEditor;
 using UnityEditorInternal;
@@ -14,7 +15,13 @@ namespace Nomnom.UnityProjectPatcher.Editor {
         private static void OnLoad() {
             var progress = StepsProgress.FromPath(StepsProgress.SavePath);
             if (progress is null) return;
-            
+
+            EditorApplication.update -= Update;
+            EditorApplication.update += Update;
+        }
+
+        private static void Update() {
+            EditorApplication.update -= Update;
             Run();
         }
 
@@ -38,7 +45,8 @@ namespace Nomnom.UnityProjectPatcher.Editor {
                 return;
             }
 
-            StartDelay(func);
+            // StartDelay(func);
+            RunFunction(func);
         }
         
         private static void RunFunction(MethodInfo func) {

@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -16,6 +18,7 @@ using UnityEditor.SceneManagement;
 using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.Profiling;
+using Debug = UnityEngine.Debug;
 using Object = UnityEngine.Object;
 using UObject = Lachee.Utilities.Serialization.UObject;
 
@@ -228,6 +231,27 @@ namespace Nomnom.UnityProjectPatcher.Editor {
 
         internal static bool HasBuildBlocker() {
             return typeof(UPPatcherSettings).Assembly.GetType("Nomnom.UnityProjectPatcher.BuildBlocker") != null;
+        }
+
+        public static IEnumerable<Type> GetParentTypes(this Type type) {
+            // is there any base type?
+            if (type == null) {
+                yield break;
+            }
+
+            yield return type;
+
+            // return all implemented or inherited interfaces
+            foreach (var i in type.GetInterfaces()) {
+                yield return i;
+            }
+
+            // return all inherited types
+            var currentBaseType = type.BaseType;
+            while (currentBaseType != null) {
+                yield return currentBaseType;
+                currentBaseType = currentBaseType.BaseType;
+            }
         }
 
 #if UNITY_2020_3_OR_NEWER
@@ -484,6 +508,24 @@ PluginImporter:
             try { resultProcessor(item, result); }
             finally { oneAtATime.Release(); }
         }
+        
+// #if UNITY_EDITOR_WIN
+//         [DllImport("user32.dll")]
+//         public static extern bool SetForegroundWindow(IntPtr hWnd);
+// #endif
+//
+//         public static void FocusUnity() {
+//             // todo: support linux
+// #if UNITY_EDITOR_WIN
+//             var process = Process.GetCurrentProcess();
+//             if (process != null) {
+//                 // process.WaitForInputIdle();
+//                 var ptr = process.MainWindowHandle;
+//                 SetForegroundWindow(ptr);
+//                 Debug.Log($"Set foreground window: {ptr}");
+//             }
+// #endif
+//         }
     }
 }
 

@@ -46,6 +46,9 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                     // if (stepsProgress.LastResult == StepResult.RestartEditor) {
                     //     EditorUtility.DisplayDialog("Focus the Editor", "Please focus the editor!", "Ok");
                     // }
+                    // if (stepsProgress.LastResult == StepResult.RestartEditor) {
+                    //     PatcherUtility.FocusUnity();
+                    // }
                 }
             } catch {
                 Debug.LogError("Failed to read steps progress");
@@ -56,6 +59,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
             if (stepIndex >= steps.Length) {
                 Debug.Log("All steps are done");
                 ClearProgress(false);
+                EditorUtility.DisplayDialog("Done", "The project has been patched successfully!", "Ok");
                 return true;
             }
 
@@ -134,6 +138,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
             SetEndTime();
             EditorUtility.ClearProgressBar();
             ClearProgress(false);
+            EditorUtility.DisplayDialog("Done", "The project has been patched successfully!", "Ok");
             return true;
         }
 

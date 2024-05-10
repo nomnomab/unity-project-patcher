@@ -21,6 +21,7 @@ namespace Nomnom.UnityProjectPatcher.AssetRipper {
         public string OutputExportFolderPath => Path.Combine(OutputFolderPath, "ExportedProject");
         public string OutputExportAssetsFolderPath => Path.Combine(OutputExportFolderPath, "Assets");
 
+        public IReadOnlyCollection<FolderMapping> FolderMappings => _folderMappings;
         public AssetRipperJsonData ConfigurationData => _configurationData;
         public IReadOnlyList<string> FoldersToCopy => _foldersToCopy.Select(x => x.Replace('/', '\\')).ToList();
         public IReadOnlyList<string> FilesToExcludeFromCopy => _filesToExcludeFromCopy.Select(x => x.Replace('/', '\\')).ToList();

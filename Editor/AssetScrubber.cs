@@ -1199,8 +1199,15 @@ namespace Nomnom.UnityProjectPatcher.Editor {
             var pathWithoutRoot = projectAssetPath.Substring(settings.ProjectGameAssetsPath.Length + 1);
             var withoutFile = Path.GetDirectoryName(pathWithoutRoot);
             if (!arSettings.TryGetFolderMappingFromOutput(withoutFile, out var folder, out var exclude)) {
+                // check if any of the mappings start with this
+                // FolderMapping? found = arSettings.FolderMappings.FirstOrDefault(x => withoutFile.StartsWith(x.outputPath));
+                // if (found is null) {
                 Debug.LogWarning($"Could not find folder mapping for \"{withoutFile}\"");
                 return null;
+                // }
+
+                // folder = found.Value.sourceName.ToOSPath();
+                // exclude = found.Value.exclude;
             }
 
             var exportPath = Path.Combine(arSettings.OutputExportAssetsFolderPath, folder, Path.GetFileName(projectAssetPath));

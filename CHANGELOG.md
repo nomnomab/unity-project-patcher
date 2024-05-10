@@ -1,4 +1,9 @@
-﻿# 1.1.0
+﻿# 1.1.1
+- Better handling of steps across editor restarts!
+- ScriptableObject sorting
+- Prefab sorting
+
+# 1.1.0
 
 - Step pipeline workflow
 - Default steps in pipeline
