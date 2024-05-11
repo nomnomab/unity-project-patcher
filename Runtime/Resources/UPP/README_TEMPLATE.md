@@ -129,6 +129,11 @@ The tool window can be opened via `Tools > Unity Project Patcher > Open Window`
 > This tool mostly supports patching an already patched project, although this can lead to broken assets.
 > So make sure you back up your project beforehand.
 
+Estimated patch durations:
+
+- Fresh patch: $ESTIMATED_DURATION$
+- Already patched: $ESTIMATED_DURATION$
+
 ## FAQ
 
 The core project's FAQ can be found here: https://github.com/nomnomab/unity-project-patcher#faq
