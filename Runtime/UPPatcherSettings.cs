@@ -14,7 +14,7 @@ using EditorAttributes;
 namespace Nomnom.UnityProjectPatcher {
     [CreateAssetMenu(fileName = "UnityProjectPatcherSettings", menuName = "Unity Project Patcher/Settings")]
     public partial class UPPatcherSettings : ScriptableObject {
-        public string GameFolderPath => _gameFolderPath ?? throw new NullReferenceException(nameof(GameFolderPath));
+        public string GameFolderPath => PatcherUtility.GetUserSettings().GameFolderPath ?? throw new NullReferenceException(nameof(GameFolderPath));
         public string GameExePath => Path.Combine(GameFolderPath, $"{GameName}.exe");
         public string GameDataPath => Path.Combine(GameFolderPath, $"{GameName}_Data");
         public string GameManagedPath => Path.Combine(GameDataPath, "Managed");
@@ -45,9 +45,6 @@ namespace Nomnom.UnityProjectPatcher {
         public IReadOnlyCollection<GitPackageInfo> GitPackages => _gitPackages;
 
 #if UNITY_2020_3_OR_NEWER
-        [SerializeField, FolderPath(getRelativePath: false)]
-        private string? _gameFolderPath;
-
         [SerializeField, InlineButton(nameof(GetGameName), "Get", buttonWidth: 30)]
         private string? _gameName = null;
         
@@ -57,9 +54,6 @@ namespace Nomnom.UnityProjectPatcher {
         [SerializeField, InlineButton(nameof(GetPipelineType), "Get", buttonWidth: 30)] 
         private PipelineType _pipelineType;
 #else
-        [SerializeField]
-        private string _gameFolderPath;
-
         [SerializeField]
         private string _gameName = null;
         

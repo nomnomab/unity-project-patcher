@@ -24,27 +24,22 @@ using UObject = Lachee.Utilities.Serialization.UObject;
 
 namespace Nomnom.UnityProjectPatcher.Editor {
     public static class PatcherUtility {
+        public static bool LockedAssemblies;
+        
+        public static UPPatcherUserSettings GetUserSettings(this IPatcherStep step) {
+            return GetUserSettings();
+        }
+        
+        public static UPPatcherUserSettings GetUserSettings() {
+            return Nomnom.UnityProjectPatcher.PatcherUtility.GetUserSettings();
+        }
+        
         public static UPPatcherSettings GetSettings(this IPatcherStep step) {
             return GetSettings();
         }
         
         public static UPPatcherSettings GetSettings() {
-            var assets = AssetDatabase.FindAssets($"t:{nameof(UPPatcherSettings)}");
-            if (assets.Length == 0) {
-                CreateSettings();
-                Debug.LogWarning("Created UPPatcherSettings asset since it was missing");
-            }
-
-            var assetPath = AssetDatabase.GUIDToAssetPath(assets[0]);
-            return AssetDatabase.LoadAssetAtPath<UPPatcherSettings>(assetPath);
-        }
-        
-        private static void CreateSettings() {
-            // create one at root
-            var settings = ScriptableObject.CreateInstance<UPPatcherSettings>();
-            AssetDatabase.CreateAsset(settings, "Assets/UPPatcherSettings.asset");
-            AssetDatabase.SaveAssets();
-            AssetDatabase.Refresh();
+            return Nomnom.UnityProjectPatcher.PatcherUtility.GetSettings();
         }
         
         public static AssetRipperSettings GetAssetRipperSettings(this IPatcherStep step) {
@@ -52,22 +47,7 @@ namespace Nomnom.UnityProjectPatcher.Editor {
         }
         
         public static AssetRipperSettings GetAssetRipperSettings() {
-            var assets = AssetDatabase.FindAssets($"t:{nameof(AssetRipperSettings)}");
-            if (assets.Length == 0) {
-                CreateAssetRipperSettings();
-                Debug.LogWarning("Created AssetRipperSettings asset since it was missing");
-            }
-            
-            var assetPath = AssetDatabase.GUIDToAssetPath(assets[0]);
-            return AssetDatabase.LoadAssetAtPath<AssetRipperSettings>(assetPath);
-        }
-
-        private static void CreateAssetRipperSettings() {
-            // create one at root
-            var settings = ScriptableObject.CreateInstance<AssetRipperSettings>();
-            AssetDatabase.CreateAsset(settings, "Assets/AssetRipperSettings.asset");
-            AssetDatabase.SaveAssets();
-            AssetDatabase.Refresh();
+            return Nomnom.UnityProjectPatcher.PatcherUtility.GetAssetRipperSettings();
         }
 
         public static bool ScriptsAreStubs(this IPatcherStep step) {
@@ -231,6 +211,15 @@ namespace Nomnom.UnityProjectPatcher.Editor {
 
         internal static bool HasBuildBlocker() {
             return typeof(UPPatcherSettings).Assembly.GetType("Nomnom.UnityProjectPatcher.BuildBlocker") != null;
+        }
+
+        public static void DisplayUsageWarning() {
+            EditorUtility.DisplayDialog("Use at your own risk!", @"
+Resources, binary code, and source code might be protected by copyright and trademark laws. Before using this software make sure that decompilation
+is not prohibited by the applicable license agreement, permitted under applicable law, or you obtained explicit permission from the copyright owner.
+
+The authors and copyright holders of this software do neither encourage, nor condone, the use of this software, and disclaim any liability for use
+of the software in violation of applicable laws.", "OK");
         }
 
         public static IEnumerable<Type> GetParentTypes(this Type type) {

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Reflection;
 using Nomnom.UnityProjectPatcher.Editor.Steps;
 using UnityEditor;
@@ -28,6 +29,8 @@ namespace Nomnom.UnityProjectPatcher.Editor {
         }
 
         private void OnEnable() {
+            Nomnom.UnityProjectPatcher.PatcherUtility.GetUserSettings();
+            
             EditorApplication.delayCall += () => {
                 var (version, gameVersion) = PatcherUtility.GetVersions();
                 _patcherVersion = version;
@@ -57,7 +60,7 @@ namespace Nomnom.UnityProjectPatcher.Editor {
                 _rightAlignedGreyLabel = new GUIStyle(EditorStyles.centeredGreyMiniLabel) { alignment = TextAnchor.MiddleRight };
             }
             
-            var title = _gameWrapperType.Name;
+            var title = _gameWrapperType?.Name ?? null;
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField($"Unity Project Patcher v{_patcherVersion ?? "N/A"}", _leftAlignedGreyLabel);
             EditorGUILayout.LabelField($"Found: {title ?? "N/A"} v{_gameWrapperVersion ?? "N/A"}", _rightAlignedGreyLabel);
@@ -86,6 +89,33 @@ namespace Nomnom.UnityProjectPatcher.Editor {
             }
 
             if (GUILayout.Button("Run Patcher")) {
+                var userSettings = PatcherUtility.GetUserSettings();
+
+                PatcherUtility.DisplayUsageWarning();
+                
+                try {
+                    if (string.IsNullOrEmpty(userSettings.GameFolderPath) || !Directory.Exists(Path.GetFullPath(userSettings.GameFolderPath))) {
+                        EditorUtility.DisplayDialog("Error", "Please select a valid game folder!", "Ok");
+                        return;
+                    }
+
+                    if (string.IsNullOrEmpty(userSettings.AssetRipperDownloadFolderPath)) {
+                        EditorUtility.DisplayDialog("Error", "Please select a valid asset ripper download location!", "Ok");
+                        return;
+                    }
+                    
+                    if (string.IsNullOrEmpty(userSettings.AssetRipperExportFolderPath)) {
+                        EditorUtility.DisplayDialog("Error", "Please select a valid asset ripper export location!", "Ok");
+                        return;
+                    }
+                } catch {
+                    EditorUtility.DisplayDialog("Error", "There is a bad path in the user settings!", "Ok");
+                    EditorUtility.FocusProjectWindow();
+                    Selection.activeObject = userSettings;
+                    EditorGUIUtility.PingObject(userSettings);
+                    return;
+                }
+                
                 if (PatcherUtility.GetGameWrapperGetStepsFunction(_gameWrapperType) is null) {
                     EditorUtility.DisplayDialog("Error", $"The {_gameWrapperType.Name} does not have a Run function", "Ok");
                     return;

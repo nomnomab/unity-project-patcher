@@ -1,4 +1,15 @@
-﻿# 1.1.1
+﻿# 1.1.3
+
+- Fixed issue with unsafe code enabling not restarting the editor
+
+# 1.1.2
+
+- Fixed asset ripper + output path not being relative paths
+- Fixed null check when no game wrapper is available
+- User settings ScriptableObject
+
+# 1.1.1
+- 
 - Better handling of steps across editor restarts!
 - ScriptableObject sorting
 - Prefab sorting

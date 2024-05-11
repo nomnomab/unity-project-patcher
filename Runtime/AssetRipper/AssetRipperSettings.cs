@@ -14,9 +14,9 @@ using EditorAttributes;
 namespace Nomnom.UnityProjectPatcher.AssetRipper {
     [CreateAssetMenu(fileName = "AssetRipperSettings", menuName = "Unity Project Patcher/AssetRipper Settings")]
     public class AssetRipperSettings : ScriptableObject {
-        public string FolderPath => _folderPath;
+        public string FolderPath => PatcherUtility.GetUserSettings().AssetRipperDownloadFolderPath;
         public string ExePath => Path.Combine(FolderPath, "AssetRipper.Tools.SystemTester.exe");
-        public string OutputFolderPath => _outputFolderPath;
+        public string OutputFolderPath => PatcherUtility.GetUserSettings().AssetRipperExportFolderPath;
         public string ConfigPath => Path.Combine(FolderPath, "AssetRipper.Settings.json");
         public string OutputExportFolderPath => Path.Combine(OutputFolderPath, "ExportedProject");
         public string OutputExportAssetsFolderPath => Path.Combine(OutputExportFolderPath, "Assets");
@@ -31,20 +31,6 @@ namespace Nomnom.UnityProjectPatcher.AssetRipper {
         // public bool NeedsManualRip => _configurationData.Processing.enableStaticMeshSeparation;
         // public bool NeedsManualRip => _configurationData.Processing.enableStaticMeshSeparation || _configurationData.Processing.enableStaticMeshSeparation;
         public bool NeedsManualRip => false;
-        
-#if UNITY_2020_3_OR_NEWER
-        [SerializeField, FolderPath(getRelativePath: false)]
-        private string? _folderPath = Path.GetFullPath("AssetRipper");
-        
-        [SerializeField, FolderPath(getRelativePath: false)]
-        private string? _outputFolderPath = Path.GetFullPath("AssetRipperOutput");
-#else
-        [SerializeField]
-        private string _folderPath = Path.GetFullPath("AssetRipper");
-        
-        [SerializeField]
-        private string _outputFolderPath = Path.GetFullPath("AssetRipperOutput");
-#endif
         
         [SerializeField]
         private FolderMapping[] _folderMappings = new[] {

@@ -1,4 +1,5 @@
 ﻿#if UNITY_EDITOR && UNITY_2020_3_OR_NEWER
+using System;
 using System.IO;
 using EditorAttributes;
 using Nomnom.UnityProjectPatcher.UnityPackages;
