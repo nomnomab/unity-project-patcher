@@ -1,6 +1,8 @@
 ﻿using System;
 using System.IO;
+#if UNITY_2020_3_OR_NEWER
 using EditorAttributes;
+#endif
 using UnityEngine;
 
 namespace Nomnom.UnityProjectPatcher {
