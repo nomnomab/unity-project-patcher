@@ -142,6 +142,12 @@ The tool window can be opened via `Tools > Unity Project Patcher > Open Window`
 
 ### Patcher Configs
 
+### UPPatcherUserSettings
+
+This config is for defining the user's Asset Ripper download path, export path, and game install folder.
+
+If this isn't made manually, when the tool is ran it will make one and direct the user to it before starting.
+
 > [!NOTE]  
 > The end user won't have to touch these, only the game wrapper creator!
 
