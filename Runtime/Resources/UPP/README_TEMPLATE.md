@@ -63,6 +63,7 @@ You will have to make sure you have the following before using the tool in any w
 - [Git](https://git-scm.com/download/win)
 - [.NET 8.0](https://dotnet.microsoft.com/en-us/download/dotnet/8.0)
     - To run Asset Ripper
+- [Unity Project Patcher](https://github.com/nomnomab/unity-project-patcher)
 - [Unity Project Patcher BepInEx](https://github.com/nomnomab/unity-project-patcher-bepinex)
     - [Can be disabled](#disabling-bepinex-usage)
 
