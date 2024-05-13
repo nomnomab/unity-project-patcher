@@ -991,9 +991,27 @@ namespace Nomnom.UnityProjectPatcher.Editor {
 
             return true;
         }
+        
+        public static string GetMetaGuid(string fullAssetPath) {
+            var fullMetaPath = $"{fullAssetPath}.meta";
+            if (!File.Exists(fullMetaPath)) {
+                Debug.LogWarning($"Could not find \"{fullMetaPath}\"");
+                return null;
+            }
+
+            var contents = File.ReadAllText(fullMetaPath);
+            var match = GuidPattern.Match(contents);
+            if (!match.Success) return null;
+
+            return match.Groups["guid"].Value;
+        }
 
         public static void ReplaceMetaGuid(string rootPath, AssetCatalogue.Entry entry, string guid) {
             var fullAssetPath = Path.Combine(rootPath, entry.RelativePathToRoot);
+            ReplaceMetaGuid(fullAssetPath, guid);
+        }
+        
+        public static void ReplaceMetaGuid(string fullAssetPath, string guid) { 
             var fullMetaPath = $"{fullAssetPath}.meta";
             if (!File.Exists(fullMetaPath)) {
                 Debug.LogWarning($"Could not find \"{fullMetaPath}\"");
@@ -1008,6 +1026,19 @@ namespace Nomnom.UnityProjectPatcher.Editor {
             File.WriteAllText(fullMetaPath, newContents);
             
             Debug.Log($" - wrote to {fullMetaPath}");
+        }
+
+        public static void ReplaceAssetGuids(string fullAssetPath, string guid) {
+            if (!File.Exists(fullAssetPath)) {
+                Debug.LogWarning($"Could not find \"{fullAssetPath}\"");
+                return;
+            }
+            
+            var contents = File.ReadAllText(fullAssetPath);
+            contents = GuidPattern.Replace(contents, $"guid: {guid}:");
+            File.WriteAllText(fullAssetPath, contents);
+            
+            Debug.Log($" - wrote to {fullAssetPath}");
         }
 
         public static void ReplaceAssetGuids(UPPatcherSettings settings, string rootPath, AssetCatalogue.Entry entry, Dictionary<string, AssetCatalogue.Entry> entryMap) {

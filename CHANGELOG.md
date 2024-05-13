@@ -1,6 +1,7 @@
 ﻿# 1.1.3
 
 - Fixed issue with unsafe code enabling not restarting the editor
+- Proxy script step
 
 # 1.1.2
 

@@ -344,6 +344,19 @@ PluginImporter:
             }
         }
 
+        [MenuItem("CONTEXT/Object/Debug/Assembly Type Name")]
+        [MenuItem("Edit/Test/Debug/Assembly Type Name")]
+        public static void DebugAssemblyTypeName() {
+            var selection = Selection.activeObject;
+            if (!selection) return;
+            
+            if (selection is MonoScript m) {
+                Debug.Log(m.GetClass().AssemblyQualifiedName);
+            } else {
+                Debug.Log(selection.GetType().AssemblyQualifiedName);
+            }
+        }
+
         [MenuItem("CONTEXT/Object/Debug/Guid")]
         [MenuItem("Edit/Test/Debug/Guid")]
         public static void DebugGuid() {
@@ -359,13 +372,21 @@ PluginImporter:
                 return;
             }
             
-            var instance = AssetDatabase.LoadMainAssetAtPath(path);
-            if (AssetDatabase.TryGetGUIDAndLocalFileIdentifier(instance, out guid, out long fileId)) {
-                Debug.Log($"{guid} {fileId}");
-            }
+            var instances = AssetDatabase.LoadAllAssetsAtPath(path);
+            foreach (var i in instances) {
+                if (AssetDatabase.TryGetGUIDAndLocalFileIdentifier(i, out guid, out long fileId)) {
+                    if (i is MonoScript s) {
+                        Debug.Log($"[{i.GetType().Name}] \"{s.GetClass()}\" -> {guid} {fileId}");
+                        // get name from guid and fileid
+                        
+                    } else {
+                        Debug.Log($"[{i.GetType().Name}] \"{i}\" -> {guid} {fileId}");
+                    }
+                }
             
-            var globalID = GlobalObjectId.GetGlobalObjectIdSlow(instance);
-            Debug.Log(globalID);
+                var globalID = GlobalObjectId.GetGlobalObjectIdSlow(i);
+                Debug.Log(globalID);
+            }
         }
 
         [MenuItem("CONTEXT/Object/Debug/Local FileId")]
@@ -496,6 +517,16 @@ PluginImporter:
             await oneAtATime.WaitAsync();
             try { resultProcessor(item, result); }
             finally { oneAtATime.Release(); }
+        }
+
+        public static bool HasDomainReloadingDisabled() {
+            if (EditorSettings.enterPlayModeOptionsEnabled &&
+                EditorSettings.enterPlayModeOptions.HasFlag(EnterPlayModeOptions.DisableDomainReload)) {
+                Debug.LogWarning("Domain reloading is disabled!");
+                return true;
+            }
+            
+            return false;
         }
         
 // #if UNITY_EDITOR_WIN
