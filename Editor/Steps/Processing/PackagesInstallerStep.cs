@@ -82,7 +82,9 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                 EditorUtility.ClearProgressBar();
 
                 if (missingPackages.Any(x => x.StartsWith("com.unity.inputsystem"))) {
-                    new EnableNewInputSystemStep().Assign();
+                    if (new EnableNewInputSystemStep().Assign()) {
+                        return UniTask.FromResult(StepResult.RestartEditor);
+                    }
                 }
             } catch {
                 Debug.LogError("Failed to install packages.");

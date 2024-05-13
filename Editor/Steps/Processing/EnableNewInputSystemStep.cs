@@ -74,7 +74,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
             var playerSettingsSo = new SerializedObject(playerSettings);
             var activeInputHandlerProp = playerSettingsSo.FindProperty("activeInputHandler");
             if (activeInputHandlerProp.intValue == (int)_inputSystemType) {
-                Debug.LogWarning("Input System is already enabled");
+                Debug.LogWarning($"Input System is already enabled! ({activeInputHandlerProp.intValue} == {(int)_inputSystemType})");
                 return false;
             }
                 

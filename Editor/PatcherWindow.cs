@@ -3,6 +3,7 @@ using System.IO;
 using System.Reflection;
 using Nomnom.UnityProjectPatcher.Editor.Steps;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEngine;
 
 namespace Nomnom.UnityProjectPatcher.Editor {
@@ -89,6 +90,10 @@ namespace Nomnom.UnityProjectPatcher.Editor {
             }
 
             if (GUILayout.Button("Run Patcher")) {
+                if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) {
+                    return;
+                }
+                
                 var userSettings = PatcherUtility.GetUserSettings();
 
                 PatcherUtility.DisplayUsageWarning();
@@ -149,6 +154,8 @@ namespace Nomnom.UnityProjectPatcher.Editor {
                     Close();
                 }
             }
+            
+            EditorGUILayout.LabelField("All config assets will be made at the root of your project by default!", EditorStyles.centeredGreyMiniLabel);
         }
     }
 }

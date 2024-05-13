@@ -1,4 +1,9 @@
-﻿# 1.1.4
+﻿# 1.1.5
+
+- Added scene saving dialogue when pressing the patch button
+- Fixed New Input System enabling not restarting if enabled via package step
+
+# 1.1.4
 
 - Project to project migration tool
 - Rename animator paramaters step

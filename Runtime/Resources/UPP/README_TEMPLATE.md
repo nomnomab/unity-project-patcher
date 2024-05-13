@@ -128,6 +128,8 @@ Estimated patch durations:
 - Fresh patch: $ESTIMATED_DURATION$
 - Already patched: $ESTIMATED_DURATION$
 
+These can vary wildly depending on system speed and project size.
+
 ## FAQ
 
 The core project's FAQ can be found here: https://github.com/nomnomab/unity-project-patcher#faq

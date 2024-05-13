@@ -425,7 +425,7 @@ Right-click the asset in the project, then select `Assets > Experimental > Re-im
 
 ## Games I Tested With
 
-- Lethal Company
+- [Lethal Company](https://github.com/nomnomab/unity-lc-project-patcher)
 - Content Warning
     - Not fully, as Photon is being confusing
 - ULTRAKILL
