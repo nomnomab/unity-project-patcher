@@ -73,6 +73,13 @@ These prerequisites may or may not be already included in your Unity version:
 <!-- Installation -->
 ## Installation
 
+### Unity Project
+
+- Requires [Unity %UNITY_VERSION%](https://unity.com/releases/editor/whats-new/%UNITY_VERSION%)
+- Unity %UNITY_PIPELINE% pipeline
+
+Create a new Unity project with the above requirements before getting started.
+
 > [!IMPORTANT]  
 > These options require [git](https://git-scm.com/download/win) to be installed!
 
