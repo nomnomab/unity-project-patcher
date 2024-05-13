@@ -66,10 +66,6 @@ You will have to make sure you have the following before using the tool in any w
 - [Unity Project Patcher BepInEx](https://github.com/nomnomab/unity-project-patcher-bepinex)
     - [Can be disabled](#disabling-bepinex-usage)
 
-These prerequisites may or may not be already included in your Unity version:
-
-- [Newtonsoft Json](https://docs.unity3d.com/Packages/com.unity.nuget.newtonsoft-json@3.2/manual/index.html): `com.unity.nuget.newtonsoft-json`
-
 <!-- Installation -->
 ## Installation
 

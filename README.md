@@ -83,6 +83,7 @@ This project is bundled with the following packages:
     - This uses version `2024-04-29-git-cf4af4bca0-essentials_build-www.gyan.dev` from
       https://www.gyan.dev/ffmpeg/builds/, which is available under the terms
       of [GPL v3](https://github.com/FFmpeg/FFmpeg?tab=GPL-3.0-3-ov-file).
+[Newtonsoft Json 2.0.0](https://docs.unity3d.com/Packages/com.unity.nuget.newtonsoft-json@3.2/manual/index.html): `com.unity.nuget.newtonsoft-json#2.0.0`
 
 ### Gets Downloaded
 
@@ -100,10 +101,6 @@ You will have to make sure you have the following before using the tool in any w
 - [Git](https://git-scm.com/download/win)
 - [.NET 8.0](https://dotnet.microsoft.com/en-us/download/dotnet/8.0)
     - To run Asset Ripper
-
-These prerequisites may or may not be already included in your Unity version:
-
-- [Newtonsoft Json](https://docs.unity3d.com/Packages/com.unity.nuget.newtonsoft-json@3.2/manual/index.html): `com.unity.nuget.newtonsoft-json`
 
 <!-- Installation -->
 ## Installation
