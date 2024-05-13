@@ -9,6 +9,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Lachee.Utilities.Serialization;
 using Nomnom.UnityProjectPatcher.AssetRipper;
+using Nomnom.UnityProjectPatcher.Editor.Steps;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -109,7 +110,7 @@ namespace Nomnom.UnityProjectPatcher.Editor {
             ".uxml",
             ".raytrace",
             ".rendertexture",
-            ".scenetemplate"
+            ".scenetemplate",
         };
 
         private readonly static HashSet<Type> QuickSkipTypes = new HashSet<Type>() {
@@ -135,6 +136,69 @@ namespace Nomnom.UnityProjectPatcher.Editor {
             ".uxml",
             ".raytrace",
             ".rendertexture",
+            ".png",
+            ".jpg",
+            ".jpeg",
+            ".tga",
+            ".tif",
+            ".tiff",
+            ".dds",
+            ".hdr",
+            ".exr",
+            ".psd",
+            ".mp4",
+            ".m4v",
+            ".mov",
+            ".webm",
+            ".mp3",
+            ".ogg",
+            ".wav",
+            ".fbx",
+            ".obj",
+            ".glb",
+            ".gltf",
+            ".bundle",
+            ".ttf",
+            ".otf",
+            ".svg",
+            ".txt",
+            ".json",
+            ".md",
+            ".dll",
+            ".so"
+        };
+
+        private readonly static Dictionary<string, Type> ExtensionTypeAssociations = new Dictionary<string, Type>() {
+            [".m4v"] = typeof(VideoClip),
+            [".mp3"] = typeof(AudioClip),
+            [".rendertexture"] = typeof(RenderTexture),
+            [".png"] = typeof(Texture),
+            [".jpg"] = typeof(Texture),
+            [".jpeg"] = typeof(Texture),
+            [".tga"] = typeof(Texture),
+            [".tif"] = typeof(Texture),
+            [".tiff"] = typeof(Texture),
+            [".dds"] = typeof(Texture),
+            [".hdr"] = typeof(Texture),
+            [".exr"] = typeof(Texture),
+            [".psd"] = typeof(Texture),
+            [".mp4"] = typeof(AudioClip),
+            [".m4v"] = typeof(VideoClip),
+            [".mov"] = typeof(VideoClip),
+            [".webm"] = typeof(VideoClip),
+            [".mp3"] = typeof(VideoClip),
+            [".ogg"] = typeof(VideoClip),
+            [".wav"] = typeof(VideoClip),
+            [".fbx"] = typeof(Mesh),
+            [".obj"] = typeof(Mesh),
+            [".glb"] = typeof(Mesh),
+            [".gltf"] = typeof(Mesh),
+            [".ttf"] = typeof(Font),
+            [".otf"] = typeof(Font),
+            [".svg"] = typeof(Texture),
+            [".txt"] = typeof(TextAsset),
+            [".json"] = typeof(TextAsset),
+            [".md"] = typeof(TextAsset),
         };
 
         // private readonly static HashSet<string> IgnoreFileExtensionsForAddressableAssetScrubbing = new HashSet<string>() {
@@ -181,7 +245,7 @@ namespace Nomnom.UnityProjectPatcher.Editor {
         private readonly static Regex AddressableGuidPattern = new Regex(@"m_AssetGUID:\s(?<guid>[0-9A-Za-z]+)", RegexOptions.Compiled);
         private readonly static Regex AssetBundleNamePattern = new Regex(@"assetBundleName:\s(?<assetBundleName>[0-9A-Za-z]+)", RegexOptions.Compiled);
 
-        [MenuItem("Tools/Scrub/Assets")]
+        [MenuItem("Tools/Unity Project Patcher/Other/Scrub/Assets")]
         public static void TestScrubProjectAssets() {
             var catalogue = ScrubProjectAssets();
             Debug.Log(catalogue);
@@ -191,7 +255,7 @@ namespace Nomnom.UnityProjectPatcher.Editor {
             AssetDatabase.Refresh();
         }
         
-        [MenuItem("Tools/Scrub/Project")]
+        [MenuItem("Tools/Unity Project Patcher/Other/Scrub/Project")]
         public static void TestScrubProject() {
             try {
                 var catalogue = ScrubProject();
@@ -199,6 +263,10 @@ namespace Nomnom.UnityProjectPatcher.Editor {
 
                 var outputPath = Path.Combine(Application.dataPath, "scrub.project.txt");
                 File.WriteAllText(outputPath, catalogue.ToString(false));
+
+                var json = catalogue.ToJson();
+                File.WriteAllText(outputPath + ".json", json);
+                
                 AssetDatabase.Refresh();
             } catch {
                 EditorUtility.ClearProgressBar();
@@ -206,7 +274,7 @@ namespace Nomnom.UnityProjectPatcher.Editor {
             }
         }
         
-        [MenuItem("Tools/Scrub/Disk")]
+        [MenuItem("Tools/Unity Project Patcher/Other/Scrub/Disk")]
         public static void TestScrubDiskFolder() {
             var arSettings = PatcherUtility.GetAssetRipperSettings();
             var catalogue = ScrubDiskFolder(Application.dataPath, arSettings.FoldersToExcludeFromRead);
@@ -217,7 +285,7 @@ namespace Nomnom.UnityProjectPatcher.Editor {
             AssetDatabase.Refresh();
         }
         
-        [MenuItem("Tools/Scrub/Disk - Custom")]
+        [MenuItem("Tools/Unity Project Patcher/Other/Scrub/Disk - Custom")]
         public static void TestScrubDiskFolderCustom() {
             var disk = EditorUtility.OpenFolderPanel("Scrub Folder", "Assets", "");
             if (string.IsNullOrEmpty(disk)) return;
@@ -233,7 +301,7 @@ namespace Nomnom.UnityProjectPatcher.Editor {
             AssetDatabase.Refresh();
         }
 
-        [MenuItem("Tools/Scrub/Addressables")]
+        [MenuItem("Tools/Unity Project Patcher/Other/Scrub/Addressables")]
         public static void TestScrubDiskFolderAddressables() {
             var arSettings = PatcherUtility.GetAssetRipperSettings();
             var disk = arSettings.OutputExportAssetsFolderPath;
@@ -246,8 +314,8 @@ namespace Nomnom.UnityProjectPatcher.Editor {
             Debug.Log($"{stopWatch.ElapsedMilliseconds}ms ({stopWatch.Elapsed.TotalSeconds}sec)");
         }
         
-        [MenuItem("Tools/Scrub/Compare")]
-        public static void TestScrubCompareTwoProjects() {
+        [MenuItem("Tools/Unity Project Patcher/Other/Scrub/Compare/Project to Disk")]
+        public static void TestScrubCompareProjectToDisk() {
             var disk = EditorUtility.OpenFolderPanel("Scrub Folder", "Assets", "");
             if (string.IsNullOrEmpty(disk)) return;
             
@@ -262,6 +330,146 @@ namespace Nomnom.UnityProjectPatcher.Editor {
             }
         }
         
+        [MenuItem("Tools/Unity Project Patcher/Other/Scrub/Compare/Project to Project")]
+        public static void TestScrubCompareProjectToProject() {
+            var disk = EditorUtility.OpenFilePanel("Scrub Folder", "Assets", "");
+            if (string.IsNullOrEmpty(disk)) return;
+            
+            var project1Catalogue = AssetCatalogue.FromDisk(disk);
+            var project2Catalogue = ScrubProject();
+
+            foreach (var match in project2Catalogue.CompareProjectToProject(project1Catalogue)) {
+                Debug.Log(match);
+            }
+        }
+
+        [MenuItem("Tools/Unity Project Patcher/Other/Import Assets From Another Project")]
+        public static void ImportAssetsFromAnotherProject() {
+            var disk = EditorUtility.OpenFilePanel("Select Project's .json file", "Assets", "");
+            if (string.IsNullOrEmpty(disk)) return;
+            
+            var modDisk = EditorUtility.OpenFolderPanel("Mod Root Folder", "Assets", "");
+            if (string.IsNullOrEmpty(modDisk)) return;
+
+            // var output = EditorUtility.SaveFolderPanel("New Folder in Project", "Assets", "");
+            // if (string.IsNullOrEmpty(output)) return;
+
+            var settings = UnityProjectPatcher.PatcherUtility.GetSettings();
+            var outputFolder = Path.Combine(settings.ProjectGamePluginsFullPath, "plugins", Path.GetFileNameWithoutExtension(modDisk));
+            if (Directory.Exists(outputFolder)) {
+                Directory.Delete(outputFolder, true);
+            }
+
+            Debug.Log(modDisk);
+
+            try {
+                // copy all files to a temp directory
+                var tempDirectory = Path.GetFullPath(Path.Combine(Application.dataPath, "..", "TempImportCopy"));
+                if (Directory.Exists(tempDirectory)) {
+                    EditorUtility.DisplayProgressBar("Import", $"Removing {tempDirectory}...", 0);
+                    Directory.Delete(tempDirectory, true);
+                }
+
+                Directory.CreateDirectory(tempDirectory);
+
+                var allFiles = Directory.GetFiles(modDisk, "*.*", SearchOption.AllDirectories);
+                for (var i = 0; i < allFiles.Length; i++) {
+                    var file = allFiles[i];
+                    if (EditorUtility.DisplayCancelableProgressBar($"Copying file [{i}/{allFiles.Length}]", $"Copying {file}", i / allFiles.Length)) {
+                        throw new OperationCanceledException();
+                    }
+
+                    var newFile = file.Replace(modDisk, tempDirectory);
+                    newFile = Path.GetFullPath(Path.Combine(tempDirectory, newFile));
+                    
+                    // var newFile = Path.GetFullPath(Path.Combine(dir, Path.GetFileName(file)).ToOSPath());
+                    // Debug.Log($"\"{file}\" to \"{newFile}\"");
+                    
+                    try {
+                        var dir = Path.GetDirectoryName(newFile);
+                        if (!Directory.Exists(dir)) {
+                            Directory.CreateDirectory(dir);
+                        }
+                        File.Copy(file, newFile, true);
+                    } catch (Exception e) {
+                        Debug.LogError($"Failed to copy \"{file}\" to \"{newFile}\":\n{e}");
+                    }
+                }
+                
+                // EditorUtility.ClearProgressBar();
+                //
+                // return;
+
+                var project1Catalogue = AssetCatalogue.FromDisk(disk);
+                var project2Catalogue = ScrubProject();
+
+                var projectJson = project2Catalogue.ToJson();
+                File.WriteAllText(CacheProjectCatalogueStep.ExportPath, projectJson);
+
+                var matches = project2Catalogue.CompareProjectToProject(project1Catalogue).ToArray();
+                var allEntryMatches = new Dictionary<string, AssetCatalogue.Entry>();
+                foreach (var match in matches) {
+                    if (string.IsNullOrEmpty(match.from.Guid)) continue;
+                    allEntryMatches[match.from.Guid] = match.to;
+                }
+                
+                for (var i = 0; i < matches.Length; i++) {
+                    var match = matches[i];
+                    var entryFrom = match.from;
+                    var entryTo = match.to;
+
+                    if (EditorUtility.DisplayCancelableProgressBar($"Guid Remapping [{i}/{matches.Length}]", $"Replacing {entryFrom.Guid} with {entryTo.Guid}", i / (float)matches.Length)) {
+                        Debug.Log("Manually cancelled");
+                        throw new OperationCanceledException();
+                    }
+
+                    // replace guids & write to disk
+                    try {
+                        AssetScrubber.ReplaceMetaGuid(tempDirectory, entryFrom, entryTo.Guid);
+                        AssetScrubber.ReplaceAssetGuids(settings, tempDirectory, entryFrom, allEntryMatches);
+                        // AssetScrubber.ReplaceFileIds(arAssets.RootAssetsPath, entryFrom, matches);
+                    } catch (Exception e) {
+                        Debug.LogError(e);
+                    }
+                }
+
+                for (int i = 0; i < project1Catalogue.Entries.Length; i++) {
+                    var entry = project1Catalogue.Entries[i];
+
+                    if (EditorUtility.DisplayCancelableProgressBar($"Guid Remapping [{i}/{project1Catalogue.Entries.Length}]", $"Checking associations for {entry.RelativePathToRoot}", i / (float)project1Catalogue.Entries.Length)) {
+                        Debug.Log("Manually cancelled");
+                        throw new OperationCanceledException();
+                    }
+
+                    try {
+                        AssetScrubber.ReplaceAssetGuids(settings, tempDirectory, entry, allEntryMatches);
+                        // AssetScrubber.ReplaceFileIds(arAssets.RootAssetsPath, entry, matches);
+                    } catch (Exception e) {
+                        Debug.LogError(e);
+                    }
+                }
+                
+                Directory.Move(tempDirectory, outputFolder);
+                
+                AssetDatabase.SaveAssets();
+                AssetDatabase.Refresh();
+            } catch (Exception e) {
+                Debug.LogException(e);
+            }
+            
+            EditorUtility.ClearProgressBar();
+        }
+
+        [MenuItem("Tools/Unity Project Patcher/Other/Fix FileIds")]
+        public static async void FixFileIDs() {
+            try {
+                var step = new FixProjectFileIdsStep();
+                await step.Run();
+            } catch (Exception e) {
+                EditorUtility.ClearProgressBar();
+            }
+        }
+
         public static AssetCatalogue ScrubProjectAssets() {
             return ScrubProject(string.Empty, _assetsRootSearchFolder);
         }
@@ -301,8 +509,8 @@ namespace Nomnom.UnityProjectPatcher.Editor {
             var usedTypes = new HashSet<string>();
 #endif
 
-            PatcherUtility.StartProfiler();
-            Profiler.BeginSample("Scrubbing Assets");
+            // PatcherUtility.StartProfiler();
+            // Profiler.BeginSample("Scrubbing Assets");
             
             EditorUtility.DisplayProgressBar("Scrubbing Project", $"Scrubbing {assets.Length} assets...", 0);
             // var weightedBad = new WeightedBag<string, (string path, long loadMs)>();
@@ -311,6 +519,14 @@ namespace Nomnom.UnityProjectPatcher.Editor {
                 var (assetGuid, path) = assets[i];
                 if (EditorUtility.DisplayCancelableProgressBar($"Scrubbing Project [{i}/{assets.Length}]", $"Scrubbing {path}", i / (float)assets.Length)) {
                     throw new OperationCanceledException();
+                }
+                
+                if (QuickSkipTypeExtensions.Contains(Path.GetExtension(path))) {
+                    var fileGuid = GetGuidFromDisk(Path.GetFullPath(path));
+                    if (ExtensionTypeAssociations.TryGetValue(Path.GetExtension(path), out var value)) {
+                        entries.Add(new AssetCatalogue.Entry(value.FullName, path.ToOSPath(), fileGuid, null, null, null));
+                        continue;
+                    }
                 }
                 
                 var assetType = AssetDatabase.GetMainAssetTypeAtPath(path);
@@ -329,7 +545,7 @@ namespace Nomnom.UnityProjectPatcher.Editor {
                     
                     // materials are dumb and tend to crash when imported???
                     if (path.EndsWith(".mat")) {
-                        entries.Add(new AssetCatalogue.Entry(properPath, assetGuid, 4800000, GetAssociatedGuids(assetPathNoAssets, fullPath, null).ToArray(), GetFileIdsFromProjectAsset(path).Select(x => x.ToString()).ToArray()));
+                        entries.Add(new AssetCatalogue.Entry(assetType.FullName, properPath, assetGuid, 4800000, GetAssociatedGuids(assetPathNoAssets, fullPath, null).ToArray(), GetFileIdsFromProjectAsset(path).Select(x => x.ToString()).ToArray()));
                         continue;
                     }
 
@@ -342,8 +558,12 @@ namespace Nomnom.UnityProjectPatcher.Editor {
                     
                     if (QuickSkipTypes.Contains(assetType) || QuickSkipTypeExtensions.Contains(Path.GetExtension(path))) {
                         var fileGuid = GetGuidFromDisk(fullPath);
-                        entries.Add(new AssetCatalogue.Entry(properPath, fileGuid, null, null, null));
+                        entries.Add(new AssetCatalogue.Entry(assetType.FullName, properPath, fileGuid, null, null, null));
                         continue;
+                    }
+                    
+                    if (EditorUtility.DisplayCancelableProgressBar($"Scrubbing Project [{i}/{assets.Length}]", $"Loading asset at {path}", i / (float)assets.Length)) {
+                        throw new OperationCanceledException();
                     }
                     
                     // loadStopWatch.Restart();
@@ -365,7 +585,7 @@ namespace Nomnom.UnityProjectPatcher.Editor {
                             var shaderType = GetShaderName(fullPath, null);
                             entries.Add(new AssetCatalogue.ShaderEntry(properPath, guid, fileId, shaderType, associatedGuids, associatedFileIds));
                         } else {
-                            entries.Add(new AssetCatalogue.Entry(properPath, guid, fileId, associatedGuids, associatedFileIds));
+                            entries.Add(new AssetCatalogue.Entry(assetType.FullName, properPath, guid, fileId, associatedGuids, associatedFileIds));
                         }
                         continue;
                     }
@@ -675,11 +895,11 @@ namespace Nomnom.UnityProjectPatcher.Editor {
                         break;
                     default: {
                         if (IgnoreFileExtensionsForAssetAssociations.Contains(Path.GetExtension(file))) {
-                            entries.Add(new AssetCatalogue.Entry(relativeFile, guid, null, null, null));
+                            entries.Add(new AssetCatalogue.Entry(null, relativeFile, guid, null, null, null));
                         } else {
                             var associatedGuids = GetAssociatedGuids(relativeFile, file, null).ToArray();
                             var associatedFileIds = GetFileIdsFromDisk(file).ToArray();
-                            entries.Add(new AssetCatalogue.Entry(relativeFile, guid, null, associatedGuids, associatedFileIds));
+                            entries.Add(new AssetCatalogue.Entry(null, relativeFile, guid, null, associatedGuids, associatedFileIds));
                         }
                     }
                         break;

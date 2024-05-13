@@ -1,4 +1,11 @@
-﻿# 1.1.3
+﻿# 1.1.4
+
+- Project to project migration tool
+- Rename animator paramaters step
+- Updated README.md
+- Updated README_TEMPLATE.md
+
+# 1.1.3
 
 - Fixed issue with unsafe code enabling not restarting the editor
 - Proxy script step

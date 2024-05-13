@@ -14,12 +14,17 @@ namespace Nomnom.UnityProjectPatcher.Editor {
     /// </summary>
     [Serializable]
     public class AssetCatalogue {
+        private static readonly JsonSerializerSettings _jsonSerializerSettings = new JsonSerializerSettings() {
+            Formatting = Formatting.Indented,
+            TypeNameHandling = TypeNameHandling.All,
+        };
+        
         public readonly string RootAssetsPath;
         public Entry[] Entries;
         
         public static AssetCatalogue FromDisk(string path) {
             var json = File.ReadAllText(path);
-            return JsonConvert.DeserializeObject<AssetCatalogue>(json);
+            return JsonConvert.DeserializeObject<AssetCatalogue>(json, _jsonSerializerSettings);
         }
         
         [JsonConstructor]
@@ -278,6 +283,129 @@ namespace Nomnom.UnityProjectPatcher.Editor {
             // }
         }
 
+        public IEnumerable<FoundMatch> CompareProjectToProject(AssetCatalogue other) {
+            var otherEntries = other.Entries;
+
+            var scriptEntriesProject1 = Entries.OfType<ScriptEntry>().ToArray();
+            var scriptEntriesProject2 = otherEntries.OfType<ScriptEntry>().ToArray();
+            
+            Debug.Log($"Comparing {scriptEntriesProject1.Length} scripts to {scriptEntriesProject2.Length} scripts");
+
+            var shaderEntriesProject1 = Entries.OfType<ShaderEntry>().ToArray();
+            var shaderEntriesProject2 = otherEntries.OfType<ShaderEntry>().ToArray();
+
+            var assetEntriesProject1 = Entries.Except(scriptEntriesProject1)
+                .Except(shaderEntriesProject1);
+            var assetEntriesProject2 = otherEntries.Except(scriptEntriesProject2)
+                .Except(shaderEntriesProject2);
+
+            var found = new List<FoundMatch>();
+            
+            // try to match scripts
+            var stopWatch = System.Diagnostics.Stopwatch.StartNew();
+            UnityEditor.EditorUtility.DisplayProgressBar("Comparing Catalogues", "Matching scripts - This will take a while", 0);
+            var each = Parallel.ForEach(scriptEntriesProject1, a => {
+                foreach (var b in scriptEntriesProject2) {
+                    if (!a.AssemblyName.Equals(b.AssemblyName, StringComparison.InvariantCultureIgnoreCase)) {
+                        continue;
+                    }
+                    
+                    if (a.FullTypeName.Equals(b.FullTypeName, StringComparison.InvariantCultureIgnoreCase)) {
+                        found.Add(new FoundMatch(b, a));
+                        break;
+                    }
+                }
+            });
+
+            while (!each.IsCompleted) { }
+
+            stopWatch.Stop();
+            Debug.Log($"Matching scripts took {stopWatch.ElapsedMilliseconds}ms ({stopWatch.Elapsed.TotalSeconds}sec)");
+            
+            EditorUtility.ClearProgressBar();
+
+            return found;
+
+            // try to match shaders
+            UnityEditor.EditorUtility.DisplayProgressBar("Comparing Catalogues", "Matching shaders - This will take a while", 0);
+            stopWatch.Restart();
+            each = Parallel.ForEach(shaderEntriesProject1, a => {
+                foreach (var b in shaderEntriesProject2) {
+                    if (a.FullShaderName != b.FullShaderName) continue;
+
+                    found.Add(new FoundMatch(b, a));
+                    // break;
+                }
+            });
+
+            while (!each.IsCompleted) { }
+
+            Debug.Log($"Matching shaders took {stopWatch.ElapsedMilliseconds}ms ({stopWatch.Elapsed.TotalSeconds}sec)");
+            UnityEditor.EditorUtility.ClearProgressBar();
+
+            // try to match assets
+            UnityEditor.EditorUtility.DisplayProgressBar("Comparing Catalogues", "Matching assets - This will take a while", 0);
+
+            stopWatch.Restart();
+
+            // figure out this step for arbitrary project files?
+            var settings = PatcherUtility.GetSettings();
+            var arSettings = PatcherUtility.GetAssetRipperSettings();
+            var projectGameAssetsPath = settings.ProjectGameAssetsPath;
+
+            var assetEntriesProject1Groups = assetEntriesProject1
+                .GroupBy(x => Path.GetExtension(x.RelativePathToRoot))
+                .ToDictionary(x => x.Key, x => x.GroupBy(y => y.AssetType + Path.GetFileName(y.RelativePathToRoot)).Select(y => y.First()).ToDictionary(y => y.AssetType + Path.GetFileName(y.RelativePathToRoot)));
+            var assetEntriesProject2Groups = assetEntriesProject2
+                .GroupBy(x => Path.GetExtension(x.RelativePathToRoot))
+                .ToDictionary(x => x.Key, x => x.GroupBy(y => y.AssetType + Path.GetFileName(y.RelativePathToRoot)).Select(y => y.First()).ToDictionary(y => y.AssetType + Path.GetFileName(y.RelativePathToRoot)));
+            
+            var assetEntriesProject1Count = assetEntriesProject1Groups.Count();
+            var assetEntriesProject2Count = assetEntriesProject2Groups.Count();
+
+            var index = -1;
+            foreach (var extensionGroup in assetEntriesProject2Groups) {
+                index++;
+                
+                var (extension, entriesA) = (extensionGroup.Key, extensionGroup.Value);
+                if (EditorUtility.DisplayCancelableProgressBar("Comparing Catalogues", $"Matching assets - {extensionGroup.Key}", index / (float)assetEntriesProject1Count)) {
+                    throw new OperationCanceledException();
+                }
+                
+                if (!assetEntriesProject1Groups.TryGetValue(extensionGroup.Key, out var entryBs)) {
+                    Debug.LogWarning($"No matching assets for extension \"{extension}\"");
+                    continue;
+                }
+
+                var entriesACount = entriesA.Count();
+                var subIndex = -1;
+                foreach (var entryGroup in entriesA) {
+                    subIndex++;
+
+                    var (entryKey, entryA) = (entryGroup.Key, entryGroup.Value);
+                    // var rawPath = AssetScrubber.GetProjectPathFromExportPath(projectGameAssetsPath, entryA, settings, arSettings, true).ToOSPath();
+                    
+                    if (EditorUtility.DisplayCancelableProgressBar("Comparing Catalogues", $"Matching assets - {entryGroup.Key} | {entryA.RelativePathToRoot}", subIndex / (float)entriesACount)) {
+                        throw new OperationCanceledException();
+                    }
+
+                    var typePath = entryA.AssetType + Path.GetFileName(entryA.RelativePathToRoot);
+                    if (entryBs.TryGetValue(typePath, out var entryB)) {
+                        found.Add(new FoundMatch(entryA, entryB));
+                    }
+                }
+
+                index++;
+            }
+
+            Debug.Log($"Matching assets took {stopWatch.ElapsedMilliseconds}ms ({stopWatch.Elapsed.TotalSeconds}sec)");
+            stopWatch.Stop();
+
+            UnityEditor.EditorUtility.ClearProgressBar();
+
+            return found;
+        }
+
         public struct FoundMatch {
             public Entry from;
             public Entry to;
@@ -377,6 +505,7 @@ namespace Nomnom.UnityProjectPatcher.Editor {
         public class Entry {
             private const string FileIdColor = "#c0c0c07f";
 
+            public string? AssetType;
             public string RelativePathToRoot;
             public string Guid;
             public long? FileId;
@@ -384,10 +513,11 @@ namespace Nomnom.UnityProjectPatcher.Editor {
             public string[] FileIds;
 
 #if UNITY_2020_3_OR_NEWER
-            public Entry(string relativePathToRoot, string guid, long? fileId, string[]? associatedGuids, string[]? fileIds) {
+            public Entry(string? assetType, string relativePathToRoot, string guid, long? fileId, string[]? associatedGuids, string[]? fileIds) {
 #else
-            public Entry(string relativePathToRoot, string guid, long? fileId, string[] associatedGuids, string[] fileIds) {
+            public Entry(string assetType, string relativePathToRoot, string guid, long? fileId, string[] associatedGuids, string[] fileIds) {
 #endif
+                AssetType = assetType;
                 if (relativePathToRoot.StartsWith("Assets")) {
                     relativePathToRoot = relativePathToRoot.Substring("Assets".Length + 1);
                 }
@@ -408,10 +538,10 @@ namespace Nomnom.UnityProjectPatcher.Editor {
                 var fileIdString = FileIds == null || FileIds.Length == 0 ? string.Empty : $"\n{string.Join("\n", FileIds.Select(x => $" \t> fileID: {x}"))}";
                 
                 if (withTags) {
-                    return $"[{Guid}] <color={FileIdColor}>{fileId,19}</color> {RelativePathToRoot} ({AssociatedGuids.Length} associated){fileIdString}";
+                    return $"[{Guid}] <color={FileIdColor}>{fileId,19}</color> {RelativePathToRoot} ({AssociatedGuids.Length} associated){fileIdString}\n\t > is \"{GetType().Name}\" + \"{AssetType}\"";
                 }
 
-                return $"[{Guid}] {fileId,19} {RelativePathToRoot} ({AssociatedGuids.Length} associated){fileIdString}";
+                return $"[{Guid}] {fileId,19} {RelativePathToRoot} ({AssociatedGuids.Length} associated){fileIdString}\n\t > is \"{GetType().Name}\" + \"{AssetType}\"";
             }
         }
 
@@ -427,9 +557,9 @@ namespace Nomnom.UnityProjectPatcher.Editor {
             // public bool IsGeneric;
 
 #if UNITY_2020_3_OR_NEWER
-            public ScriptEntry(string relativePathToRoot, string guid, long? fileId, string? fullTypeName, string? assemblyName, ScriptEntry[] nested, string[]? associatedGuids, string[]? fileIds) : base(relativePathToRoot, guid, fileId, associatedGuids, fileIds) {
+            public ScriptEntry(string relativePathToRoot, string guid, long? fileId, string? fullTypeName, string? assemblyName, ScriptEntry[] nested, string[]? associatedGuids, string[]? fileIds) : base(typeof(MonoScript).FullName, relativePathToRoot, guid, fileId, associatedGuids, fileIds) {
 #else
-            public ScriptEntry(string relativePathToRoot, string guid, long? fileId, string fullTypeName, string assemblyName, ScriptEntry[] nested, string[] associatedGuids, string[] fileIds) : base(relativePathToRoot, guid, fileId, associatedGuids, fileIds) {
+            public ScriptEntry(string relativePathToRoot, string guid, long? fileId, string fullTypeName, string assemblyName, ScriptEntry[] nested, string[] associatedGuids, string[] fileIds) : base(typeof(MonoScript).FullName, relativePathToRoot, guid, fileId, associatedGuids, fileIds) {
 #endif
                 FullTypeName = fullTypeName;
                 AssemblyName = assemblyName;
@@ -442,7 +572,8 @@ namespace Nomnom.UnityProjectPatcher.Editor {
             }
 
             public override string ToString(bool withTags) {
-                return $"{base.ToString(withTags)} [{AssemblyName}] [{FullTypeName}]\n\t* {string.Join("\n\t* ", NestedTypes.Select(x => x.ToString(withTags)))}";
+                var nestedTypes = NestedTypes.Length == 0 ? string.Empty : $"\n{string.Join("\n", NestedTypes.Select(x => $"\t* {x.ToString(withTags)}"))}";
+                return $"{base.ToString(withTags)} [{AssemblyName}] [{FullTypeName}]{nestedTypes}";
             }
         }
 
@@ -454,9 +585,9 @@ namespace Nomnom.UnityProjectPatcher.Editor {
 #endif
             
 #if UNITY_2020_3_OR_NEWER
-            public ShaderEntry(string relativePathToRoot, string guid, long? fileId, string? fullShaderName, string[]? associatedGuids, string[]? fileIds) : base(relativePathToRoot, guid, fileId, associatedGuids, fileIds) {
+            public ShaderEntry(string relativePathToRoot, string guid, long? fileId, string? fullShaderName, string[]? associatedGuids, string[]? fileIds) : base(typeof(Shader).FullName, relativePathToRoot, guid, fileId, associatedGuids, fileIds) {
 #else
-            public ShaderEntry(string relativePathToRoot, string guid, long? fileId, string fullShaderName, string[] associatedGuids, string[] fileIds) : base(relativePathToRoot, guid, fileId, associatedGuids, fileIds) {
+            public ShaderEntry(string relativePathToRoot, string guid, long? fileId, string fullShaderName, string[] associatedGuids, string[] fileIds) : base(typeof(Shader).FullName, relativePathToRoot, guid, fileId, associatedGuids, fileIds) {
 #endif
                 FullShaderName = fullShaderName;
             }
@@ -471,7 +602,7 @@ namespace Nomnom.UnityProjectPatcher.Editor {
         }
 
         public string ToJson() {
-            return JsonConvert.SerializeObject(this, Formatting.Indented);
+            return JsonConvert.SerializeObject(this, Formatting.Indented, _jsonSerializerSettings);
         }
     }
 }

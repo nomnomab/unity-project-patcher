@@ -63,6 +63,8 @@ You will have to make sure you have the following before using the tool in any w
 - [Git](https://git-scm.com/download/win)
 - [.NET 8.0](https://dotnet.microsoft.com/en-us/download/dotnet/8.0)
     - To run Asset Ripper
+- [Unity Project Patcher BepInEx](https://github.com/nomnomab/unity-project-patcher-bepinex)
+    - [Can be disabled](#disabling-bepinex-usage)
 
 These prerequisites may or may not be already included in your Unity version:
 
@@ -97,28 +99,17 @@ Install with the manifest.json:
 
 - If you are using a specific version, you can append it to the end of the git URL, such as `#v1.2.3`
 
+### Installing the BepInEx Wrapper
+
+If you require BepInEx usage, then follow the instructions at https://github.com/nomnomab/unity-project-patcher-bepinex
+
+#### Disabling BepInEx Usage
+
+If you don't want to use plugins, then follow the steps at https://github.com/nomnomab/unity-project-patcher-bepinex#disabling-this-package
+
 ### Installing this Game Wrapper
 
-Install with the package manager:
-
-1. Open the Package Manager from `Window > Package Manager`
-2. Click the '+' button in the top-left of the window
-3. Click 'Add package from git URL'
-4. Provide the URL of the this git repository: https://github.com/[AUTHOR]/[GAME-WRAPPER-NAME].git
-    - If you are using a specific version, you can append it to the end of the git URL, such as `#v1.2.3`
-5. Click the 'add' button
-
-
-Install with the manifest.json:
-
-1. Open the manifest at `[PROJECT_NAME]\Packages\manifest.json`
-2. Insert the following as an entry:
-
-```json
-"com.[AUTHOR].[GAME-WRAPPER-NAME]": "https://github.com/[AUTHOR]/[GAME-WRAPPER-NAME].git"
-```
-
-- If you are using a specific version, you can append it to the end of the git URL, such as `#v1.2.3`
+The same steps as previously, just with `https://github.com/[AUTHOR]/[GAME-WRAPPER-NAME].git`
 
 <!-- Usage -->
 ## Usage

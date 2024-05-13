@@ -33,6 +33,10 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                     return UniTask.FromResult(StepResult.Failure);
                 }
                 
+                if (!PatcherUtility.TryToCreatePath(Path.Combine(settings.ProjectGameModsFullPath, "plugins"))) {
+                    return UniTask.FromResult(StepResult.Failure);
+                }
+                
                 if (!PatcherUtility.TryToCreatePath(settings.ProjectGameToolsFullPath)) {
                     return UniTask.FromResult(StepResult.Failure);
                 }

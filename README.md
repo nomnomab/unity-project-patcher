@@ -28,7 +28,8 @@
     * [Prerequisites](#prerequisites)
     * [Installation](#installation)
 - [Usage](#usage)
-- [Custom Game Wrapper](#custom-game-wrapper)
+  - [Patcher Configs](#patcher-configs)
+  - [Custom Game Wrapper](#custom-game-wrapper)
 - [FAQ](#faq)
 - [Games I Tested With](#games-i-tested-with)
 
@@ -110,15 +111,16 @@ These prerequisites may or may not be already included in your Unity version:
 > [!IMPORTANT]  
 > These options require [git](https://git-scm.com/download/win) to be installed!
 
+#### Core package
+
 Install with the package manager:
 
 1. Open the Package Manager from `Window > Package Manager`
 2. Click the '+' button in the top-left of the window
 3. Click 'Add package from git URL'
-4. Provide the URL of the this git repository: https://github.com/nomnomab/unity-project-patcher.git
+4. Provide the URL of the this git repository: `https://github.com/nomnomab/unity-project-patcher.git`
     - If you are using a specific version, you can append it to the end of the git URL, such as `#v1.2.3`
 5. Click the 'add' button
-
 
 Install with the manifest.json:
 
@@ -130,6 +132,10 @@ Install with the manifest.json:
 ```
 
 - If you are using a specific version, you can append it to the end of the git URL, such as `#v1.2.3`
+
+#### BepInEx
+
+If you require BepInEx usage, then follow the instructions at https://github.com/nomnomab/unity-project-patcher-bepinex
 
 <!-- Usage -->
 ## Usage
@@ -345,11 +351,13 @@ public readonly List<IPatcherStep> Steps = new List<IPatcherStep>() {
     new GenerateDefaultProjectStructureStep(),
     new ImportTextMeshProStep(),
     new GenerateGitIgnoreStep(),
+    new GenerateReadmeStep(),
     new PackagesInstallerStep(), // recompile
     new CacheProjectCatalogueStep(),
     new AssetRipperStep(),
     new CopyGamePluginsStep(), // recompile
     new CopyExplicitScriptFolderStep(), // restarts
+    new EnableUnsafeCodeStep(), // recompiles
     new CopyProjectSettingsStep(allowUnsafeCode: true), // restart
     new GuidRemapperStep(),
     new CopyAssetRipperExportToProjectStep(), // restarts
@@ -395,6 +403,28 @@ Right-click the asset in the project, then select `Assets > Experimental > Re-im
 
 > [!WARNING]  
 > Does not support re-importing scenes or prefabs at the moment.
+
+#### Q: How do I migrate my current project to this one?
+
+> [!NOTE]  
+> This does *not* modify any of your original project's files!
+
+1. Run patcher to generate new project
+2. Wait for that to finish
+3. Import patcher into original project
+4. `Tools > Unity Project Patcher > Other > Scrub > Project`
+5. Wait for that to finish
+6. In new patched project
+7. `Tools > Unity Project Patcher > Other > Import Assets from Another Project`
+8. For the first file prompt, select `[Original project name]/Assets/scrub.project.txt.json`
+9. For the second folder prompt, select the root folder for your mod that has all of its assets inside of it
+   - Do not select `/Assets/`
+   - Make a folder, such as `/Assets/MyCoolMod`, and put everything the mod needs into it
+   - If you rely on external mods, include the entire mod, not just the dll as many require asset bundles!
+   - The name of this folder is what the name of the output folder will be
+10. Wait for that to finish
+11. Your old project contents will now be in `/Assets/[Game Name]/Mods/plugins`
+12. Done
 
 ## Games I Tested With
 
