@@ -1,4 +1,8 @@
-﻿# 1.1.6
+﻿# 1.1.7
+
+- Fixed `UPPatcherUserSettings` using relative project path as game path, and no longer uses Path.GetFullPath
+
+# 1.1.6
 
 - Added extra help text to `UPPatcherSettings`
 - Added `RestartEditorStep` to end of default steps

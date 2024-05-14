@@ -8,7 +8,9 @@ using UnityEngine;
 namespace Nomnom.UnityProjectPatcher {
     [CreateAssetMenu(fileName = "UnityProjectPatcherUserSettings", menuName = "Unity Project Patcher/User Settings")]
     public sealed class UPPatcherUserSettings: ScriptableObject {
-        public string GameFolderPath => Path.GetFullPath(_gameFolderPath) ?? throw new NullReferenceException(nameof(GameFolderPath));
+        public string GameFolderPath => string.IsNullOrEmpty(_gameFolderPath) 
+            ? throw new NullReferenceException(nameof(GameFolderPath)) 
+            : _gameFolderPath ?? throw new NullReferenceException(nameof(GameFolderPath));
         
         public string AssetRipperDownloadFolderPath => Path.GetFullPath(_assetRipperDownloadFolderPath);
         public string AssetRipperExportFolderPath => Path.GetFullPath(_assetRipperExportFolderPath);

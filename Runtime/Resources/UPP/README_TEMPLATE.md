@@ -110,6 +110,10 @@ Install with the manifest.json:
 
 - If you are using a specific version, you can append it to the end of the git URL, such as `#v1.2.3`
 
+### Installing this Game Wrapper
+
+The same steps as previously, just with `https://github.com/[AUTHOR]/[GAME-WRAPPER-NAME].git`
+
 ### Installing the BepInEx Wrapper
 
 Open the tool window `Tools > Unity Project Patcher > Open Window` and press the `Install BepInEx` button.
@@ -119,10 +123,6 @@ Otherwise, follow the steps at https://github.com/nomnomab/unity-project-patcher
 #### Disabling BepInEx Usage
 
 If you don't want to use plugins, then follow the steps at https://github.com/nomnomab/unity-project-patcher-bepinex#disabling-this-package
-
-### Installing this Game Wrapper
-
-The same steps as previously, just with `https://github.com/[AUTHOR]/[GAME-WRAPPER-NAME].git`
 
 <!-- Usage -->
 ## Usage
