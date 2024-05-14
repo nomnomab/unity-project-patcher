@@ -30,11 +30,9 @@ namespace Nomnom.UnityProjectPatcher.Editor {
             // check tool version
             var packages = PatcherUtility.GetPackages();
             var toolGit = "https://github.com/nomnomab/unity-project-patcher";
-            var bepinexGit = "https://github.com/nomnomab/unity-project-patcher-bepinex";
             var gameWrapper = PatcherUtility.GetGameWrapperAttribute();
             
             var currentToolVersion = packages.FirstOrDefault(x => x.name == "com.nomnom.unity-project-patcher")?.version;
-            var currentBepInExVersion = packages.FirstOrDefault(x => x.name == "com.nomnom.unity-project-patcher-bepinex")?.version;
 
             try {
                 if (!string.IsNullOrEmpty(currentToolVersion) && PatcherUtility.TryFetchGitVersion(toolGit, out var toolVersion)) {
@@ -50,6 +48,9 @@ namespace Nomnom.UnityProjectPatcher.Editor {
                 Debug.LogWarning($"Failed to fetch [com.nomnom.unity-project-patcher] version from \"{toolGit}\". Exception: {e}");
             }
 
+#if UNITY_2020_3_OR_NEWER
+            var currentBepInExVersion = packages.FirstOrDefault(x => x.name == "com.nomnom.unity-project-patcher-bepinex")?.version;
+            var bepinexGit = "https://github.com/nomnomab/unity-project-patcher-bepinex";
             try {
                 if (!string.IsNullOrEmpty(currentBepInExVersion) && PatcherUtility.TryFetchGitVersion(bepinexGit, out var bepinexVersion)) {
                     if (currentBepInExVersion != bepinexVersion) {
@@ -63,6 +64,7 @@ namespace Nomnom.UnityProjectPatcher.Editor {
             } catch (Exception e) {
                 Debug.LogWarning($"Failed to fetch [com.nomnom.unity-project-patcher-bepinex] version from \"{bepinexGit}\". Exception: {e}");
             }
+#endif
             
             if (gameWrapper != null) {
                 try {
@@ -92,6 +94,11 @@ namespace Nomnom.UnityProjectPatcher.Editor {
                 } catch (Exception e) {
                     Debug.LogWarning($"Failed to fetch [{gameWrapper.PackageName}] version. Exception: {e}");
                 }
+            }
+
+            var window = Resources.FindObjectsOfTypeAll<PatcherWindow>().FirstOrDefault() as PatcherWindow;
+            if (window) {
+                window.CheckPackages();
             }
         }
         
@@ -130,21 +137,27 @@ namespace Nomnom.UnityProjectPatcher.Editor {
             _gameWrapperGuiFunction = gameWrapperOnGUIFunction;
         }
 
-        private void OnFocus() {
-            Nomnom.UnityProjectPatcher.PatcherUtility.GetUserSettings();
-            CheckPackages();
-        }
+        // private void OnFocus() {
+        //     Nomnom.UnityProjectPatcher.PatcherUtility.GetUserSettings();
+        //     try {
+        //         CheckPackages();
+        //     } catch (Exception e) {
+        //         Debug.LogWarning(e);
+        //     }
+        // }
 
         private void CheckPackages() {
-            _packageCollection ??= PatcherUtility.GetPackages();
-            
+            if (_packageCollection is null) {
+                _packageCollection = PatcherUtility.GetPackages();
+            }
+
             var (version, gameVersion) = PatcherUtility.GetVersions(_packageCollection);
             _patcherVersion = version;
             _gameWrapperVersion = gameVersion;
 
             // check packages
             _hasBepInExPackage = _packageCollection.Any(x => x.name == "com.nomnom.unity-project-patcher-bepinex");
-            _hasBepInExFlag = PlayerSettings.GetScriptingDefineSymbols(NamedBuildTarget.Standalone).Contains("ENABLE_BEPINEX");
+            _hasBepInExFlag = PatcherUtility.GetScriptingDefineSymbols().Contains("ENABLE_BEPINEX");
             _foundPackageAttribute = PatcherUtility.GetGameWrapperAttribute();
             // _hasGameWrapperPackage = false;
             // if (!string.IsNullOrEmpty(_foundPackageAttribute?.PackageName)) {
@@ -190,6 +203,7 @@ namespace Nomnom.UnityProjectPatcher.Editor {
                 GUI.enabled = false;
             }
             
+#if UNITY_2020_3_OR_NEWER
             if (!_hasBepInExPackage) {
                 if (GUILayout.Button("Install BepInEx")) {
                     EditorApplication.delayCall += () => {
@@ -206,10 +220,10 @@ namespace Nomnom.UnityProjectPatcher.Editor {
                         }
                         
                         // enable ENABLE_BEPINEX
-                        var existingSymbols = PlayerSettings.GetScriptingDefineSymbols(NamedBuildTarget.Standalone);
+                        var existingSymbols = PatcherUtility.GetScriptingDefineSymbols();
                         if (!existingSymbols.Contains("ENABLE_BEPINEX")) {
                             existingSymbols += ";ENABLE_BEPINEX";
-                            PlayerSettings.SetScriptingDefineSymbols(NamedBuildTarget.Standalone, existingSymbols);
+                            PatcherUtility.SetScriptingDefineSymbols(existingSymbols);
                         }
 
                         EditorUtility.ClearProgressBar();
@@ -218,21 +232,24 @@ namespace Nomnom.UnityProjectPatcher.Editor {
             } else {
                 if (_hasBepInExFlag && GUILayout.Button("Disable BepInEx")) {
                     EditorApplication.delayCall += () => {
-                        PlayerSettings.SetScriptingDefineSymbols(NamedBuildTarget.Standalone, PlayerSettings.GetScriptingDefineSymbols(NamedBuildTarget.Standalone).Replace("ENABLE_BEPINEX", ""));
+                        PatcherUtility.SetScriptingDefineSymbols(PatcherUtility.GetScriptingDefineSymbols().Replace("ENABLE_BEPINEX", ""));
                     };
                 } else if (!_hasBepInExFlag && GUILayout.Button("Enable BepInEx")) {
                     EditorApplication.delayCall += () => {
-                        PlayerSettings.SetScriptingDefineSymbols(NamedBuildTarget.Standalone, PlayerSettings.GetScriptingDefineSymbols(NamedBuildTarget.Standalone) + ";ENABLE_BEPINEX");
+                        PatcherUtility.SetScriptingDefineSymbols(PatcherUtility.GetScriptingDefineSymbols() + ";ENABLE_BEPINEX");
                     };
                 }
             }
 
-            if (!_hasBepInExPackage && _foundPackageAttribute is not null && _foundPackageAttribute.RequiresBepInEx) {
+            if (!_hasBepInExPackage && !(_foundPackageAttribute is null) && _foundPackageAttribute.RequiresBepInEx) {
                 EditorGUILayout.LabelField("Please install all packages!", EditorStyles.centeredGreyMiniLabel);
                 EditorGUILayout.LabelField($"bepinex: {(_hasBepInExPackage ? "good!" : "missing!")}");
                 // EditorGUILayout.LabelField($"{_gameWrapperType.Name}: {(_hasGameWrapperPackage ? "good!" : "missing!")}");
                 return;
             }
+#else
+            EditorGUILayout.LabelField("BepInEx is not supported for older versions of Unity atm", EditorStyles.centeredGreyMiniLabel);
+#endif
 
             if (GUILayout.Button("Run Patcher")) {
                 // if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) {

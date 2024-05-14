@@ -1,4 +1,9 @@
-﻿# 1.1.9
+﻿# 1.1.10
+
+- Can define a custom game name if required in the `UPPatcherSettings`
+- Older Unity version support for various code blocks
+
+# 1.1.9
 
 - Fixed Project to Project migration not doing the full process
 - Removed many warnings related to nullables

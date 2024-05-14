@@ -16,8 +16,8 @@ namespace Nomnom.UnityProjectPatcher {
     public partial class UPPatcherSettings : ScriptableObject {
 #if UNITY_EDITOR
         public string GameFolderPath => PatcherUtility.GetUserSettings().GameFolderPath ?? throw new NullReferenceException(nameof(GameFolderPath));
-        public string GameExePath => Path.Combine(GameFolderPath, $"{GameName}.exe");
-        public string GameDataPath => Path.Combine(GameFolderPath, $"{GameName}_Data");
+        public string GameExePath => Path.Combine(GameFolderPath, $"{(string.IsNullOrEmpty(_customGameName) ? GameName : _customGameName)}.exe");
+        public string GameDataPath => Path.Combine(GameFolderPath, $"{(string.IsNullOrEmpty(_customGameName) ? GameName : _customGameName)}_Data");
         public string GameManagedPath => Path.Combine(GameDataPath, "Managed");
 #endif
         
@@ -50,6 +50,9 @@ namespace Nomnom.UnityProjectPatcher {
         [SerializeField, InlineButton(nameof(GetGameName), "Get", buttonWidth: 30)]
         private string? _gameName = null;
         
+        [SerializeField]
+        private string? _customGameName = null;
+        
         [SerializeField, InlineButton(nameof(GetGameVersion), "Get", buttonWidth: 30)] 
         private string? _gameVersion = null;
         
@@ -59,6 +62,9 @@ namespace Nomnom.UnityProjectPatcher {
         [SerializeField]
         private string _gameName = null;
         
+        [SerializeField]
+        private string _customGameName = null;
+
         [SerializeField] 
         private string _gameVersion = null;
         

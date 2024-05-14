@@ -15,6 +15,7 @@ using Newtonsoft.Json.Linq;
 using Nomnom.UnityProjectPatcher.AssetRipper;
 using Nomnom.UnityProjectPatcher.Editor.Steps;
 using UnityEditor;
+using UnityEditor.Build;
 using UnityEditor.PackageManager;
 using UnityEditor.SceneManagement;
 using UnityEditorInternal;
@@ -148,17 +149,41 @@ namespace Nomnom.UnityProjectPatcher.Editor {
             }
         }
 
+        public static string GetScriptingDefineSymbols() {
+#if UNITY_2020_3_OR_NEWER
+            return PlayerSettings.GetScriptingDefineSymbols(NamedBuildTarget.Standalone);
+#else
+            return PlayerSettings.GetScriptingDefineSymbolsForGroup(BuildTargetGroup.Standalone);
+#endif
+        }
+        
+        public static void SetScriptingDefineSymbols(string symbols) {
+#if UNITY_2020_3_OR_NEWER
+            PlayerSettings.SetScriptingDefineSymbols(NamedBuildTarget.Standalone, symbols);
+#else
+            PlayerSettings.SetScriptingDefineSymbolsForGroup(BuildTargetGroup.Standalone, symbols);
+#endif
+        }
+
         public static bool TryFetchGitVersion(string gitUrl, out string version) {
             try {
                 // https://raw.githubusercontent.com/nomnomab/unity-lc-project-patcher/master/package.json
                 var packageUrl = $"{gitUrl.Replace("github.com", "raw.githubusercontent.com")}/master/package.json";
                 var request = UnityWebRequest.Get(packageUrl);
-                request.SendWebRequest();
-                while (!request.isDone) { }
+                var r = request.SendWebRequest();
+                while (!r.isDone) { }
+                
+#if UNITY_2020_3_OR_NEWER
                 if (request.result == UnityWebRequest.Result.ConnectionError || request.result == UnityWebRequest.Result.ProtocolError) {
                     version = null;
                     return false;
                 }
+#else
+                if (request.isHttpError || request.isNetworkError) {
+                    version = null;
+                    return false;
+                }
+#endif
             
                 var json = request.downloadHandler.text;
                 var packageContents = JObject.Parse(json);
