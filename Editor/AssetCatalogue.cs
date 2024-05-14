@@ -324,8 +324,6 @@ namespace Nomnom.UnityProjectPatcher.Editor {
             
             EditorUtility.ClearProgressBar();
 
-            return found;
-
             // try to match shaders
             UnityEditor.EditorUtility.DisplayProgressBar("Comparing Catalogues", "Matching shaders - This will take a while", 0);
             stopWatch.Restart();
@@ -456,13 +454,8 @@ namespace Nomnom.UnityProjectPatcher.Editor {
         }
         
         public bool TryGetEntry(string guid, out Entry entry) {
-#if UNITY_2020_3_OR_NEWER
-            Entry? found = Entries.FirstOrDefault(x => x.Guid == guid);
-            entry = (found ?? default)!;
-#else
             var found = Entries.FirstOrDefault(x => x.Guid == guid);
             entry = found ?? default;
-#endif
             return found != null;
         }
         
@@ -505,18 +498,14 @@ namespace Nomnom.UnityProjectPatcher.Editor {
         public class Entry {
             private const string FileIdColor = "#c0c0c07f";
 
-            public string? AssetType;
+            public string AssetType;
             public string RelativePathToRoot;
             public string Guid;
             public long? FileId;
             public string[] AssociatedGuids;
             public string[] FileIds;
 
-#if UNITY_2020_3_OR_NEWER
-            public Entry(string? assetType, string relativePathToRoot, string guid, long? fileId, string[]? associatedGuids, string[]? fileIds) {
-#else
             public Entry(string assetType, string relativePathToRoot, string guid, long? fileId, string[] associatedGuids, string[] fileIds) {
-#endif
                 AssetType = assetType;
                 if (relativePathToRoot.StartsWith("Assets")) {
                     relativePathToRoot = relativePathToRoot.Substring("Assets".Length + 1);
@@ -546,21 +535,11 @@ namespace Nomnom.UnityProjectPatcher.Editor {
         }
 
         public class ScriptEntry : Entry {
-#if UNITY_2020_3_OR_NEWER
-            public string? FullTypeName;
-            public string? AssemblyName;
-#else
             public string FullTypeName;
             public string AssemblyName;
-#endif
             public ScriptEntry[] NestedTypes;
-            // public bool IsGeneric;
 
-#if UNITY_2020_3_OR_NEWER
-            public ScriptEntry(string relativePathToRoot, string guid, long? fileId, string? fullTypeName, string? assemblyName, ScriptEntry[] nested, string[]? associatedGuids, string[]? fileIds) : base(typeof(MonoScript).FullName, relativePathToRoot, guid, fileId, associatedGuids, fileIds) {
-#else
             public ScriptEntry(string relativePathToRoot, string guid, long? fileId, string fullTypeName, string assemblyName, ScriptEntry[] nested, string[] associatedGuids, string[] fileIds) : base(typeof(MonoScript).FullName, relativePathToRoot, guid, fileId, associatedGuids, fileIds) {
-#endif
                 FullTypeName = fullTypeName;
                 AssemblyName = assemblyName;
                 // IsGeneric = isGeneric;
@@ -578,17 +557,9 @@ namespace Nomnom.UnityProjectPatcher.Editor {
         }
 
         public class ShaderEntry : Entry {
-#if UNITY_2020_3_OR_NEWER
-            public string? FullShaderName;
-#else
             public string FullShaderName;
-#endif
             
-#if UNITY_2020_3_OR_NEWER
-            public ShaderEntry(string relativePathToRoot, string guid, long? fileId, string? fullShaderName, string[]? associatedGuids, string[]? fileIds) : base(typeof(Shader).FullName, relativePathToRoot, guid, fileId, associatedGuids, fileIds) {
-#else
             public ShaderEntry(string relativePathToRoot, string guid, long? fileId, string fullShaderName, string[] associatedGuids, string[] fileIds) : base(typeof(Shader).FullName, relativePathToRoot, guid, fileId, associatedGuids, fileIds) {
-#endif
                 FullShaderName = fullShaderName;
             }
             

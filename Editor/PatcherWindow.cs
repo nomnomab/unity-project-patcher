@@ -24,6 +24,76 @@ namespace Nomnom.UnityProjectPatcher.Editor {
         // private bool _hasGameWrapperPackage;
         private UPPatcherAttribute _foundPackageAttribute;
         private PackageCollection _packageCollection;
+
+        [InitializeOnLoadMethod]
+        private static void OnLoad() {
+            // check tool version
+            var packages = PatcherUtility.GetPackages();
+            var toolGit = "https://github.com/nomnomab/unity-project-patcher";
+            var bepinexGit = "https://github.com/nomnomab/unity-project-patcher-bepinex";
+            var gameWrapper = PatcherUtility.GetGameWrapperAttribute();
+            
+            var currentToolVersion = packages.FirstOrDefault(x => x.name == "com.nomnom.unity-project-patcher")?.version;
+            var currentBepInExVersion = packages.FirstOrDefault(x => x.name == "com.nomnom.unity-project-patcher-bepinex")?.version;
+
+            try {
+                if (!string.IsNullOrEmpty(currentToolVersion) && PatcherUtility.TryFetchGitVersion(toolGit, out var toolVersion)) {
+                    if (currentToolVersion != toolVersion) {
+                        Debug.LogWarning($"[com.nomnom.unity-project-patcher] is <color=yellow>outdated</color>. Please update to {toolVersion} from \"{toolGit}\". Current version: {currentToolVersion}.");
+                    } else {
+                        Debug.Log($"[com.nomnom.unity-project-patcher] is up to date. Current version: {currentToolVersion}.");
+                    }
+                } else {
+                    Debug.LogWarning($"Failed to fetch [com.nomnom.unity-project-patcher] version from \"{toolGit}\".");
+                }
+            } catch (Exception e) {
+                Debug.LogWarning($"Failed to fetch [com.nomnom.unity-project-patcher] version from \"{toolGit}\". Exception: {e}");
+            }
+
+            try {
+                if (!string.IsNullOrEmpty(currentBepInExVersion) && PatcherUtility.TryFetchGitVersion(bepinexGit, out var bepinexVersion)) {
+                    if (currentBepInExVersion != bepinexVersion) {
+                        Debug.LogWarning($"[com.nomnom.unity-project-patcher-bepinex] is <color=yellow>outdated</color>. Please update to {bepinexVersion} from \"{bepinexGit}\". Current version: {currentBepInExVersion}.");
+                    } else {
+                        Debug.Log($"[com.nomnom.unity-project-patcher-bepinex] is up to date. Current version: {currentBepInExVersion}.");
+                    }
+                } else {
+                    Debug.LogWarning($"Failed to fetch [com.nomnom.unity-project-patcher-bepinex] version from \"{bepinexGit}\".");
+                }
+            } catch (Exception e) {
+                Debug.LogWarning($"Failed to fetch [com.nomnom.unity-project-patcher-bepinex] version from \"{bepinexGit}\". Exception: {e}");
+            }
+            
+            if (gameWrapper != null) {
+                try {
+                    var packageName = gameWrapper.PackageName;
+                    var gamePackage = packages.FirstOrDefault(x => x.name == packageName);
+                    var gameRepo = gamePackage.packageId;
+                    if (string.IsNullOrEmpty(gameRepo) || !gameRepo.Contains('@')) {
+                        Debug.LogWarning($"[com.nomnom.unity-project-patcher-bepinex] failed to get gamepackage or repository.");
+                    } else if (gamePackage != null) {
+                        var gameGit = gameRepo.Split('@')[1];
+                        if (gameGit.EndsWith(".git")) {
+                            gameGit = gameGit.Substring(0, gameGit.Length - 4);
+                        }
+                        var currentGameVersion = gamePackage.version;
+                        if (PatcherUtility.TryFetchGitVersion(gameGit, out var gameVersion)) {
+                            if (currentGameVersion != gameVersion) {
+                                Debug.LogWarning($"[{gamePackage.name}] is <color=yellow>outdated</color>. Please update to {gameVersion} from \"{gameGit}\". Current version: {currentGameVersion}.");
+                            } else {
+                                Debug.Log($"[{gamePackage.name}] is up to date. Current version: {currentGameVersion}.");
+                            }
+                        } else {
+                            Debug.LogWarning($"Failed to fetch [{gamePackage.name}] version from \"{gameGit}\".");
+                        }
+                    } else {
+                        Debug.LogWarning($"[{gamePackage.name}] failed to get gamepackage or repository.");
+                    }
+                } catch (Exception e) {
+                    Debug.LogWarning($"Failed to fetch [{gameWrapper.PackageName}] version. Exception: {e}");
+                }
+            }
+        }
         
         [MenuItem("Tools/Unity Project Patcher/Open Window")]
         private static void Open() {
@@ -75,7 +145,6 @@ namespace Nomnom.UnityProjectPatcher.Editor {
             // check packages
             _hasBepInExPackage = _packageCollection.Any(x => x.name == "com.nomnom.unity-project-patcher-bepinex");
             _hasBepInExFlag = PlayerSettings.GetScriptingDefineSymbols(NamedBuildTarget.Standalone).Contains("ENABLE_BEPINEX");
-            _packageCollection = _packageCollection;
             _foundPackageAttribute = PatcherUtility.GetGameWrapperAttribute();
             // _hasGameWrapperPackage = false;
             // if (!string.IsNullOrEmpty(_foundPackageAttribute?.PackageName)) {

@@ -10,6 +10,8 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Lachee.Utilities.Serialization;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Nomnom.UnityProjectPatcher.AssetRipper;
 using Nomnom.UnityProjectPatcher.Editor.Steps;
 using UnityEditor;
@@ -17,6 +19,7 @@ using UnityEditor.PackageManager;
 using UnityEditor.SceneManagement;
 using UnityEditorInternal;
 using UnityEngine;
+using UnityEngine.Networking;
 using UnityEngine.Profiling;
 using Debug = UnityEngine.Debug;
 using Object = UnityEngine.Object;
@@ -145,6 +148,29 @@ namespace Nomnom.UnityProjectPatcher.Editor {
             }
         }
 
+        public static bool TryFetchGitVersion(string gitUrl, out string version) {
+            try {
+                // https://raw.githubusercontent.com/nomnomab/unity-lc-project-patcher/master/package.json
+                var packageUrl = $"{gitUrl.Replace("github.com", "raw.githubusercontent.com")}/master/package.json";
+                var request = UnityWebRequest.Get(packageUrl);
+                request.SendWebRequest();
+                while (!request.isDone) { }
+                if (request.result == UnityWebRequest.Result.ConnectionError || request.result == UnityWebRequest.Result.ProtocolError) {
+                    version = null;
+                    return false;
+                }
+            
+                var json = request.downloadHandler.text;
+                var packageContents = JObject.Parse(json);
+                version = packageContents["version"].Value<string>();
+                return true;
+            } catch (Exception e) {
+                Debug.LogWarning(e);
+                version = null;
+                return false;
+            }
+        }
+
         public static bool IsProbablyPatched() {
             var settings = GetSettings();
             if (!AssetDatabase.IsValidFolder(settings.ProjectGameAssetsPath)) {
@@ -169,7 +195,7 @@ namespace Nomnom.UnityProjectPatcher.Editor {
                 return false;
             }
 
-            return false;
+            // return false;
         }
         
         public static Object GetGraphicsSettings() {
@@ -261,12 +287,8 @@ of the software in violation of applicable laws.", "OK");
                 currentBaseType = currentBaseType.BaseType;
             }
         }
-
-#if UNITY_2020_3_OR_NEWER
-        public static SerializedProperty? GetCustomRenderPipelineProperty() {
-#else
+        
         public static SerializedProperty GetCustomRenderPipelineProperty() {
-#endif
             var qualitySettings = PatcherUtility.GetQualitySettings();
             var serializedObject = new SerializedObject(qualitySettings);
             

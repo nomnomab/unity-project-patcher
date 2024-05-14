@@ -20,11 +20,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
             });
         }
         
-#if UNITY_2020_3_OR_NEWER
-        public static StepsProgress? FromPath(string path) {
-#else
         public static StepsProgress FromPath(string path) {
-#endif
             if (!File.Exists(path)) {
                 return null;
             }

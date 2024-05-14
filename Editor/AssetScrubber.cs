@@ -534,11 +534,7 @@ namespace Nomnom.UnityProjectPatcher.Editor {
 
                 var properPath = path.ToOSPath();
 
-#if UNITY_2020_3_OR_NEWER
-                UnityEngine.Object? obj = null;
-#else
                 UnityEngine.Object obj = null;
-#endif
                 try {
                     var fullPath = Path.GetFullPath(path);
                     var assetPathNoAssets = PatcherUtility.GetPathWithoutRoot(path);
@@ -725,11 +721,7 @@ namespace Nomnom.UnityProjectPatcher.Editor {
             return allTypes;
         }
         
-#if UNITY_2020_3_OR_NEWER
-        public static string? GetShaderName(string assetPath, string? contents) {
-#else
         public static string GetShaderName(string assetPath, string contents) {
-#endif
             if (!File.Exists(assetPath)) {
                 return null;
             }
@@ -772,11 +764,7 @@ namespace Nomnom.UnityProjectPatcher.Editor {
             }
         }
 
-#if UNITY_2020_3_OR_NEWER
-        private static string? GetNamespace(string text) {
-#else
         private static string GetNamespace(string text) {
-#endif
             var namespaceRegex = new Regex(@"namespace\s+(\w.*)");
             var match = namespaceRegex.Match(text);
             
@@ -1063,11 +1051,7 @@ namespace Nomnom.UnityProjectPatcher.Editor {
             return assetContents.Contains($" {typeName}<");
         }
         
-#if UNITY_2020_3_OR_NEWER
-        public static string? GetGuidFromDisk(string assetPath) {
-#else
         public static string GetGuidFromDisk(string assetPath) {
-#endif
             // scrub meta file directly (?)
             // var fullAssetPath = Path.GetFullPath(assetPath);
             var fullMetaPath = $"{assetPath}.meta";
@@ -1154,11 +1138,7 @@ namespace Nomnom.UnityProjectPatcher.Editor {
             yield break;
         }
         
-#if UNITY_2020_3_OR_NEWER
-        private static IEnumerable<string> GetAssociatedGuids(string assetPath, string fullAssetPath, string? contents) {
-#else
         private static IEnumerable<string> GetAssociatedGuids(string assetPath, string fullAssetPath, string contents) {
-#endif
             // var fullMetaPath = $"{fullAssetPath}.meta";
             if (!File.Exists(fullAssetPath)) {
                 yield break;
@@ -1411,19 +1391,11 @@ namespace Nomnom.UnityProjectPatcher.Editor {
         //     return projectGameAssetsPath;
         // }
         
-#if UNITY_2020_3_OR_NEWER
-        public static string? GetProjectPathFromExportPath(AssetCatalogue.Entry entry, UPPatcherSettings settings, AssetRipperSettings arSettings, bool ignoreExclude) {
-#else
         public static string GetProjectPathFromExportPath(AssetCatalogue.Entry entry, UPPatcherSettings settings, AssetRipperSettings arSettings, bool ignoreExclude) {
-#endif
             return GetProjectPathFromExportPath(settings.ProjectGameAssetsPath, entry, settings, arSettings, ignoreExclude);
         }
         
-#if UNITY_2020_3_OR_NEWER
-        public static string? GetProjectPathFromExportPath(string projectGameAssetsPath, AssetCatalogue.Entry entry, UPPatcherSettings settings, AssetRipperSettings arSettings, bool ignoreExclude) {
-#else
         public static string GetProjectPathFromExportPath(string projectGameAssetsPath, AssetCatalogue.Entry entry, UPPatcherSettings settings, AssetRipperSettings arSettings, bool ignoreExclude) {
-#endif
             var splitPath = entry.RelativePathToRoot.Split(Path.DirectorySeparatorChar);
             var sourceName = splitPath[0];
             if (!arSettings.TryGetFolderMappingFromSource(sourceName, out var folder, out var exclude, Path.Combine("Unknown", sourceName))) {
@@ -1442,11 +1414,7 @@ namespace Nomnom.UnityProjectPatcher.Editor {
             return Path.Combine(projectGameAssetsPath, folder, restOfPath);
         }
 
-#if UNITY_2020_3_OR_NEWER
-        public static string? GetExportPathFromProjectPath(string projectAssetPath, UPPatcherSettings settings, AssetRipperSettings arSettings) {
-#else
         public static string GetExportPathFromProjectPath(string projectAssetPath, UPPatcherSettings settings, AssetRipperSettings arSettings) {
-#endif
             var pathWithoutRoot = projectAssetPath.Substring(settings.ProjectGameAssetsPath.Length + 1);
             var withoutFile = Path.GetDirectoryName(pathWithoutRoot);
             if (!arSettings.TryGetFolderMappingFromOutput(withoutFile, out var folder, out var exclude)) {

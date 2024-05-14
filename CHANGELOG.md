@@ -1,4 +1,9 @@
-﻿# 1.1.8
+﻿# 1.1.9
+
+- Fixed Project to Project migration not doing the full process
+- Removed many warnings related to nullables
+
+# 1.1.8
 
 - Fixed game wrapper version not being found
 

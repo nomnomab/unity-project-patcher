@@ -58,7 +58,7 @@ namespace Nomnom.UnityProjectPatcher.Editor {
             }
             
             var executor = new StepsExecutor(pipeline.Steps.ToArray());
-            executor.Execute();
+            executor.Execute().Forget();
         }
 
         public static StepPipeline GetPipeline() {
