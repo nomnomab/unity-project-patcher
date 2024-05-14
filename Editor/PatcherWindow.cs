@@ -166,9 +166,11 @@ namespace Nomnom.UnityProjectPatcher.Editor {
             }
 
             if (GUILayout.Button("Run Patcher")) {
-                if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) {
-                    return;
-                }
+                // if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) {
+                //     return;
+                // }
+                
+                EditorSceneManager.SaveOpenScenes();
                 
                 var userSettings = PatcherUtility.GetUserSettings();
 
