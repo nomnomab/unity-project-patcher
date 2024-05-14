@@ -40,13 +40,13 @@ namespace Nomnom.UnityProjectPatcher.Editor {
 
         private void OnEnable() {
             Nomnom.UnityProjectPatcher.PatcherUtility.GetUserSettings();
+            _gameWrapperVersion = null;
             
             EditorApplication.delayCall += () => {
                 _packageCollection = null;
                 CheckPackages();
                 Repaint();
             };
-            _gameWrapperVersion = null;
             
             var gameWrapperType = PatcherUtility.GetGameWrapperType();
             if (gameWrapperType is null) return;

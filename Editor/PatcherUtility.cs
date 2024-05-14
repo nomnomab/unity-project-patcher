@@ -120,16 +120,17 @@ namespace Nomnom.UnityProjectPatcher.Editor {
                 }
 
                 var gameWrapperType = GetGameWrapperType();
-                if (gameWrapperType is null) {
+                var gameWrapperAttribute = GetGameWrapperAttribute();
+                if (gameWrapperType is null || gameWrapperAttribute is null) {
                     results.Item2 = null;
                     return results;
                 }
-                var assembly = gameWrapperType.Assembly;
-                var packageName = assembly.GetName().Name.ToLower();
-                if (packageName.EndsWith(".editor")) {
-                    packageName = packageName.Replace(".editor", string.Empty);
-                }
-                patcher = packages.FirstOrDefault(x => x.name == packageName);
+                // var assembly = gameWrapperType.Assembly;
+                // var packageName = assembly.GetName().Name.ToLower();
+                // if (packageName.EndsWith(".editor")) {
+                //     packageName = packageName.Replace(".editor", string.Empty);
+                // }
+                patcher = packages.FirstOrDefault(x => x.name == gameWrapperAttribute.PackageName);
                 if (patcher != null) {
                     results.Item2 = patcher.version;
                 }

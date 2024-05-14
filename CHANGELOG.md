@@ -1,4 +1,8 @@
-﻿# 1.1.7
+﻿# 1.1.8
+
+- Fixed game wrapper version not being found
+
+# 1.1.7
 
 - Fixed `UPPatcherUserSettings` using relative project path as game path, and no longer uses Path.GetFullPath
 
