@@ -23,7 +23,8 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
             new GuidRemapperStep(),
             new CopyAssetRipperExportToProjectStep(), // restarts
             new FixProjectFileIdsStep(),
-            new SortAssetTypesSteps()
+            new SortAssetTypesSteps(),
+            new RestartEditorStep()
         };
 
         public StepPipeline() {

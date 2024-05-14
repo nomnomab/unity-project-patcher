@@ -14,12 +14,14 @@ using EditorAttributes;
 namespace Nomnom.UnityProjectPatcher.AssetRipper {
     [CreateAssetMenu(fileName = "AssetRipperSettings", menuName = "Unity Project Patcher/AssetRipper Settings")]
     public class AssetRipperSettings : ScriptableObject {
+#if UNITY_EDITOR
         public string FolderPath => PatcherUtility.GetUserSettings().AssetRipperDownloadFolderPath;
         public string ExePath => Path.Combine(FolderPath, "AssetRipper.Tools.SystemTester.exe");
         public string OutputFolderPath => PatcherUtility.GetUserSettings().AssetRipperExportFolderPath;
         public string ConfigPath => Path.Combine(FolderPath, "AssetRipper.Settings.json");
         public string OutputExportFolderPath => Path.Combine(OutputFolderPath, "ExportedProject");
         public string OutputExportAssetsFolderPath => Path.Combine(OutputExportFolderPath, "Assets");
+#endif
 
         public IReadOnlyCollection<FolderMapping> FolderMappings => _folderMappings;
         public AssetRipperJsonData ConfigurationData => _configurationData;
@@ -181,6 +183,7 @@ namespace Nomnom.UnityProjectPatcher.AssetRipper {
         }
 
         public void SaveToConfig() {
+#if UNITY_EDITOR
             var json = ToJson();
             
             if (!Directory.Exists(FolderPath)) {
@@ -188,6 +191,7 @@ namespace Nomnom.UnityProjectPatcher.AssetRipper {
             }
             
             File.WriteAllText(ConfigPath, json);
+#endif
         }
     }
 

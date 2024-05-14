@@ -17,7 +17,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
     public readonly struct AssetRipperStep: IPatcherStep {
         private static bool _noDeletion;
         
-        [MenuItem("Tools/Unity Project Patcher/Run AssetRipper")]
+        [MenuItem("Tools/Unity Project Patcher/Other/Run AssetRipper")]
         private static void Foo() {
             if (!EditorUtility.DisplayDialog("AssetRipper", "Are you sure you want to run AssetRipper?", "Yes", "No")) {
                 return;

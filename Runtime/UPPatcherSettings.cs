@@ -14,10 +14,12 @@ using EditorAttributes;
 namespace Nomnom.UnityProjectPatcher {
     [CreateAssetMenu(fileName = "UnityProjectPatcherSettings", menuName = "Unity Project Patcher/Settings")]
     public partial class UPPatcherSettings : ScriptableObject {
+#if UNITY_EDITOR
         public string GameFolderPath => PatcherUtility.GetUserSettings().GameFolderPath ?? throw new NullReferenceException(nameof(GameFolderPath));
         public string GameExePath => Path.Combine(GameFolderPath, $"{GameName}.exe");
         public string GameDataPath => Path.Combine(GameFolderPath, $"{GameName}_Data");
         public string GameManagedPath => Path.Combine(GameDataPath, "Managed");
+#endif
         
         public string ProjectUnityPath => Path.Combine(Application.dataPath, "Unity");
         public string ProjectUnityAssetStorePath => Path.Combine(Application.dataPath, "AssetStore");
@@ -81,15 +83,18 @@ namespace Nomnom.UnityProjectPatcher {
         [SerializeField] private List<GitPackageInfo> _gitPackages = new List<GitPackageInfo>();
 
         private void GetGameName() {
+#if UNITY_EDITOR
             if (GameFolderPath is null) {
                 Debug.LogError("Game Folder Path is null");
                 return;
             }
 
             _gameName = Path.GetFileNameWithoutExtension(GameFolderPath);
+#endif
         }
         
         private void GetGameVersion() {
+#if UNITY_EDITOR
             if (GameExePath is null) {
                 Debug.LogError("Game Exe Path is null");
                 return;
@@ -104,9 +109,11 @@ namespace Nomnom.UnityProjectPatcher {
             _gameVersion = versionInfo.FileVersion;
             
             PatcherUtility.SetDirty(this);
+#endif
         }
         
         private void GetPipelineType() {
+#if UNITY_EDITOR
             var dllPath = GameManagedPath;
             if (!Directory.Exists(dllPath)) {
                 Debug.LogError("Game Managed Path does not exist");
@@ -130,6 +137,7 @@ namespace Nomnom.UnityProjectPatcher {
             }
             
             PatcherUtility.SetDirty(this);
+#endif
         }
     }
 }

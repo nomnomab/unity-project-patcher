@@ -345,7 +345,7 @@ namespace Nomnom.UnityProjectPatcher.Editor {
 
         [MenuItem("Tools/Unity Project Patcher/Other/Import Assets From Another Project")]
         public static void ImportAssetsFromAnotherProject() {
-            var disk = EditorUtility.OpenFilePanel("Select Project's .json file", "Assets", "");
+            var disk = EditorUtility.OpenFilePanel("Select Project's .json file", "Assets", "json");
             if (string.IsNullOrEmpty(disk)) return;
             
             var modDisk = EditorUtility.OpenFolderPanel("Mod Root Folder", "Assets", "");
@@ -355,7 +355,7 @@ namespace Nomnom.UnityProjectPatcher.Editor {
             // if (string.IsNullOrEmpty(output)) return;
 
             var settings = UnityProjectPatcher.PatcherUtility.GetSettings();
-            var outputFolder = Path.Combine(settings.ProjectGamePluginsFullPath, "plugins", Path.GetFileNameWithoutExtension(modDisk));
+            var outputFolder = Path.Combine(settings.ProjectGameModsFullPath, "plugins", Path.GetFileNameWithoutExtension(modDisk));
             if (Directory.Exists(outputFolder)) {
                 Directory.Delete(outputFolder, true);
             }
@@ -460,15 +460,15 @@ namespace Nomnom.UnityProjectPatcher.Editor {
             EditorUtility.ClearProgressBar();
         }
 
-        [MenuItem("Tools/Unity Project Patcher/Other/Fix FileIds")]
-        public static async void FixFileIDs() {
-            try {
-                var step = new FixProjectFileIdsStep();
-                await step.Run();
-            } catch (Exception e) {
-                EditorUtility.ClearProgressBar();
-            }
-        }
+        // [MenuItem("Tools/Unity Project Patcher/Other/Fix FileIds")]
+        // public static async void FixFileIDs() {
+        //     try {
+        //         var step = new FixProjectFileIdsStep();
+        //         await step.Run();
+        //     } catch (Exception e) {
+        //         EditorUtility.ClearProgressBar();
+        //     }
+        // }
 
         public static AssetCatalogue ScrubProjectAssets() {
             return ScrubProject(string.Empty, _assetsRootSearchFolder);

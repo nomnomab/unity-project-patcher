@@ -30,6 +30,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
 
                     foreach (var pair in rename.replace) {
                         contents = contents.Replace($"m_Name: {pair.from}", $"m_Name: {pair.to}");
+                        contents = contents.Replace($"m_ConditionEvent: {pair.from}", $"m_ConditionEvent: {pair.to}");
                     }
 
                     File.WriteAllText(path, contents);

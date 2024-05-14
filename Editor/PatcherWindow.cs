@@ -1,8 +1,11 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using Nomnom.UnityProjectPatcher.Editor.Steps;
 using UnityEditor;
+using UnityEditor.Build;
+using UnityEditor.PackageManager;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 
@@ -15,6 +18,12 @@ namespace Nomnom.UnityProjectPatcher.Editor {
         
         private GUIStyle _leftAlignedGreyLabel;
         private GUIStyle _rightAlignedGreyLabel;
+
+        private bool _hasBepInExPackage;
+        private bool _hasBepInExFlag;
+        // private bool _hasGameWrapperPackage;
+        private UPPatcherAttribute _foundPackageAttribute;
+        private PackageCollection _packageCollection;
         
         [MenuItem("Tools/Unity Project Patcher/Open Window")]
         private static void Open() {
@@ -33,9 +42,8 @@ namespace Nomnom.UnityProjectPatcher.Editor {
             Nomnom.UnityProjectPatcher.PatcherUtility.GetUserSettings();
             
             EditorApplication.delayCall += () => {
-                var (version, gameVersion) = PatcherUtility.GetVersions();
-                _patcherVersion = version;
-                _gameWrapperVersion = gameVersion;
+                _packageCollection = null;
+                CheckPackages();
                 Repaint();
             };
             _gameWrapperVersion = null;
@@ -50,6 +58,29 @@ namespace Nomnom.UnityProjectPatcher.Editor {
             if (gameWrapperOnGUIFunction is null) return;
             
             _gameWrapperGuiFunction = gameWrapperOnGUIFunction;
+        }
+
+        private void OnFocus() {
+            Nomnom.UnityProjectPatcher.PatcherUtility.GetUserSettings();
+            CheckPackages();
+        }
+
+        private void CheckPackages() {
+            _packageCollection ??= PatcherUtility.GetPackages();
+            
+            var (version, gameVersion) = PatcherUtility.GetVersions(_packageCollection);
+            _patcherVersion = version;
+            _gameWrapperVersion = gameVersion;
+
+            // check packages
+            _hasBepInExPackage = _packageCollection.Any(x => x.name == "com.nomnom.unity-project-patcher-bepinex");
+            _hasBepInExFlag = PlayerSettings.GetScriptingDefineSymbols(NamedBuildTarget.Standalone).Contains("ENABLE_BEPINEX");
+            _packageCollection = _packageCollection;
+            _foundPackageAttribute = PatcherUtility.GetGameWrapperAttribute();
+            // _hasGameWrapperPackage = false;
+            // if (!string.IsNullOrEmpty(_foundPackageAttribute?.PackageName)) {
+            //     _hasGameWrapperPackage = _packageCollection.Any(x => x.name == _foundPackageAttribute.PackageName);
+            // }
         }
 
         private void OnGUI() {
@@ -87,6 +118,51 @@ namespace Nomnom.UnityProjectPatcher.Editor {
 
             if (EditorApplication.isCompiling) {
                 EditorGUILayout.LabelField("Compiling...", EditorStyles.centeredGreyMiniLabel);
+                GUI.enabled = false;
+            }
+            
+            if (!_hasBepInExPackage) {
+                if (GUILayout.Button("Install BepInEx")) {
+                    EditorApplication.delayCall += () => {
+                        _packageCollection = null;
+                        
+                        EditorUtility.DisplayProgressBar("Installing...", "Installing BepInEx...", 0.5f);
+                        
+                        var request = Client.Add("https://github.com/nomnomab/unity-project-patcher-bepinex.git");
+                        while (!request.IsCompleted) { }
+                        if (request.Status == StatusCode.Success) {
+                            EditorUtility.DisplayDialog("Success!", "BepInEx was installed successfully!", "OK");
+                        } else {
+                            EditorUtility.DisplayDialog("Error", $"Failed to install BepInEx! [{request.Error.errorCode}] {request.Error.message}", "OK");
+                        }
+                        
+                        // enable ENABLE_BEPINEX
+                        var existingSymbols = PlayerSettings.GetScriptingDefineSymbols(NamedBuildTarget.Standalone);
+                        if (!existingSymbols.Contains("ENABLE_BEPINEX")) {
+                            existingSymbols += ";ENABLE_BEPINEX";
+                            PlayerSettings.SetScriptingDefineSymbols(NamedBuildTarget.Standalone, existingSymbols);
+                        }
+
+                        EditorUtility.ClearProgressBar();
+                    };
+                }
+            } else {
+                if (_hasBepInExFlag && GUILayout.Button("Disable BepInEx")) {
+                    EditorApplication.delayCall += () => {
+                        PlayerSettings.SetScriptingDefineSymbols(NamedBuildTarget.Standalone, PlayerSettings.GetScriptingDefineSymbols(NamedBuildTarget.Standalone).Replace("ENABLE_BEPINEX", ""));
+                    };
+                } else if (!_hasBepInExFlag && GUILayout.Button("Enable BepInEx")) {
+                    EditorApplication.delayCall += () => {
+                        PlayerSettings.SetScriptingDefineSymbols(NamedBuildTarget.Standalone, PlayerSettings.GetScriptingDefineSymbols(NamedBuildTarget.Standalone) + ";ENABLE_BEPINEX");
+                    };
+                }
+            }
+
+            if (!_hasBepInExPackage && _foundPackageAttribute is not null && _foundPackageAttribute.RequiresBepInEx) {
+                EditorGUILayout.LabelField("Please install all packages!", EditorStyles.centeredGreyMiniLabel);
+                EditorGUILayout.LabelField($"bepinex: {(_hasBepInExPackage ? "good!" : "missing!")}");
+                // EditorGUILayout.LabelField($"{_gameWrapperType.Name}: {(_hasGameWrapperPackage ? "good!" : "missing!")}");
+                return;
             }
 
             if (GUILayout.Button("Run Patcher")) {
@@ -100,21 +176,30 @@ namespace Nomnom.UnityProjectPatcher.Editor {
                 
                 try {
                     if (string.IsNullOrEmpty(userSettings.GameFolderPath) || !Directory.Exists(Path.GetFullPath(userSettings.GameFolderPath))) {
-                        EditorUtility.DisplayDialog("Error", "Please select a valid game folder!", "Ok");
+                        EditorUtility.DisplayDialog("Error", "Please select a valid game folder!\n\nPlease fix this in your UPPatcherUserSettings asset!", "Focus UPPatcherUserSettings");
+                        EditorUtility.FocusProjectWindow();
+                        Selection.activeObject = userSettings;
+                        EditorGUIUtility.PingObject(userSettings);
                         return;
                     }
 
                     if (string.IsNullOrEmpty(userSettings.AssetRipperDownloadFolderPath)) {
-                        EditorUtility.DisplayDialog("Error", "Please select a valid asset ripper download location!", "Ok");
+                        EditorUtility.DisplayDialog("Error", "Please select a valid asset ripper download location!\n\nPlease fix this in your UPPatcherUserSettings asset!", "Focus UPPatcherUserSettings");
+                        EditorUtility.FocusProjectWindow();
+                        Selection.activeObject = userSettings;
+                        EditorGUIUtility.PingObject(userSettings);
                         return;
                     }
                     
                     if (string.IsNullOrEmpty(userSettings.AssetRipperExportFolderPath)) {
-                        EditorUtility.DisplayDialog("Error", "Please select a valid asset ripper export location!", "Ok");
+                        EditorUtility.DisplayDialog("Error", "Please select a valid asset ripper export location!\n\nPlease fix this in your UPPatcherUserSettings asset!", "Focus UPPatcherUserSettings");
+                        EditorUtility.FocusProjectWindow();
+                        Selection.activeObject = userSettings;
+                        EditorGUIUtility.PingObject(userSettings);
                         return;
                     }
                 } catch {
-                    EditorUtility.DisplayDialog("Error", "There is a bad path in the user settings!", "Ok");
+                    EditorUtility.DisplayDialog("Error", "There is a bad path in the user settings!\n\nPlease fix this in your UPPatcherUserSettings asset!", "Focus UPPatcherUserSettings");
                     EditorUtility.FocusProjectWindow();
                     Selection.activeObject = userSettings;
                     EditorGUIUtility.PingObject(userSettings);

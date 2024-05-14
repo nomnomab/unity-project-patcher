@@ -80,6 +80,13 @@ Create a new Unity project with the above requirements before getting started.
 > [!IMPORTANT]  
 > These options require [git](https://git-scm.com/download/win) to be installed!
 
+You will need to install three packages in sequence here:
+
+- Unity Project Patcher: `https://github.com/nomnomab/unity-project-patcher.git`
+- Unity Project Patcher BepInEx: `https://github.com/nomnomab/unity-project-patcher-bepinex.git`
+    - [Can be disabled](#disabling-bepinex-usage)
+- This package
+
 ### Installing the Unity Project Patcher core
 
 Install with the package manager:
@@ -105,7 +112,9 @@ Install with the manifest.json:
 
 ### Installing the BepInEx Wrapper
 
-If you require BepInEx usage, then follow the instructions at https://github.com/nomnomab/unity-project-patcher-bepinex
+Open the tool window `Tools > Unity Project Patcher > Open Window` and press the `Install BepInEx` button.
+
+Otherwise, follow the steps at https://github.com/nomnomab/unity-project-patcher-bepinex
 
 #### Disabling BepInEx Usage
 

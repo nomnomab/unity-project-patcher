@@ -1,4 +1,16 @@
-﻿# 1.1.5
+﻿# 1.1.6
+
+- Added extra help text to `UPPatcherSettings`
+- Added `RestartEditorStep` to end of default steps
+- Added `Install BepInEx` button to tool window
+  - `UPPatcher` attribute can require BepInEx now
+  - Will automatically add the `ENABLE_BEPINEX` compile flag
+- Added an Enable/Disable button for BepInEx after installation
+- Fixed `RenameAnimatorParamatersStep` not renaming `m_ConditionEvent`
+- Fixed various building issues when building asset bundles
+- Updated `README_TEMPLATE.md`
+
+# 1.1.5
 
 - Added scene saving dialogue when pressing the patch button
 - Fixed New Input System enabling not restarting if enabled via package step
@@ -7,8 +19,8 @@
 
 - Project to project migration tool
 - Rename animator paramaters step
-- Updated README.md
-- Updated README_TEMPLATE.md
+- Updated `README.md`
+- Updated `README_TEMPLATE.md`
 
 # 1.1.3
 

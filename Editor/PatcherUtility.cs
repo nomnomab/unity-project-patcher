@@ -63,6 +63,12 @@ namespace Nomnom.UnityProjectPatcher.Editor {
             
             return null;
         }
+        
+        public static UPPatcherAttribute GetGameWrapperAttribute() {
+            var type = GetGameWrapperType();
+            if (type is null) return null;
+            return type.GetCustomAttribute<UPPatcherAttribute>();
+        }
 
         // public static MethodInfo GetGameWrapperRunFunction(Type wrapperType) {
         //     var runFunction = wrapperType.GetMethod("Run", BindingFlags.Public | BindingFlags.Static | BindingFlags.NonPublic);
@@ -93,32 +99,44 @@ namespace Nomnom.UnityProjectPatcher.Editor {
             return guiFunction;
         }
 
-        public static (string version, string gameWrapperVersion) GetVersions() {
-            EditorUtility.DisplayProgressBar("Fetching...", "Fetching versions...", 0.5f);
+        public static PackageCollection GetPackages() {
             try {
                 var list = Client.List();
                 while (!list.IsCompleted) { }
+                return list.Result;
+            } catch (Exception e) {
+                Debug.LogError(e);
+                return null;
+            }
+        }
 
-                var patcher = list.Result.FirstOrDefault(x => x.name == "com.nomnom.unity-project-patcher");
+        public static (string version, string gameWrapperVersion) GetVersions(PackageCollection packages) {
+            EditorUtility.DisplayProgressBar("Fetching...", "Fetching versions...", 0.5f);
+            try {
+                var patcher = packages.FirstOrDefault(x => x.name == "com.nomnom.unity-project-patcher");
                 (string, string) results = (null, null);
                 if (patcher != null) {
                     results.Item1 = patcher.version;
                 }
 
                 var gameWrapperType = GetGameWrapperType();
+                if (gameWrapperType is null) {
+                    results.Item2 = null;
+                    return results;
+                }
                 var assembly = gameWrapperType.Assembly;
                 var packageName = assembly.GetName().Name.ToLower();
                 if (packageName.EndsWith(".editor")) {
                     packageName = packageName.Replace(".editor", string.Empty);
                 }
-                patcher = list.Result.FirstOrDefault(x => x.name == packageName);
+                patcher = packages.FirstOrDefault(x => x.name == packageName);
                 if (patcher != null) {
                     results.Item2 = patcher.version;
                 }
                 
                 return results;
             } catch (Exception e) {
-                Debug.LogError(e);
+                Debug.LogWarning(e);
                 return (null, null);
             }
             finally {

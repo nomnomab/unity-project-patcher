@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Nomnom.UnityProjectPatcher.Editor.Steps {
     public readonly struct GenerateReadmeStep: IPatcherStep {
-        [MenuItem("Tools/Unity Project Patcher/Generate README.md")]
+        [MenuItem("Tools/Unity Project Patcher/Other/Generate README.md")]
         private static void Foo() {
             try {
                 new GenerateReadmeStep().Run().Forget();

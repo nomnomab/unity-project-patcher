@@ -132,6 +132,8 @@ Install with the manifest.json:
 
 #### BepInEx
 
+This can be installed via the tool window in-editor if a package depends on it.
+
 If you require BepInEx usage, then follow the instructions at https://github.com/nomnomab/unity-project-patcher-bepinex
 
 <!-- Usage -->

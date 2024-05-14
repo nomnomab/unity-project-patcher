@@ -16,26 +16,32 @@ namespace Nomnom.UnityProjectPatcher {
 #if UNITY_2020_3_OR_NEWER
         [SerializeField, FolderPath(getRelativePath: false)]
         [Header("Where the game is installed")]
+        [HelpBox(@"This path is absolute to your game folder. Such as: ""C:\Program Files (x86)\Steam\steamapps\common\Lethal Company""")]
         private string? _gameFolderPath;
 
         [SerializeField, FolderPath]
         [Header("Where AssetRipper will be downloaded to")]
+        [HelpBox(@"This path is relative to your project folder. It defaults to ""[Project Name]\AssetRipper""")]
         private string? _assetRipperDownloadFolderPath = "AssetRipper";
 
         [SerializeField, FolderPath]
         [Header("Where AssetRipper will store exported files")]
+        [HelpBox(@"This path is relative to your project folder. It defaults to ""[Project Name]\AssetRipperOutput""")]
         private string? _assetRipperExportFolderPath = "AssetRipperOutput";
 #else
         [SerializeField]
         [Header("Where the game is installed")]
+        [HelpBox(@"This path is absolute to your game folder. Such as: ""C:\Program Files (x86)\Steam\steamapps\common\Lethal Company""")]
         private string _gameFolderPath;
         
         [SerializeField]
         [Header("Where AssetRipper will be downloaded to")]
+        [HelpBox(@"This path is relative to your project folder. It defaults to ""[Project Name]\AssetRipper""")]
         private string _assetRipperDownloadFolderPath = "AssetRipper";
         
         [SerializeField]
         [Header("Where AssetRipper will store exported files")]
+        [HelpBox(@"This path is relative to your project folder. It defaults to ""[Project Name]\AssetRipperOutput""")]
         private string _assetRipperExportFolderPath = "AssetRipperOutput";
 #endif
     }
