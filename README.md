@@ -159,6 +159,8 @@ Any game wrapper will require the following two ScriptableObjects:
 ### UPPatcherSettings
 > [!NOTE]  
 > Can be made via `Create > Unity Project Patcher > Settings`
+>
+> One will be made for you in the project root, upon opening the tool, if one doesn't exist.
 
 <div float="left" align="center" style="display: flex; flex-direction: row; gap: 10px;">
   <img src="Assets~/UPPatcherSettings_1.png" width="400" />
@@ -222,6 +224,8 @@ If you need to put any git packages in the wrapper, put them here.
 ### AssetRipperSettings
 > [!NOTE]  
 > Can be made via `Create > Unity Project Patcher > AssetRipper Settings`
+>
+> One will be made for you in the project root, upon opening the tool, if one doesn't exist.
 
 <div float="left" align="center" style="display: flex; flex-direction: row; gap: 10px;">
   <img src="Assets~/AssetRipperSettings_1.png" width="400" />
