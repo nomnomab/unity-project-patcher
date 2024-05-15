@@ -119,6 +119,8 @@ namespace Nomnom.UnityProjectPatcher.Editor {
             Nomnom.UnityProjectPatcher.PatcherUtility.GetUserSettings();
             _gameWrapperVersion = null;
             
+            OnLoad();
+            
             EditorApplication.delayCall += () => {
                 _packageCollection = null;
                 CheckPackages();

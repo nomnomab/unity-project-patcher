@@ -1,4 +1,8 @@
-﻿# 1.1.11
+﻿# 1.1.12
+
+- Added version checker in tool window opening event
+
+# 1.1.11
 
 - Migrate materials step
 
