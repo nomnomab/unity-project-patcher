@@ -1,4 +1,8 @@
-﻿# 1.1.10
+﻿# 1.1.11
+
+- Migrate materials step
+
+# 1.1.10
 
 - Can define a custom game name if required in the `UPPatcherSettings`
 - Older Unity version support for various code blocks
