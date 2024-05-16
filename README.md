@@ -429,6 +429,37 @@ Right-click the asset in the project, then select `Assets > Experimental > Re-im
 11. Your old project contents will now be in `/Assets/[Game Name]/Mods/plugins`
 12. Done
 
+#### Q: How do I add assets after patching to the current project?
+
+Ok so this is done in two ways:
+1. If the assets are not already included in the base game
+   1. Simply copy them into the project 👍
+
+> [!NOTE]  
+> There is a bug with this step!  
+> 
+> If another asset or something in the game has the same type + name as something in the incoming
+> files, then it will falsely think it is already in the project. 
+> 
+> Verify your files are correct after it finishes!
+
+2. If the assets *are* in the base game
+   1. Make a new unity project
+   2. Make a folder to put all of the new assets into
+   3. `Tools > Unity Project Patcher > Other > Scrub > Project`
+   4. Wait for that to finish
+   5. In new patched project
+   6. `Tools > Unity Project Patcher > Other > Replace Assets with Assets from Another Project`
+   7. For the first file prompt, select `[Original project name]/Assets/scrub.project.txt.json`
+   8. For the second folder prompt, select the root folder for your mod that has all of its assets inside of it
+      - From step 2
+      - Do not select `/Assets/`
+      - Make a folder, such as `/Assets/MyFolder`, and put everything you want to import into it
+   9. For the third folder prompt, select a folder in the patched project to act as the "Files not already in this project" folder
+      - Do not select anything inside of `/Assets/[Game Name]/Game`
+   10. Wait for that to finish
+   11. Done
+
 ## Games I Tested With
 
 - [Lethal Company](https://github.com/nomnomab/unity-lc-project-patcher)

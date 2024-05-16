@@ -299,7 +299,7 @@ namespace Nomnom.UnityProjectPatcher.Editor {
             var assetEntriesProject2 = otherEntries.Except(scriptEntriesProject2)
                 .Except(shaderEntriesProject2);
 
-            var found = new List<FoundMatch>();
+            var found = new ConcurrentBag<FoundMatch>();
             
             // try to match scripts
             var stopWatch = System.Diagnostics.Stopwatch.StartNew();
@@ -538,12 +538,14 @@ namespace Nomnom.UnityProjectPatcher.Editor {
             public string FullTypeName;
             public string AssemblyName;
             public ScriptEntry[] NestedTypes;
+            public bool? NonMono;
 
-            public ScriptEntry(string relativePathToRoot, string guid, long? fileId, string fullTypeName, string assemblyName, ScriptEntry[] nested, string[] associatedGuids, string[] fileIds) : base(typeof(MonoScript).FullName, relativePathToRoot, guid, fileId, associatedGuids, fileIds) {
+            public ScriptEntry(string relativePathToRoot, string guid, long? fileId, string fullTypeName, string assemblyName, ScriptEntry[] nested, string[] associatedGuids, string[] fileIds, bool? nonMono) : base(typeof(MonoScript).FullName, relativePathToRoot, guid, fileId, associatedGuids, fileIds) {
                 FullTypeName = fullTypeName;
                 AssemblyName = assemblyName;
                 // IsGeneric = isGeneric;
                 NestedTypes = nested;
+                NonMono = nonMono;
             }
 
             public override string ToString() {
@@ -552,7 +554,7 @@ namespace Nomnom.UnityProjectPatcher.Editor {
 
             public override string ToString(bool withTags) {
                 var nestedTypes = NestedTypes.Length == 0 ? string.Empty : $"\n{string.Join("\n", NestedTypes.Select(x => $"\t* {x.ToString(withTags)}"))}";
-                return $"{base.ToString(withTags)} [{AssemblyName}] [{FullTypeName}]{nestedTypes}";
+                return $"{base.ToString(withTags)} [{AssemblyName}] [{FullTypeName}] - {(NonMono == true ? "non-mono" : "mono™️")} {nestedTypes}";
             }
         }
 

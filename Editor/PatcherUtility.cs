@@ -190,7 +190,7 @@ namespace Nomnom.UnityProjectPatcher.Editor {
                 version = packageContents["version"].Value<string>();
                 return true;
             } catch (Exception e) {
-                Debug.LogWarning(e);
+                Debug.LogWarning($"Failed to fetch version from \"{gitUrl}\". Exception: {e}");
                 version = null;
                 return false;
             }

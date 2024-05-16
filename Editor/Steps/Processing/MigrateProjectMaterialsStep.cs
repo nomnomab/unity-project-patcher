@@ -15,8 +15,8 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
         //     try {
         //         var waterMaterialPath = "Packages/com.nomnom.unity-lc-project-patcher/Runtime/Water/WaterMaterial.mat";
         //         new MigrateProjectMaterialsStep(
-        //             ("VowWater", waterMaterialPath),
-        //             ("Water_mat_04", waterMaterialPath)
+        //             ("VowWater", "Packages/com.nomnom.unity-lc-project-patcher/Runtime/Water/VowWater_REPLACEMENT.mat"),
+        //             ("Water_mat_04", "Packages/com.nomnom.unity-lc-project-patcher/Runtime/Water/Water_mat_04_REPLACEMENT.mat")
         //         ).Run().Forget();
         //     } catch (Exception e) {
         //         Debug.LogException(e);

@@ -1,4 +1,11 @@
-﻿# 1.1.12
+﻿# 1.1.13
+
+- Added asset replacement utility
+- Added option to update packages in tool window itself
+- Added a popup if a step fails
+- Fixed package installer breaking with git packages
+
+# 1.1.12
 
 - Added version checker in tool window opening event
 

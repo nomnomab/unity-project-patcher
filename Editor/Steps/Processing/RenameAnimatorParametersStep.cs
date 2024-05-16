@@ -8,6 +8,19 @@ using UnityEngine;
 
 namespace Nomnom.UnityProjectPatcher.Editor.Steps {
     public readonly struct RenameAnimatorParametersStep: IPatcherStep {
+        // [MenuItem("Tools/Unity Project Patcher/Other/Rename Animator Parameters")]
+        // private static void Foo() {
+        //     try {
+        //         new RenameAnimatorParametersStep(
+        //             new RenameAnimatorParametersStep.Replacement("SunAnimContainer", ("eclipsed", "eclipse")),
+        //             new RenameAnimatorParametersStep.Replacement("SunAnimContainer 1", ("eclipsed", "eclipse"))
+        //         ).Run().Forget();
+        //     } catch (Exception e) {
+        //         Debug.LogException(e);
+        //         EditorUtility.ClearProgressBar();
+        //     }
+        // }
+        
         private readonly Replacement[] _toRename;
 
         public RenameAnimatorParametersStep(params Replacement[] toRename) {

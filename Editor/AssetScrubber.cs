@@ -46,6 +46,7 @@ namespace Nomnom.UnityProjectPatcher.Editor {
         private readonly static HashSet<string> IgnoreContains = new HashSet<string>() {
             // "Editor",
             "Test",
+            "~"
         };
         
         private readonly static HashSet<string> IgnoreDiskContains = new HashSet<string>() {
@@ -53,7 +54,8 @@ namespace Nomnom.UnityProjectPatcher.Editor {
             // "Test",
             "Profile-",
             "Profiling.",
-            "Unity.Services."
+            "Unity.Services.",
+            "~"
             // "Unity.",
         };
         
@@ -345,10 +347,10 @@ namespace Nomnom.UnityProjectPatcher.Editor {
 
         [MenuItem("Tools/Unity Project Patcher/Other/Import Assets From Another Project")]
         public static void ImportAssetsFromAnotherProject() {
-            var disk = EditorUtility.OpenFilePanel("Select Project's .json file", "Assets", "json");
+            var disk = EditorUtility.OpenFilePanel("Select project's .json file", "Assets", "json");
             if (string.IsNullOrEmpty(disk)) return;
             
-            var modDisk = EditorUtility.OpenFolderPanel("Mod Root Folder", "Assets", "");
+            var modDisk = EditorUtility.OpenFolderPanel("Mod root folder", Path.GetDirectoryName(disk), "");
             if (string.IsNullOrEmpty(modDisk)) return;
 
             // var output = EditorUtility.SaveFolderPanel("New Folder in Project", "Assets", "");
@@ -451,6 +453,275 @@ namespace Nomnom.UnityProjectPatcher.Editor {
                 
                 Directory.Move(tempDirectory, outputFolder);
                 
+                AssetDatabase.SaveAssets();
+                AssetDatabase.Refresh();
+            } catch (Exception e) {
+                Debug.LogException(e);
+            }
+            
+            EditorUtility.ClearProgressBar();
+        }
+
+        [MenuItem("Tools/Unity Project Patcher/Other/Replace Assets with Assets from Another Project")]
+        public static void ReplaceAssetsWithAssetsFromAnotherProject() {
+            // todo: combine this with ImportAssetsFromAnotherProject
+            var disk = EditorUtility.OpenFilePanel("Select Project's .json file", "Assets", "json");
+            if (string.IsNullOrEmpty(disk)) return;
+
+            var rootFolder = EditorUtility.OpenFolderPanel("Root folder", Path.GetDirectoryName(disk), "");
+            if (string.IsNullOrEmpty(rootFolder)) return;
+            
+            var miscFilesFolder = EditorUtility.OpenFolderPanel("Folder to put extra files in project", "Assets", "");
+            if (string.IsNullOrEmpty(miscFilesFolder)) return;
+            
+            if (!Directory.Exists(miscFilesFolder)) {
+                Directory.CreateDirectory(miscFilesFolder);
+            }
+
+            var targetAssetsFolder = Path.GetDirectoryName(disk).ToOSPath();
+            var rootFolderRelative = rootFolder.Substring(targetAssetsFolder.Length + 1).ToOSPath();
+            var settings = UnityProjectPatcher.PatcherUtility.GetSettings();
+            
+            Debug.Log($"targetAssetsFolder: {targetAssetsFolder}");
+            Debug.Log($"rootFolder: {rootFolder}");
+            Debug.Log($"rootFolderRelative: {rootFolderRelative}");
+            Debug.Log($"miscFilesFolder: {miscFilesFolder}");
+
+            try {
+                // copy all files to a temp directory
+                var tempDirectory = Path.GetFullPath(Path.Combine(Application.dataPath, "..", "TempImportReplacementCopy")).ToOSPath();
+                if (Directory.Exists(tempDirectory)) {
+                    EditorUtility.DisplayProgressBar("Import", $"Removing {tempDirectory}...", 0);
+                    Directory.Delete(tempDirectory, true);
+                }
+
+                Debug.Log($"tempDirectory: {tempDirectory}");
+
+                Directory.CreateDirectory(tempDirectory);
+
+                var allFiles = Directory.GetFiles(rootFolder, "*.*", SearchOption.AllDirectories);
+                for (var i = 0; i < allFiles.Length; i++) {
+                    var file = allFiles[i].ToOSPath();
+                    if (EditorUtility.DisplayCancelableProgressBar($"Copying file [{i}/{allFiles.Length}]", $"Copying {file}", i / allFiles.Length)) {
+                        throw new OperationCanceledException();
+                    }
+
+                    var newFile = file.Replace(targetAssetsFolder, tempDirectory);
+                    // newFile = Path.GetFullPath(Path.Combine(tempDirectory, newFile));
+
+                    // var newFile = Path.GetFullPath(Path.Combine(dir, Path.GetFileName(file)).ToOSPath());
+                    // Debug.Log($"\"{file}\" to \"{newFile}\"");
+
+                    try {
+                        var dir = Path.GetDirectoryName(newFile);
+                        if (!Directory.Exists(dir)) {
+                            Directory.CreateDirectory(dir);
+                        }
+                        File.Copy(file, newFile);
+                    } catch (Exception e) {
+                        Debug.LogError($"Failed to copy \"{file}\" to \"{newFile}\":\n{e}");
+                    }
+                }
+
+                // return;
+
+                // EditorUtility.ClearProgressBar();
+                //
+                // return;
+
+                var project1Catalogue = AssetCatalogue.FromDisk(disk);
+                var project2Catalogue = ScrubProject();
+                
+                var matches = project2Catalogue.CompareProjectToProject(project1Catalogue).ToArray();
+                Debug.Log($"Found {matches.Length} matches");
+
+                // foreach (var match in matches) {
+                //     Debug.Log(match);
+                //     if (match.from is AssetCatalogue.ScriptEntry e1 && match.to is AssetCatalogue.ScriptEntry e2) {
+                //         if (e1.FullTypeName.Contains("UnityEditor.MonoScript")) continue;
+                //         if (e2.FullTypeName.Contains("UnityEditor.MonoScript")) continue;
+                //         if (e1.NonMono == null || !e1.NonMono.Value) continue;
+                //         if (e2.NonMono == null || !e2.NonMono.Value) continue;
+                //         
+                //         Debug.Log($" - deleting \"{e2.RelativePathToRoot}\"");
+                //         continue;
+                //         
+                //         // if (e2.NonMono == null) continue;
+                //         // if (e1.NonMono && e2.NonMono) {
+                //         //     Debug.Log(" - skipping non-mono");
+                //         //     continue;
+                //         // }
+                //     }
+                // }
+                
+                var allEntryMatches = new Dictionary<string, AssetCatalogue.Entry>();
+                foreach (var match in matches) {
+                    if (string.IsNullOrEmpty(match.from.Guid)) continue;
+                    allEntryMatches[match.from.Guid] = match.to;
+                }
+                
+                for (var i = 0; i < matches.Length; i++) {
+                    var match = matches[i];
+                    var entryFrom = match.from;
+                    var entryTo = match.to;
+
+                    if (EditorUtility.DisplayCancelableProgressBar($"Guid Remapping [{i}/{matches.Length}]", $"Replacing {entryFrom.Guid} with {entryTo.Guid}", i / (float)matches.Length)) {
+                        Debug.Log("Manually cancelled");
+                        throw new OperationCanceledException();
+                    }
+
+                    // replace guids & write to disk
+                    try {
+                        AssetScrubber.ReplaceMetaGuid(tempDirectory, entryFrom, entryTo.Guid);
+                        AssetScrubber.ReplaceAssetGuids(settings, tempDirectory, entryFrom, allEntryMatches);
+                        // AssetScrubber.ReplaceFileIds(arAssets.RootAssetsPath, entryFrom, matches);
+                    } catch (Exception e) {
+                        Debug.LogError(e);
+                    }
+                }
+
+                for (int i = 0; i < project1Catalogue.Entries.Length; i++) {
+                    var entry = project1Catalogue.Entries[i];
+
+                    if (EditorUtility.DisplayCancelableProgressBar($"Guid Remapping [{i}/{project1Catalogue.Entries.Length}]", $"Checking associations for {entry.RelativePathToRoot}", i / (float)project1Catalogue.Entries.Length)) {
+                        Debug.Log("Manually cancelled");
+                        throw new OperationCanceledException();
+                    }
+
+                    try {
+                        AssetScrubber.ReplaceAssetGuids(settings, tempDirectory, entry, allEntryMatches);
+                        // AssetScrubber.ReplaceFileIds(arAssets.RootAssetsPath, entry, matches);
+                    } catch (Exception e) {
+                        Debug.LogError(e);
+                    }
+                }
+                
+                // now comes the annoying part
+                // gotta copy over all the matches to replace the ones in the project
+                var usedEntries = new HashSet<string>();
+                var timeNow = DateTime.Now.ToFileTime();
+                
+                var toDelete = new HashSet<AssetCatalogue.Entry>();
+                // foreach (var match in matches) {
+                //     var entryFrom = match.from;
+                //     var entryTo = match.to;
+                //     if (entryFrom is AssetCatalogue.ScriptEntry e1 && entryTo is AssetCatalogue.ScriptEntry e2) {
+                //         if (e1.FullTypeName.Contains("UnityEditor.MonoScript")) continue;
+                //         if (e2.FullTypeName.Contains("UnityEditor.MonoScript")) continue;
+                //         if (e1.NonMono == null || !e1.NonMono.Value) continue;
+                //         if (e2.NonMono == null || !e2.NonMono.Value) continue;
+                //         
+                //         toDelete.Add(e2);
+                //     }
+                // }
+                
+                for (var i = 0; i < matches.Length; i++) {
+                    var match = matches[i];
+                    var entryFrom = match.from;
+                    var entryTo = match.to;
+
+                    if (EditorUtility.DisplayCancelableProgressBar($"Checking [{i}/{matches.Length}]", $"Checking {entryFrom.RelativePathToRoot}", i / (float)matches.Length)) {
+                        throw new OperationCanceledException();
+                    }
+                    
+                    var fromPath = Path.Combine(tempDirectory, entryFrom.RelativePathToRoot).ToOSPath();
+                    // Debug.Log(match);
+                    // Debug.Log($"{entryFrom.RelativePathToRoot} vs {rootFolderRelative}");
+                    if (!entryFrom.RelativePathToRoot.StartsWith(rootFolderRelative)) {
+                        // Debug.Log(" - skipping");
+                        continue;
+                    }
+                    
+                    var toPath = Path.Combine(Path.GetFullPath(project2Catalogue.RootAssetsPath), entryTo.RelativePathToRoot).ToOSPath();
+                    
+                    if (EditorUtility.DisplayCancelableProgressBar($"Copying [{i}/{matches.Length}]", $"Copying {entryFrom.RelativePathToRoot}", i / (float)matches.Length)) {
+                        throw new OperationCanceledException();
+                    }
+
+                    var sameName = Path.GetFileName(entryFrom.RelativePathToRoot) == Path.GetFileName(entryTo.RelativePathToRoot);
+                    bool isValidNonMonoPair() {
+                        if (entryFrom is AssetCatalogue.ScriptEntry e1 && entryTo is AssetCatalogue.ScriptEntry e2) {
+                            if (e1.FullTypeName.Contains("UnityEditor.MonoScript")) return false;
+                            if (e2.FullTypeName.Contains("UnityEditor.MonoScript")) return false;
+                            if (e1.NonMono == null || !e1.NonMono.Value) return false;
+                            if (e2.NonMono == null || !e2.NonMono.Value) return false;
+                        
+                            // toDelete.Add(e2);
+                            if (!sameName) {
+                                return true;
+                            }
+                        }
+                        
+                        return false;
+                    }
+
+                    // Debug.Log($"Checking {entryFrom.RelativePathToRoot} vs {entryTo.RelativePathToRoot}");
+                    if (isValidNonMonoPair()) {
+                        // Debug.Log($" - valid non mono pair");
+                        toDelete.Add(entryTo);
+                        // continue;
+                    }
+
+                    if (!sameName) {
+                        continue;
+                    }
+                    
+                    usedEntries.Add(entryFrom.RelativePathToRoot);
+                    usedEntries.Add(entryTo.RelativePathToRoot);
+
+                    try {
+                        var hiddenFolder = Path.Combine(Path.GetDirectoryName(toPath), "Backup~");
+                        if (!Directory.Exists(hiddenFolder)) {
+                            Directory.CreateDirectory(hiddenFolder);
+                            Debug.Log($"Backup folder created at \"{hiddenFolder}\"");
+                        }
+                        
+                        File.Copy(toPath, Path.Combine(hiddenFolder, $"{Path.GetFileNameWithoutExtension(toPath)}_{timeNow}{Path.GetExtension(toPath)}"), true);
+                        File.Copy(fromPath, toPath, true);
+                        
+                        Debug.Log($"Copied \"{fromPath}\" to \"{toPath}\"");
+                    } catch (Exception e) {
+                        Debug.LogError($"Failed to copy \"{fromPath}\" to \"{toPath}\":\n{e}");
+                    }
+                }
+
+                for (int i = 0; i < project1Catalogue.Entries.Length; i++) {
+                    var entry = project1Catalogue.Entries[i];
+                    if (usedEntries.Contains(entry.RelativePathToRoot)) continue;
+                    
+                    var fromPath = Path.Combine(tempDirectory, entry.RelativePathToRoot).ToOSPath();
+                    if (!entry.RelativePathToRoot.StartsWith(rootFolderRelative)) continue;
+                    
+                    var toPath = Path.Combine(miscFilesFolder, entry.RelativePathToRoot).ToOSPath();
+                    try {
+                        var folder = Path.GetDirectoryName(toPath);
+                        if (!Directory.Exists(folder)) {
+                            Directory.CreateDirectory(folder);
+                        }
+                        
+                        File.Copy(fromPath, toPath, true);
+                        usedEntries.Add(entry.RelativePathToRoot);
+                        Debug.Log($"Copied to misc \"{fromPath}\" to \"{toPath}\"");
+                    } catch (Exception e) {
+                        Debug.LogError($"Failed to copy \"{fromPath}\" to \"{toPath}\":\n{e}");
+                    }
+                }
+
+                foreach (var entry in toDelete) {
+                    // if (usedEntries.Contains(entry)) continue;
+                    var toPath = Path.Combine(Path.GetFullPath(project2Catalogue.RootAssetsPath), entry.RelativePathToRoot).ToOSPath();
+                    try {
+                        File.Delete(toPath);
+                        Debug.Log($"Deleted \"{toPath}\"");
+                    } catch (Exception e) {
+                        Debug.LogError($"Failed to delete \"{toPath}\":\n{e}");
+                    }
+                }
+
+                EditorUtility.ClearProgressBar();
+                
+                Directory.Delete(tempDirectory, true);
+
                 AssetDatabase.SaveAssets();
                 AssetDatabase.Refresh();
             } catch (Exception e) {
@@ -595,11 +866,12 @@ namespace Nomnom.UnityProjectPatcher.Editor {
                         
                     var assemblyName = foundClass?.Assembly.GetName().Name;
                     var nestedTypes = foundClass?.GetNestedTypes()
-                        .Select(x => new AssetCatalogue.ScriptEntry(x.FullName ?? "n/a", "n/a", null, x.FullName ?? "n/a", assemblyName ?? "Assembly-CSharp", Array.Empty<AssetCatalogue.ScriptEntry>(), associatedGuids, associatedFileIds))
+                        .Select(x => new AssetCatalogue.ScriptEntry(x.FullName ?? "n/a", "n/a", null, x.FullName ?? "n/a", assemblyName ?? "Assembly-CSharp", Array.Empty<AssetCatalogue.ScriptEntry>(), associatedGuids, associatedFileIds, typeof(MonoScript).IsAssignableFrom(x)))
                         .ToArray() ?? Array.Empty<AssetCatalogue.ScriptEntry>();
                     
                     var typeName = foundClass?.FullName ?? assetType.FullName ?? "n/a";
-                    entries.Add(new AssetCatalogue.ScriptEntry(properPath, guid, fileId, foundClass?.FullName ?? assetType.FullName ?? "n/a", assemblyName ?? "Assembly-CSharp", nestedTypes, associatedGuids, associatedFileIds));
+                    var isMono = assetType != null ? typeof(MonoScript).IsAssignableFrom(assetType) : false;
+                    entries.Add(new AssetCatalogue.ScriptEntry(properPath, guid, fileId, foundClass?.FullName ?? assetType.FullName ?? "n/a", assemblyName ?? "Assembly-CSharp", nestedTypes, associatedGuids, associatedFileIds, isMono));
                         
                     usedTypes.Add(typeName);
                         
@@ -758,7 +1030,7 @@ namespace Nomnom.UnityProjectPatcher.Editor {
                     var t = asm.GetType(type, false, true);
                     if (t is null) continue;
                     
-                    yield return new AssetCatalogue.ScriptEntry(assetPath, string.Empty, fileId, t.FullName, t.Assembly.GetName().Name, Array.Empty<AssetCatalogue.ScriptEntry>(), null, null);
+                    yield return new AssetCatalogue.ScriptEntry(assetPath, string.Empty, fileId, t.FullName, t.Assembly.GetName().Name, Array.Empty<AssetCatalogue.ScriptEntry>(), null, null, true);
                     break;
                 }
             }
@@ -871,7 +1143,7 @@ namespace Nomnom.UnityProjectPatcher.Editor {
                         
                         var associatedGuids = GetAssociatedGuids(relativeFile, file, null).ToArray();
                         var associatedFileIds = GetFileIdsFromDisk(file).ToArray();
-                        entries.Add(new AssetCatalogue.ScriptEntry(relativeFile, guid, null, fullTypeName, assemblyName, Array.Empty<AssetCatalogue.ScriptEntry>(), associatedGuids, associatedFileIds));
+                        entries.Add(new AssetCatalogue.ScriptEntry(relativeFile, guid, null, fullTypeName, assemblyName, Array.Empty<AssetCatalogue.ScriptEntry>(), associatedGuids, associatedFileIds, null));
                     }
                         break;
                     case ".shader": {

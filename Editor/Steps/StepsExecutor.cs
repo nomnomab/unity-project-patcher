@@ -130,6 +130,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                     }
                 } catch {
                     Debug.LogError($"Step {step.GetType().Name} failed");
+                    EditorUtility.DisplayDialog($"Step {step.GetType().Name} failed", "Check the console for details", "Ok");
                     ClearProgress(true);
                     EditorUtility.ClearProgressBar();
                     throw;

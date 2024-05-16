@@ -34,6 +34,10 @@ namespace Nomnom.UnityProjectPatcher.UnityPackages {
 #endif
 
         public override string ToString() {
+            if (string.IsNullOrEmpty(version)) {
+                return name;
+            }
+            
             return $"{name}@{version}";
         }
     }

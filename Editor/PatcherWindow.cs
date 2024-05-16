@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -24,80 +25,15 @@ namespace Nomnom.UnityProjectPatcher.Editor {
         // private bool _hasGameWrapperPackage;
         private UPPatcherAttribute _foundPackageAttribute;
         private PackageCollection _packageCollection;
+        private PackageVersion[] _packageVersions;
 
         [InitializeOnLoadMethod]
         private static void OnLoad() {
-            // check tool version
-            var packages = PatcherUtility.GetPackages();
-            var toolGit = "https://github.com/nomnomab/unity-project-patcher";
-            var gameWrapper = PatcherUtility.GetGameWrapperAttribute();
-            
-            var currentToolVersion = packages.FirstOrDefault(x => x.name == "com.nomnom.unity-project-patcher")?.version;
-
-            try {
-                if (!string.IsNullOrEmpty(currentToolVersion) && PatcherUtility.TryFetchGitVersion(toolGit, out var toolVersion)) {
-                    if (currentToolVersion != toolVersion) {
-                        Debug.LogWarning($"[com.nomnom.unity-project-patcher] is <color=yellow>outdated</color>. Please update to {toolVersion} from \"{toolGit}\". Current version: {currentToolVersion}.");
-                    } else {
-                        Debug.Log($"[com.nomnom.unity-project-patcher] is up to date. Current version: {currentToolVersion}.");
-                    }
-                } else {
-                    Debug.LogWarning($"Failed to fetch [com.nomnom.unity-project-patcher] version from \"{toolGit}\".");
-                }
-            } catch (Exception e) {
-                Debug.LogWarning($"Failed to fetch [com.nomnom.unity-project-patcher] version from \"{toolGit}\". Exception: {e}");
-            }
-
-#if UNITY_2020_3_OR_NEWER
-            var currentBepInExVersion = packages.FirstOrDefault(x => x.name == "com.nomnom.unity-project-patcher-bepinex")?.version;
-            var bepinexGit = "https://github.com/nomnomab/unity-project-patcher-bepinex";
-            try {
-                if (!string.IsNullOrEmpty(currentBepInExVersion) && PatcherUtility.TryFetchGitVersion(bepinexGit, out var bepinexVersion)) {
-                    if (currentBepInExVersion != bepinexVersion) {
-                        Debug.LogWarning($"[com.nomnom.unity-project-patcher-bepinex] is <color=yellow>outdated</color>. Please update to {bepinexVersion} from \"{bepinexGit}\". Current version: {currentBepInExVersion}.");
-                    } else {
-                        Debug.Log($"[com.nomnom.unity-project-patcher-bepinex] is up to date. Current version: {currentBepInExVersion}.");
-                    }
-                } else {
-                    Debug.LogWarning($"Failed to fetch [com.nomnom.unity-project-patcher-bepinex] version from \"{bepinexGit}\".");
-                }
-            } catch (Exception e) {
-                Debug.LogWarning($"Failed to fetch [com.nomnom.unity-project-patcher-bepinex] version from \"{bepinexGit}\". Exception: {e}");
-            }
-#endif
-            
-            if (gameWrapper != null) {
-                try {
-                    var packageName = gameWrapper.PackageName;
-                    var gamePackage = packages.FirstOrDefault(x => x.name == packageName);
-                    var gameRepo = gamePackage.packageId;
-                    if (string.IsNullOrEmpty(gameRepo) || !gameRepo.Contains('@')) {
-                        Debug.LogWarning($"[com.nomnom.unity-project-patcher-bepinex] failed to get gamepackage or repository.");
-                    } else if (gamePackage != null) {
-                        var gameGit = gameRepo.Split('@')[1];
-                        if (gameGit.EndsWith(".git")) {
-                            gameGit = gameGit.Substring(0, gameGit.Length - 4);
-                        }
-                        var currentGameVersion = gamePackage.version;
-                        if (PatcherUtility.TryFetchGitVersion(gameGit, out var gameVersion)) {
-                            if (currentGameVersion != gameVersion) {
-                                Debug.LogWarning($"[{gamePackage.name}] is <color=yellow>outdated</color>. Please update to {gameVersion} from \"{gameGit}\". Current version: {currentGameVersion}.");
-                            } else {
-                                Debug.Log($"[{gamePackage.name}] is up to date. Current version: {currentGameVersion}.");
-                            }
-                        } else {
-                            Debug.LogWarning($"Failed to fetch [{gamePackage.name}] version from \"{gameGit}\".");
-                        }
-                    } else {
-                        Debug.LogWarning($"[{gamePackage.name}] failed to get gamepackage or repository.");
-                    }
-                } catch (Exception e) {
-                    Debug.LogWarning($"Failed to fetch [{gameWrapper.PackageName}] version. Exception: {e}");
-                }
-            }
-
+            if (EditorApplication.isPlayingOrWillChangePlaymode) return;
             var window = Resources.FindObjectsOfTypeAll<PatcherWindow>().FirstOrDefault() as PatcherWindow;
-            if (window) {
+            if (!window) {
+                GetPackageVersions().ToArray();
+            } else {
                 window.CheckPackages();
             }
         }
@@ -111,15 +47,13 @@ namespace Nomnom.UnityProjectPatcher.Editor {
             } else {
                 window.titleContent = new GUIContent($"UPPatcher - {gameWrapperType.Name}");
             }
-            window.minSize = new Vector2(500, 100);
+            window.minSize = new Vector2(500, 400);
             window.Show();
         }
 
         private void OnEnable() {
             Nomnom.UnityProjectPatcher.PatcherUtility.GetUserSettings();
             _gameWrapperVersion = null;
-            
-            OnLoad();
             
             EditorApplication.delayCall += () => {
                 _packageCollection = null;
@@ -148,10 +82,76 @@ namespace Nomnom.UnityProjectPatcher.Editor {
         //     }
         // }
 
+        private static IEnumerable<PackageVersion> GetPackageVersions() {
+            // check tool version
+            var packages = PatcherUtility.GetPackages();
+            var toolGit = "https://github.com/nomnomab/unity-project-patcher";
+            var gameWrapper = PatcherUtility.GetGameWrapperAttribute();
+            
+            var currentToolVersion = packages.FirstOrDefault(x => x.name == "com.nomnom.unity-project-patcher")?.version;
+            
+            if (!string.IsNullOrEmpty(currentToolVersion) && PatcherUtility.TryFetchGitVersion(toolGit, out var toolVersion)) {
+                yield return new PackageVersion("Unity Project Patcher", toolGit, currentToolVersion, toolVersion);
+                    
+                if (currentToolVersion != toolVersion) {
+                    Debug.LogWarning($"[com.nomnom.unity-project-patcher] is <color=yellow>outdated</color>. Please update to {toolVersion} from \"{toolGit}\". Current version: {currentToolVersion}.");
+                } else {
+                    Debug.Log($"[com.nomnom.unity-project-patcher] is up to date. Current version: {currentToolVersion}.");
+                }
+            } else {
+                Debug.LogWarning($"Failed to fetch [com.nomnom.unity-project-patcher] version from \"{toolGit}\".");
+            }
+
+#if UNITY_2020_3_OR_NEWER
+            var currentBepInExVersion = packages.FirstOrDefault(x => x.name == "com.nomnom.unity-project-patcher-bepinex")?.version;
+            var bepinexGit = "https://github.com/nomnomab/unity-project-patcher-bepinex";
+            if (!string.IsNullOrEmpty(currentBepInExVersion) && PatcherUtility.TryFetchGitVersion(bepinexGit, out var bepinexVersion)) {
+                yield return new PackageVersion("BepInEx", bepinexGit, currentBepInExVersion, bepinexVersion);
+                    
+                if (currentBepInExVersion != bepinexVersion) {
+                    Debug.LogWarning($"[com.nomnom.unity-project-patcher-bepinex] is <color=yellow>outdated</color>. Please update to {bepinexVersion} from \"{bepinexGit}\". Current version: {currentBepInExVersion}.");
+                } else {
+                    Debug.Log($"[com.nomnom.unity-project-patcher-bepinex] is up to date. Current version: {currentBepInExVersion}.");
+                }
+            } else {
+                Debug.LogWarning($"Failed to fetch [com.nomnom.unity-project-patcher-bepinex] version from \"{bepinexGit}\".");
+            }
+#endif
+            
+            if (gameWrapper != null) {
+                var packageName = gameWrapper.PackageName;
+                var gamePackage = packages.FirstOrDefault(x => x.name == packageName);
+                var gameRepo = gamePackage.packageId;
+                if (string.IsNullOrEmpty(gameRepo) || !gameRepo.Contains('@')) {
+                    Debug.LogWarning($"[com.nomnom.unity-project-patcher-bepinex] failed to get gamepackage or repository.");
+                } else if (gamePackage != null) {
+                    var gameGit = gameRepo.Split('@')[1];
+                    if (gameGit.EndsWith(".git")) {
+                        gameGit = gameGit.Substring(0, gameGit.Length - 4);
+                    }
+                    var currentGameVersion = gamePackage.version;
+                    if (PatcherUtility.TryFetchGitVersion(gameGit, out var gameVersion)) {
+                        yield return new PackageVersion(packageName, gameGit, currentGameVersion, gameVersion);
+                        if (currentGameVersion != gameVersion) {
+                            Debug.LogWarning($"[{gamePackage.name}] is <color=yellow>outdated</color>. Please update to {gameVersion} from \"{gameGit}\". Current version: {currentGameVersion}.");
+                        } else {
+                            Debug.Log($"[{gamePackage.name}] is up to date. Current version: {currentGameVersion}.");
+                        }
+                    } else {
+                        Debug.LogWarning($"Failed to fetch [{gamePackage.name}] version from \"{gameGit}\".");
+                    }
+                } else {
+                    Debug.LogWarning($"[{gamePackage.name}] failed to get gamepackage or repository.");
+                }
+            }
+        }
+
         private void CheckPackages() {
             if (_packageCollection is null) {
                 _packageCollection = PatcherUtility.GetPackages();
             }
+
+            _packageVersions = GetPackageVersions().ToArray();
 
             var (version, gameVersion) = PatcherUtility.GetVersions(_packageCollection);
             _patcherVersion = version;
@@ -168,6 +168,7 @@ namespace Nomnom.UnityProjectPatcher.Editor {
         }
 
         private void OnGUI() {
+            // header
             if (_leftAlignedGreyLabel == null) {
                 _leftAlignedGreyLabel = new GUIStyle(EditorStyles.centeredGreyMiniLabel) { alignment = TextAnchor.MiddleLeft };
             }
@@ -192,6 +193,8 @@ namespace Nomnom.UnityProjectPatcher.Editor {
                 return;
             }
             
+            EditorGUILayout.LabelField("All config assets will be made at the root of your project by default!", EditorStyles.centeredGreyMiniLabel);
+            
             var currentStep = StepsExecutor.CurrentStepName;
             GUI.enabled = string.IsNullOrEmpty(currentStep);
             if (!string.IsNullOrEmpty(currentStep)) {
@@ -204,54 +207,6 @@ namespace Nomnom.UnityProjectPatcher.Editor {
                 EditorGUILayout.LabelField("Compiling...", EditorStyles.centeredGreyMiniLabel);
                 GUI.enabled = false;
             }
-            
-#if UNITY_2020_3_OR_NEWER
-            if (!_hasBepInExPackage) {
-                if (GUILayout.Button("Install BepInEx")) {
-                    EditorApplication.delayCall += () => {
-                        _packageCollection = null;
-                        
-                        EditorUtility.DisplayProgressBar("Installing...", "Installing BepInEx...", 0.5f);
-                        
-                        var request = Client.Add("https://github.com/nomnomab/unity-project-patcher-bepinex.git");
-                        while (!request.IsCompleted) { }
-                        if (request.Status == StatusCode.Success) {
-                            EditorUtility.DisplayDialog("Success!", "BepInEx was installed successfully!", "OK");
-                        } else {
-                            EditorUtility.DisplayDialog("Error", $"Failed to install BepInEx! [{request.Error.errorCode}] {request.Error.message}", "OK");
-                        }
-                        
-                        // enable ENABLE_BEPINEX
-                        var existingSymbols = PatcherUtility.GetScriptingDefineSymbols();
-                        if (!existingSymbols.Contains("ENABLE_BEPINEX")) {
-                            existingSymbols += ";ENABLE_BEPINEX";
-                            PatcherUtility.SetScriptingDefineSymbols(existingSymbols);
-                        }
-
-                        EditorUtility.ClearProgressBar();
-                    };
-                }
-            } else {
-                if (_hasBepInExFlag && GUILayout.Button("Disable BepInEx")) {
-                    EditorApplication.delayCall += () => {
-                        PatcherUtility.SetScriptingDefineSymbols(PatcherUtility.GetScriptingDefineSymbols().Replace("ENABLE_BEPINEX", ""));
-                    };
-                } else if (!_hasBepInExFlag && GUILayout.Button("Enable BepInEx")) {
-                    EditorApplication.delayCall += () => {
-                        PatcherUtility.SetScriptingDefineSymbols(PatcherUtility.GetScriptingDefineSymbols() + ";ENABLE_BEPINEX");
-                    };
-                }
-            }
-
-            if (!_hasBepInExPackage && !(_foundPackageAttribute is null) && _foundPackageAttribute.RequiresBepInEx) {
-                EditorGUILayout.LabelField("Please install all packages!", EditorStyles.centeredGreyMiniLabel);
-                EditorGUILayout.LabelField($"bepinex: {(_hasBepInExPackage ? "good!" : "missing!")}");
-                // EditorGUILayout.LabelField($"{_gameWrapperType.Name}: {(_hasGameWrapperPackage ? "good!" : "missing!")}");
-                return;
-            }
-#else
-            EditorGUILayout.LabelField("BepInEx is not supported for older versions of Unity atm", EditorStyles.centeredGreyMiniLabel);
-#endif
 
             if (GUILayout.Button("Run Patcher")) {
                 // if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) {
@@ -313,13 +268,6 @@ namespace Nomnom.UnityProjectPatcher.Editor {
                 
                 return;
             }
-
-            if (GUILayout.Button("Print Steps to Log")) {
-                var pipeline = PatcherSteps.GetPipeline();
-                if (pipeline != null) {
-                    pipeline.PrintToLog();
-                }
-            }
             
             if (_gameWrapperGuiFunction != null) {
                 try {
@@ -330,7 +278,124 @@ namespace Nomnom.UnityProjectPatcher.Editor {
                 }
             }
             
-            EditorGUILayout.LabelField("All config assets will be made at the root of your project by default!", EditorStyles.centeredGreyMiniLabel);
+            GUILayout.FlexibleSpace();
+
+            EditorGUILayout.BeginVertical("Box");
+            DisplayUpdateButtons();
+            
+            if (GUILayout.Button("Print Steps to Log")) {
+                var pipeline = PatcherSteps.GetPipeline();
+                if (pipeline != null) {
+                    pipeline.PrintToLog();
+                }
+            }
+
+            DisplayBepInExButton();
+            EditorGUILayout.EndVertical();
+        }
+
+        private void DisplayUpdateButtons() {
+            var versions = _packageVersions;
+            if (versions == null) return;
+            if (versions.All(x => x.IsCompatible())) {
+                EditorGUILayout.LabelField("All packages are up to date!", EditorStyles.centeredGreyMiniLabel);
+                return;
+            }
+
+            var needsUpdate = versions.Where(x => !x.IsCompatible());
+            var needsUpdateCount = needsUpdate.Count();
+            EditorGUILayout.BeginHorizontal();
+            if (GUILayout.Button("Check for Updates")) {
+                EditorApplication.delayCall += () => {
+                    EditorUtility.DisplayProgressBar("Checking...", "Checking packages...", 0.5f);
+                    CheckPackages();
+                    EditorUtility.ClearProgressBar();
+                };
+            }
+            if (GUILayout.Button($"Update {needsUpdateCount} Package{(needsUpdateCount != 1 ? "s" : "")}")) {
+                var urls = versions.Select(x => x.gitUrl);
+                if (!EditorUtility.DisplayDialog("Update Packages", "Are you sure you want to update the following packages?\n\n" + string.Join("\n", urls.Select(x => $" - {x}")), "Yes", "No")) {
+                    return;
+                }
+                
+                EditorApplication.delayCall += () => {
+                    EditorUtility.DisplayProgressBar("Updating...", "Updating packages...", 0.5f);
+                    Client.AddAndRemove(urls.ToArray());
+                    EditorUtility.ClearProgressBar();
+                };
+            }
+            EditorGUILayout.EndHorizontal();
+            
+            foreach (var package in needsUpdate) {
+                EditorGUILayout.LabelField($"[{package.name}] {package.from} -> {package.to}", EditorStyles.centeredGreyMiniLabel);
+            }
+        }
+
+        private void DisplayBepInExButton() {
+#if UNITY_2020_3_OR_NEWER
+            if (!_hasBepInExPackage) {
+                if (GUILayout.Button("Install BepInEx")) {
+                    EditorApplication.delayCall += () => {
+                        _packageCollection = null;
+                        
+                        EditorUtility.DisplayProgressBar("Installing...", "Installing BepInEx...", 0.5f);
+                        
+                        var request = Client.Add("https://github.com/nomnomab/unity-project-patcher-bepinex.git");
+                        while (!request.IsCompleted) { }
+                        if (request.Status == StatusCode.Success) {
+                            EditorUtility.DisplayDialog("Success!", "BepInEx was installed successfully!", "OK");
+                        } else {
+                            EditorUtility.DisplayDialog("Error", $"Failed to install BepInEx! [{request.Error.errorCode}] {request.Error.message}", "OK");
+                        }
+                        
+                        // enable ENABLE_BEPINEX
+                        var existingSymbols = PatcherUtility.GetScriptingDefineSymbols();
+                        if (!existingSymbols.Contains("ENABLE_BEPINEX")) {
+                            existingSymbols += ";ENABLE_BEPINEX";
+                            PatcherUtility.SetScriptingDefineSymbols(existingSymbols);
+                        }
+
+                        EditorUtility.ClearProgressBar();
+                    };
+                }
+            } else {
+                if (_hasBepInExFlag && GUILayout.Button("Disable BepInEx")) {
+                    EditorApplication.delayCall += () => {
+                        PatcherUtility.SetScriptingDefineSymbols(PatcherUtility.GetScriptingDefineSymbols().Replace("ENABLE_BEPINEX", ""));
+                    };
+                } else if (!_hasBepInExFlag && GUILayout.Button("Enable BepInEx")) {
+                    EditorApplication.delayCall += () => {
+                        PatcherUtility.SetScriptingDefineSymbols(PatcherUtility.GetScriptingDefineSymbols() + ";ENABLE_BEPINEX");
+                    };
+                }
+            }
+
+            if (!_hasBepInExPackage && !(_foundPackageAttribute is null) && _foundPackageAttribute.RequiresBepInEx) {
+                EditorGUILayout.LabelField("Please install all packages!", EditorStyles.centeredGreyMiniLabel);
+                EditorGUILayout.LabelField($"bepinex: {(_hasBepInExPackage ? "good!" : "missing!")}");
+                // EditorGUILayout.LabelField($"{_gameWrapperType.Name}: {(_hasGameWrapperPackage ? "good!" : "missing!")}");
+                return;
+            }
+#else
+            EditorGUILayout.LabelField("BepInEx is not supported for older versions of Unity atm", EditorStyles.centeredGreyMiniLabel);
+#endif
+        }
+
+        private readonly struct PackageVersion {
+            public readonly string name;
+            public readonly string gitUrl;
+            public readonly string from, to;
+            
+            public bool IsCompatible() {
+                return from == to;
+            }
+            
+            public PackageVersion(string name, string gitUrl, string from, string to) {
+                this.name = name;
+                this.gitUrl = gitUrl;
+                this.from = from;
+                this.to = to;
+            }
         }
     }
 }

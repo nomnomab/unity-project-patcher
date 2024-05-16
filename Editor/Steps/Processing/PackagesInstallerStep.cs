@@ -24,6 +24,10 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
         public UniTask<StepResult> Run() {
             var settings = this.GetSettings();
             var packages = settings.ExactPackagesFound;
+            var gitPackages = settings.GitPackages;
+            var allPackages = packages
+                .Concat(gitPackages.Select(x => new FoundPackageInfo(x.version, null, null, PackageMatchType.Exact)))
+                .ToArray();
             // var gitPackages = settings.GitPackages;
 
             // var packageStrings = packages
@@ -42,7 +46,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                     }
                 }
 
-                var missingPackages = packages
+                var missingPackages = allPackages
                     .Where(x => packageList.Result.All(y => y.name != x.name))
                     .Select(x => x.ToString())
                     .ToArray();
@@ -78,10 +82,36 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                 }
 #endif
                 
+                packageList = Client.List(false, false);
+                while (true) {
+                    if (packageList.IsCompleted) break;
+                    if (packageList.Status == StatusCode.Failure && packageList.Error != null) {
+                        EditorUtility.ClearProgressBar();
+                        throw new Exception($"Failed to list packages! [{packageList.Error.errorCode}] {packageList.Error.message}");
+                    }
+                }
+                
+                missingPackages = allPackages
+                    .Where(x => packageList.Result.All(y => y.name != x.name))
+                    .Select(x => x.ToString())
+                    .ToArray();
+
+                if (!missingPackages.Any()) {
+                    EditorUtility.ClearProgressBar();
+                    
+                    if (packages.Any(x => x.ToString().StartsWith("com.unity.inputsystem"))) {
+                        if (new EnableNewInputSystemStep().Assign()) {
+                            return UniTask.FromResult(StepResult.RestartEditor);
+                        }
+                    }
+                    
+                    return UniTask.FromResult(StepResult.Recompile);
+                }
+                
                 ManuallyResolveManifest();
                 EditorUtility.ClearProgressBar();
 
-                if (missingPackages.Any(x => x.StartsWith("com.unity.inputsystem"))) {
+                if (packages.Any(x => x.ToString().StartsWith("com.unity.inputsystem"))) {
                     if (new EnableNewInputSystemStep().Assign()) {
                         return UniTask.FromResult(StepResult.RestartEditor);
                     }
@@ -107,7 +137,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
             var settings = this.GetSettings();
             var packages = settings.ExactPackagesFound;
             var gitPackages = settings.GitPackages;
-            var allPackages = packages.Concat(gitPackages.Select(x => new FoundPackageInfo(x.name, string.Empty, null, PackageMatchType.Exact)));
+            var allPackages = packages.Concat(gitPackages.Select(x => new FoundPackageInfo(x.name, x.version, null, PackageMatchType.Exact)));
             
             var manifest = File.ReadAllText(manifestFile);
             var manifestJson = JObject.Parse(manifest);
@@ -122,14 +152,16 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                     var version = package.version;
                 
                     EditorUtility.DisplayProgressBar("Updating packages", $"Updating {name}#{version}", 0.75f);
+                    Debug.Log($"Updating {name}#{version}");
                 
                     if (!dependencies.TryGetValue(name, out var versionObj)) {
-                        dependencies[name] = new JValue(version);
+                        dependencies[name] = versionObj = new JValue(version);
                         changed = true;
                     }
 
                     var value = (JValue)versionObj;
                     var valueString = value.ToString(CultureInfo.InvariantCulture);
+                    Debug.Log(valueString);
                     if (valueString != version) {
                         value.Value = version;
                         changed = true;
