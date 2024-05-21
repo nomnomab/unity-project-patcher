@@ -94,7 +94,7 @@ namespace Nomnom.UnityProjectPatcher.Editor {
                 yield return new PackageVersion("Unity Project Patcher", toolGit, currentToolVersion, toolVersion);
                     
                 if (currentToolVersion != toolVersion) {
-                    Debug.LogWarning($"[com.nomnom.unity-project-patcher] is <color=yellow>outdated</color>. Please update to {toolVersion} from \"{toolGit}\". Current version: {currentToolVersion}.");
+                    Debug.LogWarning($"[com.nomnom.unity-project-patcher] is <color=yellow>outdated</color>. Please open the patcher window to update to {toolVersion} from \"{toolGit}\". Current version: {currentToolVersion}.");
                 } else {
                     //Debug.Log($"[com.nomnom.unity-project-patcher] is up to date. Current version: {currentToolVersion}.");
                 }
@@ -109,7 +109,7 @@ namespace Nomnom.UnityProjectPatcher.Editor {
                 yield return new PackageVersion("BepInEx", bepinexGit, currentBepInExVersion, bepinexVersion);
                     
                 if (currentBepInExVersion != bepinexVersion) {
-                    Debug.LogWarning($"[com.nomnom.unity-project-patcher-bepinex] is <color=yellow>outdated</color>. Please update to {bepinexVersion} from \"{bepinexGit}\". Current version: {currentBepInExVersion}.");
+                    Debug.LogWarning($"[com.nomnom.unity-project-patcher-bepinex] is <color=yellow>outdated</color>. Please open the patcher window to update to {bepinexVersion} from \"{bepinexGit}\". Current version: {currentBepInExVersion}.");
                 } else {
                     //Debug.Log($"[com.nomnom.unity-project-patcher-bepinex] is up to date. Current version: {currentBepInExVersion}.");
                 }
@@ -133,7 +133,7 @@ namespace Nomnom.UnityProjectPatcher.Editor {
                     if (PatcherUtility.TryFetchGitVersion(gameGit, out var gameVersion)) {
                         yield return new PackageVersion(packageName, gameGit, currentGameVersion, gameVersion);
                         if (currentGameVersion != gameVersion) {
-                            Debug.LogWarning($"[{gamePackage.name}] is <color=yellow>outdated</color>. Please update to {gameVersion} from \"{gameGit}\". Current version: {currentGameVersion}.");
+                            Debug.LogWarning($"[{gamePackage.name}] is <color=yellow>outdated</color>. Please open the patcher window to update to {gameVersion} from \"{gameGit}\". Current version: {currentGameVersion}.");
                         } else {
                             //Debug.Log($"[{gamePackage.name}] is up to date. Current version: {currentGameVersion}.");
                         }

@@ -1,4 +1,8 @@
-﻿# 1.1.14
+﻿# 1.1.15
+
+- Updated package upgrade message to prompt the user to open the tool window for upgrades
+
+# 1.1.14
 
 - Better messages for dialogues
 - Configs menu for easier asset focusing
