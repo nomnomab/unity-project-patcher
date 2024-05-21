@@ -96,7 +96,7 @@ namespace Nomnom.UnityProjectPatcher.Editor {
                 if (currentToolVersion != toolVersion) {
                     Debug.LogWarning($"[com.nomnom.unity-project-patcher] is <color=yellow>outdated</color>. Please update to {toolVersion} from \"{toolGit}\". Current version: {currentToolVersion}.");
                 } else {
-                    Debug.Log($"[com.nomnom.unity-project-patcher] is up to date. Current version: {currentToolVersion}.");
+                    //Debug.Log($"[com.nomnom.unity-project-patcher] is up to date. Current version: {currentToolVersion}.");
                 }
             } else {
                 Debug.LogWarning($"Failed to fetch [com.nomnom.unity-project-patcher] version from \"{toolGit}\".");
@@ -111,7 +111,7 @@ namespace Nomnom.UnityProjectPatcher.Editor {
                 if (currentBepInExVersion != bepinexVersion) {
                     Debug.LogWarning($"[com.nomnom.unity-project-patcher-bepinex] is <color=yellow>outdated</color>. Please update to {bepinexVersion} from \"{bepinexGit}\". Current version: {currentBepInExVersion}.");
                 } else {
-                    Debug.Log($"[com.nomnom.unity-project-patcher-bepinex] is up to date. Current version: {currentBepInExVersion}.");
+                    //Debug.Log($"[com.nomnom.unity-project-patcher-bepinex] is up to date. Current version: {currentBepInExVersion}.");
                 }
             } else {
                 Debug.LogWarning($"Failed to fetch [com.nomnom.unity-project-patcher-bepinex] version from \"{bepinexGit}\".");
@@ -135,7 +135,7 @@ namespace Nomnom.UnityProjectPatcher.Editor {
                         if (currentGameVersion != gameVersion) {
                             Debug.LogWarning($"[{gamePackage.name}] is <color=yellow>outdated</color>. Please update to {gameVersion} from \"{gameGit}\". Current version: {currentGameVersion}.");
                         } else {
-                            Debug.Log($"[{gamePackage.name}] is up to date. Current version: {currentGameVersion}.");
+                            //Debug.Log($"[{gamePackage.name}] is up to date. Current version: {currentGameVersion}.");
                         }
                     } else {
                         Debug.LogWarning($"Failed to fetch [{gamePackage.name}] version from \"{gameGit}\".");
@@ -194,6 +194,7 @@ namespace Nomnom.UnityProjectPatcher.Editor {
             }
             
             EditorGUILayout.LabelField("All config assets will be made at the root of your project by default!", EditorStyles.centeredGreyMiniLabel);
+            EditorGUILayout.LabelField("Configs can be focused via \"Tools > Unity Project Patcher > Configs\"", EditorStyles.centeredGreyMiniLabel);
             
             var currentStep = StepsExecutor.CurrentStepName;
             GUI.enabled = string.IsNullOrEmpty(currentStep);
@@ -221,7 +222,7 @@ namespace Nomnom.UnityProjectPatcher.Editor {
                 
                 try {
                     if (string.IsNullOrEmpty(userSettings.GameFolderPath) || !Directory.Exists(Path.GetFullPath(userSettings.GameFolderPath))) {
-                        EditorUtility.DisplayDialog("Error", "Please select a valid game folder!\n\nPlease fix this in your UPPatcherUserSettings asset!", "Focus UPPatcherUserSettings");
+                        EditorUtility.DisplayDialog("Error", "Please select a valid game folder!\n\nPlease fix this in your UPPatcherUserSettings asset!\n\n" + @"This path is absolute to your game folder. Such as: ""C:\Program Files (x86)\Steam\steamapps\common\Lethal Company""", "Focus UPPatcherUserSettings");
                         EditorUtility.FocusProjectWindow();
                         Selection.activeObject = userSettings;
                         EditorGUIUtility.PingObject(userSettings);
@@ -258,8 +259,14 @@ namespace Nomnom.UnityProjectPatcher.Editor {
 
                 if (PatcherUtility.IsProbablyPatched()) {
                     if (!EditorUtility.DisplayDialog("Warning", "The project seems to already be patched. Are you sure you want to continue? This may lead to unrecoverable changes.\n\nMake sure you back up your project before doing this!", "Yes", "No")) {
+                        Debug.LogWarning("Patcher stopped early");
                         return;
                     }
+                }
+
+                if (!EditorUtility.DisplayDialog("Note", "The patcher will take a while to complete. It will also restart multiple times.\n\nDo not touch Unity unless a popup shows up for an error, the patcher completing, or another reason.", "OK")) {
+                    Debug.LogWarning("Patcher stopped early");
+                    return;
                 }
 
                 EditorApplication.delayCall += () => {

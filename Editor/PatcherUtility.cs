@@ -595,6 +595,14 @@ PluginImporter:
             return false;
         }
         
+        [MenuItem("Tools/Unity Project Patcher/Configs/" + nameof(UPPatcherUserSettings))]
+        private static void OpenUPPatcherUserSettings() {
+            var config = GetUserSettings();
+            EditorUtility.FocusProjectWindow();
+            Selection.activeObject = config;
+            EditorGUIUtility.PingObject(config);
+        }
+        
 // #if UNITY_EDITOR_WIN
 //         [DllImport("user32.dll")]
 //         public static extern bool SetForegroundWindow(IntPtr hWnd);

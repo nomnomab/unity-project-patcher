@@ -1,4 +1,11 @@
-﻿# 1.1.13
+﻿# 1.1.14
+
+- Better messages for dialogues
+- Configs menu for easier asset focusing
+- Added configs to `Tools > Unity Project Patcher > Configs`
+- Won't show log for package not needing an upgrade
+
+# 1.1.13
 
 - Added asset replacement utility
 - Added option to update packages in tool window itself

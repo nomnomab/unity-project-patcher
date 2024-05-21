@@ -145,6 +145,10 @@ The tool window can be opened via `Tools > Unity Project Patcher > Open Window`
 > This tool mostly supports patching an already patched project, although this can lead to broken assets.
 > So make sure you back up your project beforehand.
 
+When pressing the patch button, it may prompt you to fix various paths in your `UPPatcherUserSettings` asset.
+
+Available configs can be accessed via `Tools > Unity Project Patcher > Configs`
+
 ### Patcher Configs
 
 ### UPPatcherUserSettings

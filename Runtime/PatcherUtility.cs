@@ -22,6 +22,25 @@ namespace Nomnom.UnityProjectPatcher {
         }
         
 #if UNITY_EDITOR
+        public static T GetSettingsAsset<T>() where T : ScriptableObject {
+            var assets = AssetDatabase.FindAssets($"t:{nameof(T)}");
+            if (assets.Length == 0) {
+                CreateSettings<T>();
+                Debug.LogWarning($"Created {nameof(T)} asset since it was missing");
+                assets = AssetDatabase.FindAssets($"t:{nameof(T)}");
+            }
+
+            var assetPath = AssetDatabase.GUIDToAssetPath(assets[0]);
+            return AssetDatabase.LoadAssetAtPath<T>(assetPath);
+        }
+
+        public static void CreateSettings<T>() where T : ScriptableObject {
+            var settings = ScriptableObject.CreateInstance<T>();
+            AssetDatabase.CreateAsset(settings, $"Assets/{nameof(T)}.asset");
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+        }
+        
         public static UPPatcherUserSettings GetUserSettings() {
             var assets = AssetDatabase.FindAssets($"t:{nameof(UPPatcherUserSettings)}");
             if (assets.Length == 0) {
