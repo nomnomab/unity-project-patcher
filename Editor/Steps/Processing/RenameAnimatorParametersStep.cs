@@ -39,14 +39,14 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                 
                 try {
                     var path = Path.GetFullPath(controller);
-                    var contents = File.ReadAllText(path);
+                    var contents = File.ReadAllText(path.ToValidPath());
 
                     foreach (var pair in rename.replace) {
                         contents = contents.Replace($"m_Name: {pair.from}", $"m_Name: {pair.to}");
                         contents = contents.Replace($"m_ConditionEvent: {pair.from}", $"m_ConditionEvent: {pair.to}");
                     }
 
-                    File.WriteAllText(path, contents);
+                    File.WriteAllText(path.ToValidPath(), contents);
                 } catch (Exception e) {
                     Debug.LogError($"Failed to replace animator controller parameters for \"{controller}\":\n{e}");
                 }

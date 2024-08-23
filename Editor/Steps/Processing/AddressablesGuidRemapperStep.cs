@@ -76,7 +76,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
             
             var lookup = new ConcurrentBag<(string file, string fileGuid, List<(string from, string to)>)>();
             var each = Parallel.ForEach(files, file => {
-                var contents = File.ReadAllText(file);
+                var contents = File.ReadAllText(file.ToValidPath());
                 var matches = AddressableGuidPattern.Matches(contents);
                 // if (matches.Count == 0) return;
             

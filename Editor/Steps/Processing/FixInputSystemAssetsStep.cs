@@ -37,14 +37,14 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                     var asset = AssetDatabase.LoadAssetAtPath(assetPath, inputActionAssetType);
                     var clone = Object.Instantiate(asset);
                     var realPath = Path.GetFullPath(assetPath);
-                    var text = File.ReadAllText(realPath);
+                    var text = File.ReadAllText(realPath.ToValidPath());
                     if (!text.Trim().StartsWith("%YAML")) continue;
                 
                     clone.name = $"{Path.GetFileNameWithoutExtension(realPath)}";
 
                     var json = Fix(clone);
                     var newPath = Path.Combine(Path.GetDirectoryName(realPath), $"{Path.GetFileNameWithoutExtension(realPath)}.inputactions");
-                    File.WriteAllText(newPath, json);
+                    File.WriteAllText(newPath.ToValidPath(), json);
                     
                     AssetDatabase.Refresh();
                     

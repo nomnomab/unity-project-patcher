@@ -253,7 +253,7 @@ namespace Nomnom.UnityProjectPatcher.Editor {
             Debug.Log(catalogue);
 
             var outputPath = Path.Combine(Application.dataPath, "scrub.assets.txt");
-            File.WriteAllText(outputPath, catalogue.ToString(false));
+            PatcherUtility.WriteAllText(outputPath, catalogue.ToString(false));
             AssetDatabase.Refresh();
         }
         
@@ -264,10 +264,10 @@ namespace Nomnom.UnityProjectPatcher.Editor {
                 Debug.Log(catalogue);
 
                 var outputPath = Path.Combine(Application.dataPath, "scrub.project.txt");
-                File.WriteAllText(outputPath, catalogue.ToString(false));
+                PatcherUtility.WriteAllText(outputPath, catalogue.ToString(false));
 
                 var json = catalogue.ToJson();
-                File.WriteAllText(outputPath + ".json", json);
+                PatcherUtility.WriteAllText(outputPath + ".json", json);
                 
                 AssetDatabase.Refresh();
             } catch {
@@ -283,7 +283,7 @@ namespace Nomnom.UnityProjectPatcher.Editor {
             Debug.Log(catalogue);
             
             var outputPath = Path.Combine(Application.dataPath, "scrub.disk.txt");
-            File.WriteAllText(outputPath, catalogue.ToString(false));
+            PatcherUtility.WriteAllText(outputPath, catalogue.ToString(false));
             AssetDatabase.Refresh();
         }
         
@@ -299,7 +299,7 @@ namespace Nomnom.UnityProjectPatcher.Editor {
             Debug.Log(catalogue);
             
             var outputPath = Path.Combine(Application.dataPath, "scrub.disk_custom.txt");
-            File.WriteAllText(outputPath, catalogue.ToString(false));
+            PatcherUtility.WriteAllText(outputPath, catalogue.ToString(false));
             AssetDatabase.Refresh();
         }
 
@@ -406,7 +406,7 @@ namespace Nomnom.UnityProjectPatcher.Editor {
                 var project2Catalogue = ScrubProject();
 
                 var projectJson = project2Catalogue.ToJson();
-                File.WriteAllText(CacheProjectCatalogueStep.ExportPath, projectJson);
+                PatcherUtility.WriteAllText(CacheProjectCatalogueStep.ExportPath, projectJson);
 
                 var matches = project2Catalogue.CompareProjectToProject(project1Catalogue).ToArray();
                 var allEntryMatches = new Dictionary<string, AssetCatalogue.Entry>();
@@ -999,7 +999,7 @@ namespace Nomnom.UnityProjectPatcher.Editor {
             }
 
             if (string.IsNullOrEmpty(contents)) {
-                contents = File.ReadAllText(assetPath);
+                contents = PatcherUtility.ReadAllText(assetPath);
             }
             
             var regex = new Regex(@"Shader\s+.(?<TypeName>.*\w)");
@@ -1115,7 +1115,7 @@ namespace Nomnom.UnityProjectPatcher.Editor {
             var each = Parallel.ForEach(files, x => {
                 var (file, relativeFile) = x;
                 var extension = Path.GetExtension(relativeFile);
-                // var contents = File.ReadAllText(file);
+                // var contents = PatcherUtility.ReadAllText(file);
                 var guid = GetGuidFromDisk(file);
                 
                 switch (extension) {
@@ -1135,7 +1135,7 @@ namespace Nomnom.UnityProjectPatcher.Editor {
                         // make a type path
                         fullTypeName = fullTypeName.Replace('\\', '.');
                         
-                        var contents = File.ReadAllText(file);
+                        var contents = PatcherUtility.ReadAllText(file);
                         var foundNamespace = GetNamespace(contents);
                         foreach (var e in GetDefinitions(contents, "class").Concat(GetDefinitions(contents, "struct")).Take(1)) {
                             fullTypeName = $"{foundNamespace}.{e}";
@@ -1227,7 +1227,7 @@ namespace Nomnom.UnityProjectPatcher.Editor {
             var each = Parallel.ForEach(metaFiles, x => {
                 var (file, relativeFile) = x;
                 
-                var contents = File.ReadAllText(file);
+                var contents = PatcherUtility.ReadAllText(file);
                 var match = AssetBundleNamePattern.Match(contents);
                 if (!match.Success) return;
                 
@@ -1262,9 +1262,9 @@ namespace Nomnom.UnityProjectPatcher.Editor {
                                 
                                 EditorUtility.DisplayProgressBar("Scrubbing for Addressables", $"Fixing {file}", index / (float) files.Count);
                                 
-                                var content = File.ReadAllText(file);
+                                var content = PatcherUtility.ReadAllText(file);
                                 content = AssetBundleNamePattern.Replace(content, $"assetBundleName: {lastLine}");
-                                File.WriteAllText(file, content);
+                                PatcherUtility.WriteAllText(file, content);
                                 
                                 // Debug.Log($"Fixing {file}, \"{line}.bundle\" -> \"{lastLine}.bundle\"");
                             }
@@ -1296,9 +1296,9 @@ namespace Nomnom.UnityProjectPatcher.Editor {
                                 
                                 EditorUtility.DisplayProgressBar("Scrubbing for Addressables", $"Fixing {file}", index / (float) files.Count);
                                 
-                                var content = File.ReadAllText(file);
+                                var content = PatcherUtility.ReadAllText(file);
                                 content = AssetBundleNamePattern.Replace(content, $"assetBundleName: {bundleName}");
-                                File.WriteAllText(file, content);
+                                PatcherUtility.WriteAllText(file, content);
                                 
                                 // Debug.Log($"Fixing {file}, \"{line}.bundle\" -> \"{bundleName}\"");
                             }
@@ -1319,17 +1319,17 @@ namespace Nomnom.UnityProjectPatcher.Editor {
         
         private static bool IsGenericScript(string assetPath, string typeName) {
             if (!File.Exists(assetPath)) return false;
-            var assetContents = File.ReadAllText(assetPath);
+            var assetContents = PatcherUtility.ReadAllText(assetPath);
             return assetContents.Contains($" {typeName}<");
         }
         
         public static string GetGuidFromDisk(string assetPath) {
             // scrub meta file directly (?)
             // var fullAssetPath = Path.GetFullPath(assetPath);
-            var fullMetaPath = $"{assetPath}.meta";
+            var fullMetaPath = $"{assetPath}.meta".ToValidPath();
             if (!File.Exists(fullMetaPath)) return null;
 
-            var contents = File.ReadAllText(fullMetaPath);
+            var contents = PatcherUtility.ReadAllText(fullMetaPath);
             var match = GuidPattern.Match(contents);
             if (!match.Success) return null;
                 
@@ -1353,7 +1353,7 @@ namespace Nomnom.UnityProjectPatcher.Editor {
                 yield break;
             }
             
-            var contents = File.ReadAllText(fullAssetPath);
+            var contents = PatcherUtility.ReadAllText(fullAssetPath);
             var matches = FileIdReferencePattern.Matches(contents);
             
             foreach (var match in matches.Cast<Match>()) {
@@ -1420,9 +1420,9 @@ namespace Nomnom.UnityProjectPatcher.Editor {
                 yield break;
             }
             
-            // var assetContents = File.ReadAllText(fullAssetPath);
+            // var assetContents = PatcherUtility.ReadAllText(fullAssetPath);
             if (string.IsNullOrEmpty(contents)) {
-                contents = File.ReadAllText(fullAssetPath);
+                contents = PatcherUtility.ReadAllText(fullAssetPath);
             }
             
             var matches = GuidPattern.Matches(contents);
@@ -1471,7 +1471,7 @@ namespace Nomnom.UnityProjectPatcher.Editor {
                 return null;
             }
 
-            var contents = File.ReadAllText(fullMetaPath);
+            var contents = PatcherUtility.ReadAllText(fullMetaPath);
             var match = GuidPattern.Match(contents);
             if (!match.Success) return null;
 
@@ -1490,12 +1490,12 @@ namespace Nomnom.UnityProjectPatcher.Editor {
                 return;
             }
 
-            var contents = File.ReadAllText(fullMetaPath);
+            var contents = PatcherUtility.ReadAllText(fullMetaPath);
             var match = GuidPattern.Match(contents);
             if (!match.Success) return;
             
             var newContents = contents.Replace(match.Groups["guid"].Value, guid);
-            File.WriteAllText(fullMetaPath, newContents);
+            PatcherUtility.WriteAllText(fullMetaPath, newContents);
             
             Debug.Log($" - wrote to {fullMetaPath}");
         }
@@ -1506,9 +1506,9 @@ namespace Nomnom.UnityProjectPatcher.Editor {
                 return;
             }
             
-            var contents = File.ReadAllText(fullAssetPath);
+            var contents = PatcherUtility.ReadAllText(fullAssetPath);
             contents = GuidPattern.Replace(contents, $"guid: {guid}:");
-            File.WriteAllText(fullAssetPath, contents);
+            PatcherUtility.WriteAllText(fullAssetPath, contents);
             
             Debug.Log($" - wrote to {fullAssetPath}");
         }
@@ -1524,7 +1524,7 @@ namespace Nomnom.UnityProjectPatcher.Editor {
                 return;
             }
 
-            var contents = File.ReadAllText(fullAssetPath);
+            var contents = PatcherUtility.ReadAllText(fullAssetPath);
             var hasChanged = false;
             for (var i = 0; i < entry.AssociatedGuids.Length; i++) {
                 var guid = entry.AssociatedGuids[i];
@@ -1546,7 +1546,7 @@ namespace Nomnom.UnityProjectPatcher.Editor {
 
             if (!hasChanged) return;
             
-            File.WriteAllText(fullAssetPath, contents);
+            PatcherUtility.WriteAllText(fullAssetPath, contents);
             
             Debug.Log($" - wrote to {fullAssetPath}");
         }
@@ -1556,7 +1556,7 @@ namespace Nomnom.UnityProjectPatcher.Editor {
         // }
         //     // var currentScene = EditorSceneManager.GetActiveScene();
         //     // var sceneFullPath = Path.GetFullPath(currentScene.path);
-        //     var sceneContents = File.ReadAllText(scenePath);
+        //     var sceneContents = PatcherUtility.ReadAllText(scenePath);
         //     var yamlComponents = UYAMLParser.Parse(sceneContents);
         //     var foundProperties = new Dictionary<string, UObject>();
         //     foreach (var component in yamlComponents) {
@@ -1612,7 +1612,7 @@ namespace Nomnom.UnityProjectPatcher.Editor {
         //         // var newContent = builder.ToString();
         //         // // Debug.Log(newContent);
         //         //             
-        //         // File.WriteAllText(scenePath, newContent);
+        //         // PatcherUtility.WriteAllText(scenePath, newContent);
         //         // foreach (var o in yamlComponents) {
         //         //     // yield return o;
         //         // }
@@ -1626,7 +1626,7 @@ namespace Nomnom.UnityProjectPatcher.Editor {
         //     if (entry.FileIds.Length == 0) return;
         //     
         //     var fullAssetPath = Path.Combine(rootPath, entry.RelativePathToRoot);
-        //     var contents = File.ReadAllText(fullAssetPath);
+        //     var contents = PatcherUtility.ReadAllText(fullAssetPath);
         //     for (var m = 0; m < matches.Length; m++) {
         //         var match = matches[m];
         //         if (EditorUtility.DisplayCancelableProgressBar($"Scrubbing {fullAssetPath}", $"Scrubbing {entry.Guid}", (float)m / matches.Length)) {
@@ -1653,7 +1653,7 @@ namespace Nomnom.UnityProjectPatcher.Editor {
         //         break;
         //     }
         //
-        //     File.WriteAllText(fullAssetPath, contents);
+        //     PatcherUtility.WriteAllText(fullAssetPath, contents);
         // }
         
         // public static string GetProjectGameAssetsPath(UPPatcherSettings settings) {
@@ -1726,7 +1726,7 @@ namespace Nomnom.UnityProjectPatcher.Editor {
         //     var fullScriptPath = $"{fullAssetPath}.cs";
         //     if (!File.Exists(fullScriptPath)) return null;
         //
-        //     var contents = File.ReadAllText(fullScriptPath);
+        //     var contents = PatcherUtility.ReadAllText(fullScriptPath);
         //     var namespaceMatch = NamespacePattern.Match(contents);
         // }
     }

@@ -23,7 +23,7 @@ namespace Nomnom.UnityProjectPatcher.Editor {
         public Entry[] Entries;
         
         public static AssetCatalogue FromDisk(string path) {
-            var json = File.ReadAllText(path);
+            var json = File.ReadAllText(path.ToValidPath());
             return JsonConvert.DeserializeObject<AssetCatalogue>(json, _jsonSerializerSettings);
         }
         

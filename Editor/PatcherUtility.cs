@@ -320,6 +320,30 @@ of the software in violation of applicable laws.", "OK");
             return serializedObject.FindProperty("m_QualitySettings.Array.data[0].customRenderPipeline");
         }
 
+        public static string ToValidPath(this string path) {
+#if UNITY_EDITOR_WIN
+            if (path.StartsWith(@"\\?\")) {
+                return path;
+            }
+            if (path.Length >= 255) {
+                path = @"\\?\" + path;
+            }
+            return path;
+#else
+            return path;
+#endif
+        }
+
+        public static string ReadAllText(string path) {
+            path = ToValidPath(path);
+            return File.ReadAllText(path);
+        }
+
+        public static void WriteAllText(string path, string contents) {
+            path = ToValidPath(path);
+            File.WriteAllText(path, contents);
+        }
+
         private const string ExcludeFromAllPlatformsMetaDummyString = @"
 fileFormatVersion: 2
 guid: e467066723a20064d8f96fc222107589";

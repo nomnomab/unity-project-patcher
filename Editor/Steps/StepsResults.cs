@@ -37,7 +37,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                 return new StepsResults();
             }
             
-            var json = File.ReadAllText(savePath);
+            var json = File.ReadAllText(savePath.ToValidPath());
             return JsonConvert.DeserializeObject<StepsResults>(json) ?? new StepsResults();
         }
     }

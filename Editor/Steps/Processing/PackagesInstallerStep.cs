@@ -139,7 +139,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
             var gitPackages = settings.GitPackages;
             var allPackages = packages.Concat(gitPackages.Select(x => new FoundPackageInfo(x.name, x.version, null, PackageMatchType.Exact)));
             
-            var manifest = File.ReadAllText(manifestFile);
+            var manifest = File.ReadAllText(manifestFile.ToValidPath());
             var manifestJson = JObject.Parse(manifest);
             var dependencies = (JObject)manifestJson["dependencies"];
             var changed = false;

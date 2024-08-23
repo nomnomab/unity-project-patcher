@@ -70,7 +70,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                 //     throw new OperationCanceledException();
                 // }
 
-                var sceneContents = File.ReadAllText(Path.GetFullPath(scenePath));
+                var sceneContents = File.ReadAllText(Path.GetFullPath(scenePath).ToValidPath());
                 for (int i = 0; i < oldFileIds.Length; i++) {
                     var oldFileId = oldFileIds[i];
                     var newFileId = newFileIds[i].ToString();
@@ -85,7 +85,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                         .Replace($"fileID: {oldFileId}}}", $"fileID: {newFileId}}}");
                 }
                 
-                File.WriteAllText(Path.GetFullPath(scenePath), sceneContents);
+                File.WriteAllText(Path.GetFullPath(scenePath).ToValidPath(), sceneContents);
             }
             
             EditorUtility.ClearProgressBar();

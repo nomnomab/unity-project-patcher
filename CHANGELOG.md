@@ -1,4 +1,8 @@
-﻿# 1.1.15
+﻿# 1.1.16
+
+- Added possible fix for long path names on Windows for File reads and writes
+
+# 1.1.15
 
 - Updated package upgrade message to prompt the user to open the tool window for upgrades
 

@@ -30,7 +30,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                 var mixerName = _mixerNames[m];
                 var diageticPath = Path.Combine(settings.ProjectGameAssetsFullPath, finalFolder, mixerName).ToAssetDatabaseSafePath();
                 try {
-                    var text = File.ReadAllText(diageticPath);
+                    var text = File.ReadAllText(diageticPath.ToValidPath());
                     var lines = text.Split('\n');
                     var finalText = new StringBuilder();
                     for (var i = 0; i < lines.Length; i++) {

@@ -25,7 +25,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                 return null;
             }
             
-            var json = File.ReadAllText(path);
+            var json = File.ReadAllText(path.ToValidPath());
             return JsonConvert.DeserializeObject<StepsProgress>(json) ?? null;
         }
 
