@@ -1,4 +1,9 @@
-﻿# 1.1.16
+﻿# 1.1.17
+
+- Added `CustomBuildUrl` field in `AssetRipperSettings` to allow third-party AssetRipper builds
+- Fixed compatibility with newer AssetRipper versions
+
+# 1.1.16
 
 - Added possible fix for long path names on Windows for File reads and writes
 
