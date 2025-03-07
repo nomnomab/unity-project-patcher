@@ -196,8 +196,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
         }
 
         private async UniTask DownloadAssetRipper(AssetRipperSettings arSettings) {
-            const string dllUrl = "https://github.com/nomnomab/AssetRipper/releases/download/v1.0.12-patcher/Release.zip";
-            var buildUrl = dllUrl;
+            var buildUrl = arSettings.BuildUrl;
             
             Debug.Log($"Downloading AssetRipper from {buildUrl}");
 

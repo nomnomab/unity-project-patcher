@@ -29,11 +29,14 @@ namespace Nomnom.UnityProjectPatcher.AssetRipper {
         public IReadOnlyList<string> FilesToExcludeFromCopy => _filesToExcludeFromCopy.Select(x => x.Replace('/', '\\')).ToList();
         public IReadOnlyList<string> FoldersToExcludeFromRead => _foldersToExcludeFromRead.Select(x => x.Replace('/', '\\')).ToList();
         public IReadOnlyList<string> ProjectSettingFilesToCopy => _projectSettingFilesToCopy.Select(x => x.Replace('/', '\\')).ToList();
-
+        
+        const string defaultBuildUrl = "https://github.com/nomnomab/AssetRipper/releases/download/v1.0.12-patcher/Release.zip";
+        public string BuildUrl => string.IsNullOrWhiteSpace(_customBuildUrl) ? defaultBuildUrl : _customBuildUrl;
+        
         // public bool NeedsManualRip => _configurationData.Processing.enableStaticMeshSeparation;
         // public bool NeedsManualRip => _configurationData.Processing.enableStaticMeshSeparation || _configurationData.Processing.enableStaticMeshSeparation;
         public bool NeedsManualRip => false;
-        
+
         [SerializeField]
         private FolderMapping[] _folderMappings = new[] {
             new FolderMapping(DefaultFolderMapping.AnimationClipKey, DefaultFolderMapping.AnimationClipKey, DefaultFolderMapping.AnimationClipOutput),
@@ -120,6 +123,9 @@ namespace Nomnom.UnityProjectPatcher.AssetRipper {
 
         [SerializeField]
         private AssetRipperJsonData _configurationData = new AssetRipperJsonData();
+
+        [SerializeField] 
+        private string _customBuildUrl = string.Empty;
         
 #if UNITY_2020_3_OR_NEWER
         public bool TryGetFolderMapping(string key, out string folder, out bool exclude, string? fallbackPath = null) {
@@ -226,9 +232,6 @@ namespace Nomnom.UnityProjectPatcher.AssetRipper {
         [JsonProperty("StreamingAssetsMode")]
         [DefaultValue(StreamingAssetsMode.Extract)]
         public StreamingAssetsMode streamingAssetsMode;
-
-        [JsonProperty("DefaultVersion"), HideInInspector]
-        public DefaultVersion defaultVersion;
 
         [JsonProperty("BundledAssetsExportMode")]
         [Tooltip("GroupByAssetType: Bundled assets are treated the same as assets from other files.\n\nGroupByBundleName: Bundled assets are grouped by their asset bundle name.\n\nDirectExport: Bundled assets are exported without grouping.")]
