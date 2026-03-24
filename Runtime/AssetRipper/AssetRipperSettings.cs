@@ -25,10 +25,10 @@ namespace Nomnom.UnityProjectPatcher.AssetRipper {
 
         public IReadOnlyCollection<FolderMapping> FolderMappings => _folderMappings;
         public AssetRipperJsonData ConfigurationData => _configurationData;
-        public IReadOnlyList<string> FoldersToCopy => _foldersToCopy.Select(x => x.Replace('/', '\\')).ToList();
-        public IReadOnlyList<string> FilesToExcludeFromCopy => _filesToExcludeFromCopy.Select(x => x.Replace('/', '\\')).ToList();
-        public IReadOnlyList<string> FoldersToExcludeFromRead => _foldersToExcludeFromRead.Select(x => x.Replace('/', '\\')).ToList();
-        public IReadOnlyList<string> ProjectSettingFilesToCopy => _projectSettingFilesToCopy.Select(x => x.Replace('/', '\\')).ToList();
+        public IReadOnlyList<string> FoldersToCopy => _foldersToCopy.Select(x => x.ToOSPath()).ToList();
+        public IReadOnlyList<string> FilesToExcludeFromCopy => _filesToExcludeFromCopy.Select(x => x.ToOSPath()).ToList();
+        public IReadOnlyList<string> FoldersToExcludeFromRead => _foldersToExcludeFromRead.Select(x => x.ToOSPath()).ToList();
+        public IReadOnlyList<string> ProjectSettingFilesToCopy => _projectSettingFilesToCopy.Select(x => x.ToOSPath()).ToList();
         
         const string defaultBuildUrl = "https://github.com/nomnomab/AssetRipper/releases/download/v1.0.12-patcher/Release.zip";
         public string BuildUrl => string.IsNullOrWhiteSpace(_customBuildUrl) ? defaultBuildUrl : _customBuildUrl;

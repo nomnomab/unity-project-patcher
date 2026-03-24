@@ -382,13 +382,14 @@ namespace Nomnom.UnityProjectPatcher.Editor {
                     }
 
                     var newFile = file.Replace(modDisk, tempDirectory);
-                    newFile = Path.GetFullPath(Path.Combine(tempDirectory, newFile));
+                    newFile = Path.GetFullPath(Path.Combine(tempDirectory, newFile)).ToOSPath();
                     
                     // var newFile = Path.GetFullPath(Path.Combine(dir, Path.GetFileName(file)).ToOSPath());
                     // Debug.Log($"\"{file}\" to \"{newFile}\"");
                     
-                    try {
-                        var dir = Path.GetDirectoryName(newFile);
+                    try
+                    {
+                        var dir = Path.GetDirectoryName(newFile).ToOSPath();
                         if (!Directory.Exists(dir)) {
                             Directory.CreateDirectory(dir);
                         }
@@ -506,7 +507,7 @@ namespace Nomnom.UnityProjectPatcher.Editor {
                         throw new OperationCanceledException();
                     }
 
-                    var newFile = file.Replace(targetAssetsFolder, tempDirectory);
+                    var newFile = file.Replace(targetAssetsFolder, tempDirectory).ToOSPath();
                     // newFile = Path.GetFullPath(Path.Combine(tempDirectory, newFile));
 
                     // var newFile = Path.GetFullPath(Path.Combine(dir, Path.GetFileName(file)).ToOSPath());
@@ -676,7 +677,7 @@ namespace Nomnom.UnityProjectPatcher.Editor {
                             Debug.Log($"Backup folder created at \"{hiddenFolder}\"");
                         }
                         
-                        File.Copy(toPath, Path.Combine(hiddenFolder, $"{Path.GetFileNameWithoutExtension(toPath)}_{timeNow}{Path.GetExtension(toPath)}"), true);
+                        File.Copy(toPath, Path.Combine(hiddenFolder, $"{Path.GetFileNameWithoutExtension(toPath)}_{timeNow}{Path.GetExtension(toPath)}").ToOSPath(), true);
                         File.Copy(fromPath, toPath, true);
                         
                         Debug.Log($"Copied \"{fromPath}\" to \"{toPath}\"");
@@ -1125,7 +1126,7 @@ namespace Nomnom.UnityProjectPatcher.Editor {
                         var typeName = PatcherUtility.GetPathWithoutRoot(relativeFile);
                     
                         // take first folder
-                        var assemblyName = typeName.Substring(0, typeName.IndexOf('\\'));
+                        var assemblyName = typeName.Substring(0, typeName.IndexOf(Path.DirectorySeparatorChar));
                         // if (foldersToExclude.Contains(assemblyName)) continue;
                     
                         // trim first folder
@@ -1133,7 +1134,7 @@ namespace Nomnom.UnityProjectPatcher.Editor {
                         // trim extension
                         fullTypeName = fullTypeName.Substring(0, fullTypeName.LastIndexOf('.'));
                         // make a type path
-                        fullTypeName = fullTypeName.Replace('\\', '.');
+                        fullTypeName = fullTypeName.Replace(Path.DirectorySeparatorChar, '.');
                         
                         var contents = PatcherUtility.ReadAllText(file);
                         var foundNamespace = GetNamespace(contents);
@@ -1454,8 +1455,8 @@ namespace Nomnom.UnityProjectPatcher.Editor {
                 return false;
             }
 
-            if (assetPath.Contains("\\")) {
-                var rootFolder = assetPath.Substring(0, assetPath.IndexOf('\\'));
+            if (assetPath.Contains(Path.DirectorySeparatorChar)) {
+                var rootFolder = assetPath.Substring(0, assetPath.IndexOf(Path.DirectorySeparatorChar));
                 if (rootFolder == "Mesh") {
                     return false;
                 }

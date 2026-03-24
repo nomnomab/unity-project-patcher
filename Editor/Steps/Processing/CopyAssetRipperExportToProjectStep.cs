@@ -42,7 +42,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                 EditorUtility.DisplayProgressBar($"Copying assets [{i}/{allowedEntries.Length}]", $"Copying {asset.RelativePathToRoot}", i / (float)allowedEntries.Length);
                 
                 try {
-                    var projectPath = AssetScrubber.GetProjectPathFromExportPath(projectGameAssetsPath, asset, settings, arSettings, false);
+                    var projectPath = AssetScrubber.GetProjectPathFromExportPath(projectGameAssetsPath, asset, settings, arSettings, false).ToOSPath();
                     if (projectPath is null) {
                         // failed to find project path
                         // throw new System.NotImplementedException();
@@ -51,7 +51,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                     }
 
                     Directory.CreateDirectory(Path.GetDirectoryName(projectPath));
-                    var exportPath = Path.Combine(arAssets.RootAssetsPath, asset.RelativePathToRoot);
+                    var exportPath = Path.Combine(arAssets.RootAssetsPath, asset.RelativePathToRoot).ToOSPath();
                     File.Copy(exportPath, projectPath, true);
                     
                     var metaFilePath = $"{exportPath}.meta";

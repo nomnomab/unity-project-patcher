@@ -271,11 +271,29 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
         }
         
         private UniTask RunAssetRipper(string assetRipperExePath, string inputPath, string outputPath, string settingsPath) {
+            
+            #if UNITY_EDITOR_LINUX
+                assetRipperExePath = Path.ChangeExtension(assetRipperExePath, ".dll");
+            #endif
             Debug.Log($"Running AssetRipper at \"{assetRipperExePath}\" with \"{inputPath}\" and outputting into \"{outputPath}\"");
             Debug.Log($"Using data folder at \"{inputPath}\"");
             Debug.Log($"Outputting ripped assets at \"{outputPath}\"");
             Debug.Log($"Using settings from \"{settingsPath}\"");
             
+            #if UNITY_EDITOR_LINUX
+            var process = new System.Diagnostics.Process()
+            {
+                StartInfo = new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = "dotnet",
+                    Arguments = $"\"{assetRipperExePath}\" \"{settingsPath}\" \"{outputPath}\" \"{inputPath}\"",
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    CreateNoWindow = true
+                }
+            };
+            #else
             var process = new System.Diagnostics.Process {
                 StartInfo = new System.Diagnostics.ProcessStartInfo {
                     FileName = assetRipperExePath,
@@ -286,6 +304,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                     CreateNoWindow = true
                 }
             };
+            #endif
             
             // run the process
             try {

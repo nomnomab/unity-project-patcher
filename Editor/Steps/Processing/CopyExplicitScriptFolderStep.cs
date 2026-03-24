@@ -64,7 +64,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
                         var relativePath = PathNetCore.GetRelativePath(fromFolder, file);
 #endif
 
-                        var targetPath = Path.Combine(toFolder, relativePath);
+                        var targetPath = Path.Combine(toFolder, relativePath).ToOSPath();
                         Directory.CreateDirectory(Path.GetDirectoryName(targetPath));
                         File.Copy(file, targetPath, true);
                     }

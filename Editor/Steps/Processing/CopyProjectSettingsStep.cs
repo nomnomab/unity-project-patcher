@@ -30,8 +30,8 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
 
             try {
                 foreach (var name in settings.ProjectSettingFilesToCopy) {
-                    var sourcePath = Path.Combine(arProjectSettingsFolder, name);
-                    var destinationPath = Path.Combine(projectProjectSettingsFolder, name);
+                    var sourcePath = Path.Combine(arProjectSettingsFolder, name).ToOSPath();
+                    var destinationPath = Path.Combine(projectProjectSettingsFolder, name).ToOSPath();
                     if (File.Exists(sourcePath)) {
                         File.Copy(sourcePath, destinationPath, true);
                     }

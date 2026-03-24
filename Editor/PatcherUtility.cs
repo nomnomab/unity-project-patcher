@@ -517,11 +517,11 @@ PluginImporter:
         [MenuItem("Assets/Experimental/Re-import from Export")]
         public static void ReimportFromExport() {
             var activeObject = Selection.activeObject;
-            var assetPath = AssetDatabase.GetAssetPath(Selection.activeObject);
+            var assetPath = AssetDatabase.GetAssetPath(Selection.activeObject).ToOSPath();
             var settings = GetSettings();
             var arSettings = GetAssetRipperSettings();
         
-            var exportPath = AssetScrubber.GetExportPathFromProjectPath(assetPath, settings, arSettings);
+            var exportPath = AssetScrubber.GetExportPathFromProjectPath(assetPath, settings, arSettings).ToOSPath();
             if (string.IsNullOrEmpty(exportPath)) {
                 Debug.LogWarning("Could not find export path");
                 return;

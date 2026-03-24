@@ -35,7 +35,7 @@ namespace Nomnom.UnityProjectPatcher.Editor.Steps {
 #else
                 var relativePath = PathNetCore.GetRelativePath(_folder, file);
 #endif
-                var targetPath = Path.Combine(arSettings.OutputExportAssetsFolderPath, _outputFolderInExport, relativePath);
+                var targetPath = Path.Combine(arSettings.OutputExportAssetsFolderPath, _outputFolderInExport, relativePath).ToOSPath();
                 var folderPath = Path.GetDirectoryName(targetPath);
                 if (!Directory.Exists(folderPath)) {
                     Directory.CreateDirectory(folderPath);
