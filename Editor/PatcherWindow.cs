@@ -121,27 +121,41 @@ namespace Nomnom.UnityProjectPatcher.Editor {
             if (gameWrapper != null) {
                 var packageName = gameWrapper.PackageName;
                 var gamePackage = packages.FirstOrDefault(x => x.name == packageName);
-                var gameRepo = gamePackage.packageId;
-                if (string.IsNullOrEmpty(gameRepo) || !gameRepo.Contains('@')) {
-                    Debug.LogWarning($"[com.nomnom.unity-project-patcher-bepinex] failed to get gamepackage or repository.");
-                } else if (gamePackage != null) {
-                    var gameGit = gameRepo.Split('@')[1];
-                    if (gameGit.EndsWith(".git")) {
-                        gameGit = gameGit.Substring(0, gameGit.Length - 4);
-                    }
-                    var currentGameVersion = gamePackage.version;
-                    if (PatcherUtility.TryFetchGitVersion(gameGit, out var gameVersion)) {
-                        yield return new PackageVersion(packageName, gameGit, currentGameVersion, gameVersion);
-                        if (currentGameVersion != gameVersion) {
-                            Debug.LogWarning($"[{gamePackage.name}] is <color=yellow>outdated</color>. Please open the patcher window to update to {gameVersion} from \"{gameGit}\". Current version: {currentGameVersion}.");
-                        } else {
-                            //Debug.Log($"[{gamePackage.name}] is up to date. Current version: {currentGameVersion}.");
-                        }
+                if (gamePackage != null) {
+                    var gameRepo = gamePackage.packageId;
+                    if (string.IsNullOrEmpty(gameRepo) || !gameRepo.Contains('@')) {
+                        Debug.LogWarning($"[com.nomnom.unity-project-patcher-bepinex] failed to get gamepackage or repository.");
                     } else {
-                        Debug.LogWarning($"Failed to fetch [{gamePackage.name}] version from \"{gameGit}\".");
+                        var currentGameVersion = gamePackage.version;
+
+                        var gameGit = gameRepo.Split('@')[1];
+                        if (gameGit.StartsWith("file:")) {
+                            yield return new PackageVersion(packageName, gameGit, currentGameVersion, currentGameVersion);
+                            // Debug.Log($"[{gamePackage.name}] is up to date. Current version: {currentGameVersion}.");
+                        } else {
+                            var hashIndex = gameGit.IndexOf('#');
+                            if (hashIndex >= 0) {
+                                gameGit = gameGit.Substring(0, hashIndex);
+                            }
+
+                            if (gameGit.EndsWith(".git")) {
+                                gameGit = gameGit.Substring(0, gameGit.Length - 4);
+                            }
+                            
+                            if (PatcherUtility.TryFetchGitVersion(gameGit, out var gameVersion)) {
+                                yield return new PackageVersion(packageName, gameGit, currentGameVersion, gameVersion);
+                                if (currentGameVersion != gameVersion) {
+                                    Debug.LogWarning($"[{gamePackage.name}] is <color=yellow>outdated</color>. Please open the patcher window to update to {gameVersion} from \"{gameGit}\". Current version: {currentGameVersion}.");
+                                } else {
+                                    //Debug.Log($"[{gamePackage.name}] is up to date. Current version: {currentGameVersion}.");
+                                }
+                            } else {
+                                Debug.LogWarning($"Failed to fetch [{gamePackage.name}] version from \"{gameGit}\".");
+                            }
+                        }
                     }
                 } else {
-                    Debug.LogWarning($"[{gamePackage.name}] failed to get gamepackage or repository.");
+                    Debug.LogWarning($"[{packageName}] failed to get gamepackage or repository.");
                 }
             }
         }
